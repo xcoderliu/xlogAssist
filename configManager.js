@@ -1,0 +1,563 @@
+// 配置管理模块 - 负责正则规则和配置组管理
+class ConfigManager {
+    constructor(core) {
+        this.core = core;
+    }
+
+    // 显示配置面板
+    showConfigPanel() {
+        this.core.configPanel.style.display = 'block';
+        this.renderRulesList();
+    }
+
+    // 隐藏配置面板
+    hideConfigPanel() {
+        this.core.configPanel.style.display = 'none';
+    }
+
+    // 添加正则规则
+    addRegexRule() {
+        const pattern = document.getElementById('regexPattern').value.trim();
+        const color = document.getElementById('regexColor').value;
+        const bgColor = document.getElementById('regexBgColor').value;
+        const highlightWholeLine = document.getElementById('highlightWholeLine').checked;
+        
+        if (!pattern) {
+            alert('请输入正则表达式');
+            return;
+        }
+
+        try {
+            // 测试正则表达式是否有效
+            new RegExp(pattern, 'gi');
+            
+            const newRule = { pattern, color, bgColor, highlightWholeLine };
+            
+            if (this.core.editingIndex !== undefined) {
+                // 编辑模式：替换原有规则
+                const oldRuleId = this.core.getRuleId(this.core.regexRules[this.core.editingIndex]);
+                this.core.regexRules[this.core.editingIndex] = newRule;
+                
+                // 更新配置组中的规则引用
+                this.updateGroupRuleReferences(oldRuleId, this.core.getRuleId(newRule));
+                
+                delete this.core.editingIndex;
+                this.core.setStatus('规则更新成功');
+            } else {
+                // 添加模式：添加新规则
+                this.core.regexRules.push(newRule);
+                this.core.setStatus('规则添加成功');
+            }
+            
+            this.core.saveConfig();
+            this.renderRulesList();
+            if (this.core.renderLogs) {
+                this.core.renderLogs(); // 重新渲染以应用新规则
+            }
+            
+            // 清空表单并重置按钮文字
+            document.getElementById('regexPattern').value = '';
+            document.getElementById('regexColor').value = '#ff4444';
+            document.getElementById('regexBgColor').value = '#ffffff';
+            document.getElementById('highlightWholeLine').checked = false;
+            document.getElementById('addRegexRule').textContent = '添加规则';
+            
+        } catch (error) {
+            alert('正则表达式无效: ' + error.message);
+        }
+    }
+
+    // 更新配置组中的规则引用
+    updateGroupRuleReferences(oldRuleId, newRuleId) {
+        // 更新所有配置组中的规则引用
+        this.core.configGroups.forEach(group => {
+            const index = group.ruleIds.indexOf(oldRuleId);
+            if (index !== -1) {
+                group.ruleIds[index] = newRuleId;
+            }
+        });
+    }
+
+    // 渲染规则列表
+    renderRulesList() {
+        const rulesList = document.getElementById('rulesList');
+        rulesList.innerHTML = '<h4>当前规则:</h4>';
+        
+        if (this.core.regexRules.length === 0) {
+            rulesList.innerHTML += '<div class="empty-rules">暂无规则</div>';
+            return;
+        }
+
+        this.core.regexRules.forEach((rule, index) => {
+            const ruleElement = document.createElement('div');
+            ruleElement.className = 'rule-item';
+            ruleElement.innerHTML = `
+                <div style="display: flex; align-items: center; flex-wrap: wrap;">
+                    <div class="rule-preview" style="background: ${rule.bgColor}; color: ${rule.color}; display: flex; align-items: center; justify-content: center; font-weight: bold;">A</div>
+                    <span class="rule-text">${rule.pattern}</span>
+                    ${rule.highlightWholeLine ? '<span style="font-size: 12px; color: #666; margin-left: 8px;">(整行)</span>' : ''}
+                </div>
+                <div>
+                    <button class="edit-rule" data-index="${index}" style="background: #28a745; margin-right: 5px;">编辑</button>
+                    <button class="delete-rule" data-index="${index}">删除</button>
+                </div>
+            `;
+            rulesList.appendChild(ruleElement);
+        });
+
+        // 绑定编辑事件
+        rulesList.querySelectorAll('.edit-rule').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const index = parseInt(e.target.dataset.index);
+                this.editRule(index);
+            });
+        });
+
+        // 绑定删除事件
+        rulesList.querySelectorAll('.delete-rule').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const index = parseInt(e.target.dataset.index);
+                this.deleteRule(index, e);
+            });
+        });
+    }
+
+    // 编辑规则
+    editRule(index) {
+        const rule = this.core.regexRules[index];
+        
+        // 填充表单
+        document.getElementById('regexPattern').value = rule.pattern;
+        document.getElementById('regexColor').value = rule.color;
+        document.getElementById('regexBgColor').value = rule.bgColor;
+        document.getElementById('highlightWholeLine').checked = rule.highlightWholeLine;
+        
+        // 保存当前编辑的规则索引，用于后续替换
+        this.core.editingIndex = index;
+        
+        // 更改按钮文字为"更新规则"
+        document.getElementById('addRegexRule').textContent = '更新规则';
+        
+        this.core.setStatus('规则已加载到编辑表单，修改后点击"更新规则"');
+    }
+
+    // 删除规则
+    deleteRule(index, event) {        
+        if (confirm('确定要删除这个规则吗？')) {
+            const ruleToDelete = this.core.regexRules[index];
+            const ruleIdToDelete = this.core.getRuleId(ruleToDelete);
+            
+            // 从所有配置组中移除这个规则的引用
+            this.core.configGroups.forEach(group => {
+                const ruleIndex = group.ruleIds.indexOf(ruleIdToDelete);
+                if (ruleIndex !== -1) {
+                    group.ruleIds.splice(ruleIndex, 1);
+                }
+            });
+            
+            this.core.regexRules.splice(index, 1);
+            this.core.saveConfig();
+            this.renderRulesList();
+            this.renderGroupsList(); // 更新配置组列表显示
+            if (this.core.renderLogs) {
+                this.core.renderLogs();
+            }
+            this.core.setStatus('规则已删除');
+        }
+    }
+
+    // 创建配置组
+    createConfigGroup() {
+        const groupName = this.core.groupNameInput.value.trim();
+        
+        if (!groupName) {
+            alert('请输入配置组名称');
+            return;
+        }
+        
+        if (this.core.configGroups.some(group => group.name === groupName)) {
+            alert('配置组名称已存在');
+            return;
+        }
+        
+        this.core.configGroups.push({
+            id: Date.now().toString(),
+            name: groupName,
+            ruleIds: []
+        });
+        
+        this.core.saveConfig();
+        this.core.groupNameInput.value = '';
+        this.renderGroupsList();
+        this.renderGroupSelection(); // 更新选择生效的配置组
+        this.core.setStatus('配置组创建成功');
+    }
+
+    // 渲染配置组列表
+    renderGroupsList() {
+        const groupsList = document.getElementById('groupsList');
+        groupsList.innerHTML = '<h4>配置组列表:</h4>';
+        
+        if (this.core.configGroups.length === 0) {
+            groupsList.innerHTML += '<div class="empty-groups">暂无配置组</div>';
+            return;
+        }
+
+        this.core.configGroups.forEach((group, index) => {
+            const groupElement = document.createElement('div');
+            groupElement.className = 'group-item';
+            groupElement.innerHTML = `
+                <div>
+                    <span class="group-name">${group.name}</span>
+                    <span class="group-rules-count">(${group.ruleIds.length} 条规则)</span>
+                </div>
+                <div class="group-controls">
+                    <button class="edit-rule" data-group-index="${index}">编辑</button>
+                    <button class="delete-rule" data-group-index="${index}">删除</button>
+                </div>
+            `;
+            groupsList.appendChild(groupElement);
+        });
+
+        // 绑定配置组操作事件
+        groupsList.querySelectorAll('.edit-rule').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const index = parseInt(e.target.dataset.groupIndex);
+                this.editConfigGroup(index);
+            });
+        });
+
+        groupsList.querySelectorAll('.delete-rule').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const index = parseInt(e.target.dataset.groupIndex);
+                this.deleteConfigGroup(index, e);
+            });
+        });
+    }
+
+    // 渲染配置组选择
+    renderGroupSelection() {
+        const groupSelection = document.getElementById('groupSelection');
+        this.core.groupCheckboxes.innerHTML = '';
+        
+        if (this.core.configGroups.length === 0) {
+            groupSelection.style.display = 'none';
+            return;
+        }
+
+        groupSelection.style.display = 'block';
+        
+        this.core.configGroups.forEach((group, index) => {
+            const checkboxItem = document.createElement('div');
+            checkboxItem.className = 'group-checkbox-item';
+            checkboxItem.innerHTML = `
+                <input type="checkbox" id="group-${group.id}" value="${group.id}"
+                       ${this.core.activeGroups.has(group.id) ? 'checked' : ''}>
+                <label for="group-${group.id}">${group.name}</label>
+            `;
+            this.core.groupCheckboxes.appendChild(checkboxItem);
+        });
+
+        // 绑定复选框变化事件
+        this.core.groupCheckboxes.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+            checkbox.addEventListener('change', (e) => {
+                const groupId = e.target.value;
+                if (e.target.checked) {
+                    this.core.activeGroups.add(groupId);
+                } else {
+                    this.core.activeGroups.delete(groupId);
+                }
+                this.core.saveConfig();
+                if (this.core.renderLogs) {
+                    this.core.renderLogs();
+                }
+                this.core.setStatus('配置组已更新');
+            });
+        });
+    }
+
+    // 编辑配置组
+    editConfigGroup(index) {
+        const group = this.core.configGroups[index];
+        this.openGroupRulesManager(group.id);
+    }
+
+    // 删除配置组
+    deleteConfigGroup(index, event) {
+        if (confirm('确定要删除这个配置组吗？')) {
+            const group = this.core.configGroups[index];
+            this.core.activeGroups.delete(group.id);
+            this.core.configGroups.splice(index, 1);
+            this.core.saveConfig();
+            this.renderGroupsList();
+            this.renderGroupSelection();
+            this.core.setStatus('配置组已删除');
+        }
+    }
+
+    // 打开配置组规则管理界面
+    openGroupRulesManager(groupId) {
+        const group = this.core.configGroups.find(g => g.id === groupId);
+        if (!group) return;
+
+        const modal = document.getElementById('groupRulesModal');
+        const title = modal.querySelector('.modal-title');
+        const content = modal.querySelector('.modal-body');
+        
+        title.textContent = `管理配置组: ${group.name}`;
+        
+        // 构建规则管理界面
+        content.innerHTML = `
+            <div class="group-rules-manager">
+                <h4>已添加的规则</h4>
+                <div id="groupRulesList" class="group-rules-list"></div>
+                
+                <h4>添加规则到配置组</h4>
+                <div id="availableRulesList" class="available-rules-list"></div>
+                
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" onclick="document.getElementById('groupRulesModal').style.display='none'">关闭</button>
+                </div>
+            </div>
+        `;
+
+        // 渲染已添加的规则
+        this.renderGroupRulesList(group);
+        
+        // 渲染可用的规则
+        this.renderAvailableRulesList(group);
+        
+        modal.style.display = 'block';
+        
+        // 绑定配置组规则操作事件
+        this.bindGroupRuleEvents();
+    }
+
+    // 渲染配置组中的规则列表
+    renderGroupRulesList(group) {
+        const container = document.getElementById('groupRulesList');
+        if (!container) return;
+
+        if (group.ruleIds.length === 0) {
+            container.innerHTML = '<p class="text-muted">暂无规则</p>';
+            return;
+        }
+
+        container.innerHTML = group.ruleIds.map(ruleId => {
+            const rule = this.core.regexRules.find(r => this.core.getRuleId(r) === ruleId);
+            if (!rule) return '';
+            
+            return `
+                <div class="group-rule-item" data-rule-id="${ruleId}">
+                    <div class="rule-preview" style="color:${rule.color}; background-color:${rule.bgColor}">
+                        ${rule.pattern}
+                    </div>
+                    <button class="btn btn-sm btn-danger remove-group-rule" data-group-id="${group.id}" data-rule-id="${ruleId}">
+                        移除
+                    </button>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // 渲染可用的规则列表
+    renderAvailableRulesList(group) {
+        const container = document.getElementById('availableRulesList');
+        if (!container) return;
+
+        const availableRules = this.core.regexRules.filter(rule => {
+            const ruleId = this.core.getRuleId(rule);
+            return !group.ruleIds.includes(ruleId);
+        });
+
+        if (availableRules.length === 0) {
+            container.innerHTML = '<p class="text-muted">暂无可用规则</p>';
+            return;
+        }
+
+        container.innerHTML = availableRules.map(rule => {
+            const ruleId = this.core.getRuleId(rule);
+            return `
+                <div class="available-rule-item" data-rule-id="${ruleId}">
+                    <div class="rule-preview" style="color:${rule.color}; background-color:${rule.bgColor}">
+                        ${rule.pattern}
+                    </div>
+                    <button class="btn btn-sm btn-primary add-group-rule" data-group-id="${group.id}" data-rule-id="${ruleId}">
+                        添加
+                    </button>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // 添加规则到配置组
+    addRuleToGroup(groupId, ruleId) {
+        const group = this.core.configGroups.find(g => g.id === groupId);
+        if (!group) return;
+        
+        // 检查规则是否已经存在
+        if (group.ruleIds.includes(ruleId)) {
+            this.core.setStatus('规则已存在于配置组中');
+            return;
+        }
+
+        group.ruleIds.push(ruleId);
+        this.core.saveConfig();
+        this.renderGroupRulesList(group);
+        this.renderAvailableRulesList(group);
+        this.renderGroupsList(); // 更新配置组列表显示
+        this.core.setStatus('规则已添加到配置组');
+    }
+
+    // 绑定配置组规则操作事件
+    bindGroupRuleEvents() {
+        const modal = document.getElementById('groupRulesModal');
+        if (!modal) return;
+        
+        // 使用事件委托处理添加规则按钮点击
+        modal.addEventListener('click', (e) => {
+            if (e.target.classList.contains('add-group-rule')) {
+                const groupId = e.target.dataset.groupId;
+                const ruleId = e.target.dataset.ruleId;
+                this.addRuleToGroup(groupId, ruleId);
+            } else if (e.target.classList.contains('remove-group-rule')) {
+                const groupId = e.target.dataset.groupId;
+                const ruleId = e.target.dataset.ruleId;
+                this.removeRuleFromGroup(groupId, ruleId);
+            }
+        });
+    }
+
+    // 从配置组移除规则
+    removeRuleFromGroup(groupId, ruleId) {
+        const group = this.core.configGroups.find(g => g.id === groupId);
+        if (!group) return;
+
+        const index = group.ruleIds.indexOf(ruleId);
+        if (index !== -1) {
+            group.ruleIds.splice(index, 1);
+            this.core.saveConfig();
+            this.renderGroupRulesList(group);
+            this.renderAvailableRulesList(group);
+            this.renderGroupsList(); // 更新配置组列表显示
+            this.core.setStatus('规则已从配置组移除');
+        }
+    }
+
+    // 导出配置
+    exportConfig() {
+        const configData = {
+            version: '1.0',
+            timestamp: new Date().toISOString(),
+            regexRules: this.core.regexRules,
+            configGroups: this.core.configGroups,
+            activeGroups: Array.from(this.core.activeGroups)
+        };
+
+        const jsonString = JSON.stringify(configData, null, 2);
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `xlogassist-config-${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        this.core.setStatus('配置导出成功');
+    }
+
+    // 导入配置
+    importConfig(file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const configData = JSON.parse(e.target.result);
+                
+                // 验证配置数据格式
+                if (!configData.regexRules || !configData.configGroups) {
+                    throw new Error('无效的配置文件格式');
+                }
+
+                // 合并配置
+                this.mergeConfig(configData);
+                
+                this.core.saveConfig();
+                this.renderRulesList();
+                this.renderGroupsList();
+                this.renderGroupSelection();
+                
+                if (this.core.renderLogs) {
+                    this.core.renderLogs();
+                }
+                
+                this.core.setStatus('配置导入成功');
+            } catch (error) {
+                alert('导入配置失败: ' + error.message);
+                this.core.setStatus('配置导入失败', 'error');
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    // 合并配置数据
+    mergeConfig(configData) {
+        // 合并正则规则
+        configData.regexRules.forEach(newRule => {
+            const existingIndex = this.core.regexRules.findIndex(rule =>
+                rule.pattern === newRule.pattern &&
+                rule.color === newRule.color &&
+                rule.bgColor === newRule.bgColor
+            );
+            
+            if (existingIndex === -1) {
+                this.core.regexRules.push(newRule);
+            }
+        });
+
+        // 合并配置组
+        configData.configGroups.forEach(newGroup => {
+            const existingIndex = this.core.configGroups.findIndex(group =>
+                group.name === newGroup.name
+            );
+            
+            if (existingIndex === -1) {
+                this.core.configGroups.push(newGroup);
+            } else {
+                // 合并规则ID
+                const existingGroup = this.core.configGroups[existingIndex];
+                newGroup.ruleIds.forEach(ruleId => {
+                    if (!existingGroup.ruleIds.includes(ruleId)) {
+                        existingGroup.ruleIds.push(ruleId);
+                    }
+                });
+            }
+        });
+    }
+
+    // 绑定导出导入事件
+    bindExportImportEvents() {
+        // 导出配置按钮
+        this.core.exportConfigBtn?.addEventListener('click', () => {
+            this.exportConfig();
+        });
+
+        // 导入配置按钮
+        this.core.importConfigBtn?.addEventListener('click', () => {
+            this.core.importConfigFileInput?.click();
+        });
+
+        // 文件选择事件
+        this.core.importConfigFileInput?.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                this.importConfig(file);
+                e.target.value = ''; // 清空文件选择器
+            }
+        });
+    }
+}
+
+export default ConfigManager;
