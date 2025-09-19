@@ -11,10 +11,12 @@ class ExportManager {
 
     // 导出排查区日志
     exportInvestigation() {
-        const content = this.core.investigationLogs.map(log => 
+        // 按照原始日志顺序排序
+        const sortedLogs = [...this.core.investigationLogs].sort((a, b) => a.originalIndex - b.originalIndex);
+        const content = sortedLogs.map(log =>
             `[${log.file}:${log.originalIndex + 1}] ${log.content}`
         ).join('\n');
-        this.exportContent(content, 'investigation.txt');
+        this.exportContent(content, 'investigation.log');
     }
 
     // 导出内容到文件
