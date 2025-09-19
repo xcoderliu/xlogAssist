@@ -170,8 +170,30 @@
             </div>
         </div>
 
+        <!-- 设置面板 -->
+        <div class="settings-panel" id="settingsPanel">
+            <div class="settings-header">
+                <h3>设置</h3>
+                <button class="close-btn" id="closeSettings">×</button>
+            </div>
+            <div class="settings-content">
+                <div class="settings-item">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="investigationClickToJump">
+                        点击排查区跳转原日志行
+                    </label>
+                </div>
+                <div class="settings-actions">
+                    <button id="saveSettings" class="btn">保存设置</button>
+                </div>
+            </div>
+        </div>
+
         <footer>
-            <button id="configBtn" class="btn">配置</button>
+            <div class="button-group">
+                <button id="settingsBtn" class="btn btn-small">设置</button>
+                <button id="configBtn" class="btn">配置</button>
+            </div>
             <span class="status" id="status">就绪</span>
         </footer>
     </div>

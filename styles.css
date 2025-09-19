@@ -1030,3 +1030,93 @@ body.resizing {
 body.resizing * {
     cursor: col-resize !important;
 }
+
+/* 设置面板样式 */
+.settings-panel {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #ffffff;
+    border: 1px solid #dadce0;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 1001;
+    display: none;
+    width: 400px;
+    max-width: 90vw;
+}
+
+.settings-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #dadce0;
+}
+
+.settings-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 500;
+    color: #202124;
+}
+
+.settings-content {
+    max-height: 70vh;
+    overflow-y: auto;
+    padding-right: 8px;
+}
+
+.settings-item {
+    margin-bottom: 20px;
+}
+
+.settings-actions {
+    text-align: right;
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid #dadce0;
+}
+
+/* 底部按钮样式调整 */
+footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* 按钮在左，状态在右 */
+}
+
+footer .button-group {
+    display: flex;
+    align-items: center;
+    gap: 8px; /* 按钮之间的间距 */
+}
+
+footer .btn-small {
+    padding: 10px 16px; /* 调整内边距 */
+    font-size: 14px;
+    background: #f1f3f4;
+    color: #5f6368;
+    border: 1px solid #dadce0;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 60px;
+}
+
+footer .btn-small:hover {
+    background: #e8eaed;
+    color: #202124;
+}
+
+footer .btn {
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 60px;
+    padding: 10px 16px; /* 与设置按钮保持一致 */
+}

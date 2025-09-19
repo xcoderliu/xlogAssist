@@ -21,6 +21,11 @@ class LogAnalyzer {
         // 选中行相关属性
         this.selectedLineIndex = -1;
         
+        // 设置相关属性
+        this.settings = {
+            investigationClickToJump: true
+        };
+        
         // 初始化模块
         this.initializeModules();
     }
@@ -62,6 +67,13 @@ class LogAnalyzer {
         this.exportConfigBtn = document.getElementById('exportConfig');
         this.importConfigBtn = document.getElementById('importConfig');
         this.importConfigFileInput = document.getElementById('importConfigFile');
+        
+        // 设置相关元素
+        this.settingsBtn = document.getElementById('settingsBtn');
+        this.settingsPanel = document.getElementById('settingsPanel');
+        this.closeSettingsBtn = document.getElementById('closeSettings');
+        this.investigationClickToJumpCheckbox = document.getElementById('investigationClickToJump');
+        this.saveSettingsBtn = document.getElementById('saveSettings');
     }
 
     bindEvents() {
@@ -119,6 +131,11 @@ class LogAnalyzer {
                 this.switchTab(tab);
             });
         });
+
+        // 设置相关事件
+        this.settingsBtn.addEventListener('click', () => this.showSettingsPanel());
+        this.closeSettingsBtn.addEventListener('click', () => this.hideSettingsPanel());
+        this.saveSettingsBtn.addEventListener('click', () => this.saveSettings());
     }
 
     // 状态管理方法
@@ -139,12 +156,14 @@ class LogAnalyzer {
         localStorage.setItem('xlogAssist_regexRules', JSON.stringify(this.regexRules));
         localStorage.setItem('xlogAssist_configGroups', JSON.stringify(this.configGroups));
         localStorage.setItem('xlogAssist_activeGroups', JSON.stringify(Array.from(this.activeGroups)));
+        localStorage.setItem('xlogAssist_settings', JSON.stringify(this.settings));
     }
 
     loadConfig() {
         const savedRules = localStorage.getItem('xlogAssist_regexRules');
         const savedGroups = localStorage.getItem('xlogAssist_configGroups');
         const savedActiveGroups = localStorage.getItem('xlogAssist_activeGroups');
+        const savedSettings = localStorage.getItem('xlogAssist_settings');
         
         if (savedRules) {
             this.regexRules = JSON.parse(savedRules);
@@ -156,6 +175,10 @@ class LogAnalyzer {
         
         if (savedActiveGroups) {
             this.activeGroups = new Set(JSON.parse(savedActiveGroups));
+        }
+        
+        if (savedSettings) {
+            this.settings = { ...this.settings, ...JSON.parse(savedSettings) };
         }
     }
 
@@ -199,6 +222,24 @@ class LogAnalyzer {
             this.renderGroupsList();
             this.renderGroupSelection();
         }
+    }
+
+    // 设置相关方法
+    showSettingsPanel() {
+        // 加载当前设置到表单
+        this.investigationClickToJumpCheckbox.checked = this.settings.investigationClickToJump;
+        this.settingsPanel.style.display = 'block';
+    }
+
+    hideSettingsPanel() {
+        this.settingsPanel.style.display = 'none';
+    }
+
+    saveSettings() {
+        this.settings.investigationClickToJump = this.investigationClickToJumpCheckbox.checked;
+        this.saveConfig();
+        this.hideSettingsPanel();
+        this.setStatus('设置已保存');
     }
 }
 

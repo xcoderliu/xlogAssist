@@ -35,7 +35,16 @@ class UIRenderer {
             const lineElement = document.createElement('div');
             lineElement.className = 'log-line';
             lineElement.dataset.index = log.originalIndex;
-            lineElement.innerHTML = this.applyRegexHighlighting(log.content);
+            
+            // 应用正则高亮和搜索高亮
+            let content = this.applyRegexHighlighting(log.content);
+            
+            // 如果是搜索模式，应用搜索高亮
+            if (this.core.isRealSearchMode && this.core.searchTerm) {
+                content = this.applySearchHighlightingToContent(content, log.content);
+            }
+            
+            lineElement.innerHTML = content;
             
             // 添加点击事件选中行
             lineElement.addEventListener('click', () => {
@@ -50,7 +59,7 @@ class UIRenderer {
             this.core.logContent.appendChild(lineElement);
         });
         
-        // 如果正在搜索模式，重新高亮当前搜索结果
+        // 如果正在搜索模式，重新高亮当前搜索结果并选中对应行
         if (this.core.isRealSearchMode && this.core.currentSearchIndex >= 0) {
             this.highlightCurrentSearchResult(this.core.currentSearchIndex);
         }
@@ -93,20 +102,13 @@ class UIRenderer {
 
     // 高亮当前搜索结果
     highlightCurrentSearchResult(index) {
-        // 清除之前的高亮
-        this.core.logContent.querySelectorAll('.log-line .search-char-highlight').forEach(el => {
-            // 只移除搜索高亮类，保留其他样式
-            const parent = el.parentNode;
-            const text = el.textContent;
-            parent.replaceChild(document.createTextNode(text), el);
-        });
-        
-        if (index >= 0 && index < this.core.searchResults.length) {
-            const result = this.core.searchResults[index];
-            const lineElement = this.core.logContent.querySelector(`[data-index="${result.log.originalIndex}"]`);
-            if (lineElement) {
+        // 对所有匹配的日志行应用搜索高亮
+        this.core.logContent.querySelectorAll('.log-line').forEach(lineElement => {
+            const originalIndex = parseInt(lineElement.dataset.index);
+            const log = this.core.logs.find(l => l.originalIndex === originalIndex);
+            if (log) {
                 // 获取原始内容（包含正则高亮）
-                const originalContent = this.applyRegexHighlighting(result.log.content);
+                const originalContent = this.applyRegexHighlighting(log.content);
                 
                 // 创建临时元素来操作HTML
                 const tempDiv = document.createElement('div');
@@ -179,8 +181,14 @@ class UIRenderer {
                 } else {
                     lineElement.innerHTML = originalContent;
                 }
-                
-                // 选中当前搜索结果所在的行
+            }
+        });
+        
+        // 选中当前搜索结果所在的行
+        if (index >= 0 && index < this.core.searchResults.length) {
+            const result = this.core.searchResults[index];
+            const lineElement = this.core.logContent.querySelector(`[data-index="${result.log.originalIndex}"]`);
+            if (lineElement) {
                 this.core.selectLine(result.log.originalIndex);
                 lineElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
@@ -213,6 +221,79 @@ class UIRenderer {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+
+    // 对内容应用搜索高亮
+    applySearchHighlightingToContent(htmlContent, originalText) {
+        // 获取纯文本内容用于搜索匹配
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = htmlContent;
+        const textContent = tempDiv.textContent || tempDiv.innerText || '';
+        
+        // 查找所有匹配位置
+        let matchIndex = -1;
+        const matches = [];
+        let searchText = textContent.toLowerCase();
+        
+        while ((matchIndex = searchText.indexOf(this.core.searchTerm, matchIndex + 1)) !== -1) {
+            matches.push(matchIndex);
+        }
+        
+        if (matches.length === 0) {
+            return htmlContent;
+        }
+        
+        // 重新构建HTML，在所有匹配位置插入搜索高亮
+        let currentPos = 0;
+        let highlightedHtml = '';
+        
+        // 使用DOM遍历来正确处理HTML结构
+        const walker = document.createTreeWalker(tempDiv, NodeFilter.SHOW_TEXT, null, false);
+        let node;
+        let offset = 0;
+        
+        while ((node = walker.nextNode())) {
+            const nodeText = node.textContent;
+            const nodeLength = nodeText.length;
+            
+            // 查找在当前文本节点内的所有匹配
+            const nodeMatches = matches.filter(match =>
+                match >= offset && match < offset + nodeLength
+            );
+            
+            if (nodeMatches.length > 0) {
+                let nodeHtml = '';
+                let lastPos = 0;
+                
+                nodeMatches.forEach(matchPos => {
+                    const localMatchIndex = matchPos - offset;
+                    const matchEnd = localMatchIndex + this.core.searchTerm.length;
+                    
+                    // 添加匹配前的文本
+                    nodeHtml += this.escapeHtml(nodeText.substring(lastPos, localMatchIndex));
+                    // 添加高亮的匹配文本
+                    nodeHtml += `<span class="search-char-highlight">${this.escapeHtml(nodeText.substring(localMatchIndex, matchEnd))}</span>`;
+                    lastPos = matchEnd;
+                });
+                
+                // 添加剩余的文本
+                nodeHtml += this.escapeHtml(nodeText.substring(lastPos));
+                
+                // 替换当前节点的HTML
+                const parent = node.parentNode;
+                const temp = document.createElement('div');
+                temp.innerHTML = nodeHtml;
+                
+                while (temp.firstChild) {
+                    parent.insertBefore(temp.firstChild, node);
+                }
+                parent.removeChild(node);
+            }
+            
+            offset += nodeLength;
+        }
+        
+        return tempDiv.innerHTML;
     }
 }
 

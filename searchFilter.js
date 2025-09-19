@@ -98,6 +98,11 @@ class SearchFilter {
             this.core.setStatus(`找到 ${this.core.searchResults.length} 个匹配项`);
             this.navigateToNextMatch(); // 自动导航到第一个匹配项
         }
+        
+        // 重新渲染排查区以应用搜索高亮
+        if (this.core.renderInvestigationLogs) {
+            this.core.renderInvestigationLogs();
+        }
     }
 
     // 导航到下一个匹配项
@@ -238,6 +243,11 @@ class SearchFilter {
         this.core.currentSearchIndex = -1;
         this.core.searchTerm = '';
         this.core.setStatus('已清除搜索');
+        
+        // 重新渲染排查区以清除搜索高亮
+        if (this.core.renderInvestigationLogs) {
+            this.core.renderInvestigationLogs();
+        }
     }
 }
 
