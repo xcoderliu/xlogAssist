@@ -14,7 +14,7 @@
 
         <div class="main-content">
             <!-- 左侧日志显示区域 -->
-            <div class="log-display-area">
+            <div class="log-display-area" id="logDisplayArea">
                 <div class="upload-section">
                     <div class="drop-zone" id="dropZone">
                         <div class="drop-content">
@@ -61,8 +61,11 @@
                 </div>
             </div>
 
+            <!-- 分隔条 -->
+            <div class="resizer" id="resizer"></div>
+            
             <!-- 右侧排查区域 -->
-            <div class="investigation-area">
+            <div class="investigation-area" id="investigationArea">
                 <div class="investigation-header">
                     <h3>排查区</h3>
                     <div class="investigation-controls">

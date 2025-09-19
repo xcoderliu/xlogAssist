@@ -7,6 +7,7 @@ import UIRenderer from './uiRenderer.js';
 import ContextMenu from './contextMenu.js';
 import Investigation from './investigation.js';
 import ExportManager from './export.js';
+import Resizer from './resizer.js';
 import { escapeHtml, selectLine, getRuleId, getActiveRules } from './utils.js';
 
 // 扩展核心类的功能
@@ -88,10 +89,18 @@ Object.assign(LogAnalyzer.prototype, {
     getActiveRules
 });
 
+// 扩展核心类以包含分隔条功能
+Object.assign(LogAnalyzer.prototype, {
+    // 分隔条相关方法
+    initializeResizer: function() { return new Resizer(this); }
+});
+
 // 初始化应用
 let app;
 document.addEventListener('DOMContentLoaded', () => {
     app = new LogAnalyzer();
     // 绑定导出导入事件
     app.bindExportImportEvents();
+    // 初始化分隔条
+    app.initializeResizer();
 });

@@ -46,17 +46,20 @@ header h1 {
     flex: 1;
     min-height: 0;
     overflow: hidden;
+    position: relative;
 }
 
 /* 日志显示区域 */
 .log-display-area {
-    flex: 1;
+    flex: none; /* 改为none，由JavaScript控制宽度 */
     display: flex;
     flex-direction: column;
     min-width: 0;
     min-height: 0;
     padding: 24px;
     border-right: 1px solid #dadce0;
+    position: relative;
+    width: 50%; /* 默认宽度，会被JavaScript覆盖 */
 }
 
 /* 上传区域 */
@@ -237,12 +240,13 @@ header h1 {
 
 /* 排查区域 */
 .investigation-area {
-    flex: 1;
+    flex: 1; /* 保持flex:1，让它填充剩余空间 */
     min-width: 0;
     min-height: 0;
     padding: 24px;
     background: #f8f9fa;
     border-left: 1px solid #dadce0;
+    position: relative;
 }
 
 .investigation-header {
@@ -815,7 +819,10 @@ footer {
 }
 
 @media (min-width: 1025px) {
-    .log-display-area,
+    .log-display-area {
+        flex: none; /* 保持由JavaScript控制宽度 */
+        min-width: 0;
+    }
     .investigation-area {
         flex: 1;
         min-width: 0;
@@ -969,4 +976,57 @@ footer {
 
 .delete-rule:hover {
     background: #d33426;
+}
+
+/* 分隔条样式 */
+.resizer {
+    width: 8px;
+    background: #dadce0;
+    cursor: col-resize;
+    position: relative;
+    z-index: 10;
+    transition: background-color 0.2s ease;
+}
+
+.resizer:hover {
+    background: #1a73e8;
+}
+
+.resizer:active {
+    background: #1967d2;
+}
+
+.resizer::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 2px;
+    height: 24px;
+    background: #9aa0a6;
+    border-radius: 1px;
+}
+
+.resizer:hover::before {
+    background: #ffffff;
+}
+
+/* 拖动时的样式 */
+.resizer.dragging {
+    background: #1a73e8;
+}
+
+.resizer.dragging::before {
+    background: #ffffff;
+}
+
+/* 拖动时的文档样式 */
+body.resizing {
+    cursor: col-resize;
+    user-select: none;
+}
+
+body.resizing * {
+    cursor: col-resize !important;
 }
