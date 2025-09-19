@@ -234,14 +234,16 @@ class SearchFilter {
         this.core.prevMatch.style.display = 'none';
         this.core.nextMatch.style.display = 'none';
         
-        // 重新渲染日志以恢复原始内容
-        if (this.core.renderLogs) {
-            this.core.renderLogs();
-        }
+        // 先清除搜索状态，然后再重新渲染
         this.core.isRealSearchMode = false;
         this.core.searchResults = [];
         this.core.currentSearchIndex = -1;
         this.core.searchTerm = '';
+        
+        // 重新渲染日志以恢复原始内容
+        if (this.core.renderLogs) {
+            this.core.renderLogs();
+        }
         this.core.setStatus('已清除搜索');
         
         // 重新渲染排查区以清除搜索高亮
