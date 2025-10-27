@@ -5,6 +5,7 @@ class LogAnalyzer {
         this.regexRules = [];
         this.configGroups = [];
         this.activeGroups = new Set();
+        this.filterGroups = new Set(); // 新增：用于存储启用过滤的配置组
         this.currentFile = null;
         this.editingIndex = undefined;
         
@@ -156,6 +157,7 @@ class LogAnalyzer {
         localStorage.setItem('xlogAssist_regexRules', JSON.stringify(this.regexRules));
         localStorage.setItem('xlogAssist_configGroups', JSON.stringify(this.configGroups));
         localStorage.setItem('xlogAssist_activeGroups', JSON.stringify(Array.from(this.activeGroups)));
+        localStorage.setItem('xlogAssist_filterGroups', JSON.stringify(Array.from(this.filterGroups))); // 新增：保存过滤配置组
         localStorage.setItem('xlogAssist_settings', JSON.stringify(this.settings));
     }
 
@@ -163,6 +165,7 @@ class LogAnalyzer {
         const savedRules = localStorage.getItem('xlogAssist_regexRules');
         const savedGroups = localStorage.getItem('xlogAssist_configGroups');
         const savedActiveGroups = localStorage.getItem('xlogAssist_activeGroups');
+        const savedFilterGroups = localStorage.getItem('xlogAssist_filterGroups'); // 新增：加载过滤配置组
         const savedSettings = localStorage.getItem('xlogAssist_settings');
         
         if (savedRules) {
@@ -175,6 +178,10 @@ class LogAnalyzer {
         
         if (savedActiveGroups) {
             this.activeGroups = new Set(JSON.parse(savedActiveGroups));
+        }
+        
+        if (savedFilterGroups) {
+            this.filterGroups = new Set(JSON.parse(savedFilterGroups)); // 新增：加载过滤配置组
         }
         
         if (savedSettings) {

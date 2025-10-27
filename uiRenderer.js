@@ -19,7 +19,12 @@ class UIRenderer {
         }
         
         // 获取要渲染的日志（应用过滤）
-        const logsToRender = this.core.filteredLogs || this.core.logs;
+        let logsToRender = this.core.filteredLogs || this.core.logs;
+        
+        // 应用配置组过滤（如果启用了过滤）
+        if (this.core.filterGroups.size > 0) {
+            logsToRender = this.applyGroupFiltering(logsToRender);
+        }
         
         if (logsToRender.length === 0) {
             this.core.logContent.innerHTML = `
@@ -294,6 +299,40 @@ class UIRenderer {
         }
         
         return tempDiv.innerHTML;
+    }
+
+    // 应用配置组过滤
+    applyGroupFiltering(logs) {
+        // 获取启用过滤的配置组中的规则
+        const filterRuleIds = new Set();
+        this.core.configGroups.forEach(group => {
+            if (this.core.filterGroups.has(group.id)) {
+                group.ruleIds.forEach(ruleId => filterRuleIds.add(ruleId));
+            }
+        });
+
+        // 如果没有启用过滤的规则，返回所有日志
+        if (filterRuleIds.size === 0) {
+            return logs;
+        }
+
+        // 获取对应的规则对象
+        const filterRules = this.core.regexRules.filter(rule =>
+            filterRuleIds.has(this.core.getRuleId(rule))
+        );
+
+        // 过滤日志：只显示匹配任意过滤规则的日志
+        return logs.filter(log => {
+            return filterRules.some(rule => {
+                try {
+                    const regex = new RegExp(rule.pattern, 'gi');
+                    return regex.test(log.content);
+                } catch (error) {
+                    console.warn('正则表达式错误:', rule.pattern, error);
+                    return false;
+                }
+            });
+        });
     }
 }
 

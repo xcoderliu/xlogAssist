@@ -54,6 +54,10 @@ class ConfigManager {
             if (this.core.renderLogs) {
                 this.core.renderLogs(); // 重新渲染以应用新规则
             }
+            // 修复：规则变化时重新渲染排查区
+            if (this.core.renderInvestigationLogs) {
+                this.core.renderInvestigationLogs();
+            }
             
             // 清空表单并重置按钮文字
             document.getElementById('regexPattern').value = '';
@@ -162,6 +166,10 @@ class ConfigManager {
             if (this.core.renderLogs) {
                 this.core.renderLogs();
             }
+            // 修复：规则删除时重新渲染排查区
+            if (this.core.renderInvestigationLogs) {
+                this.core.renderInvestigationLogs();
+            }
             this.core.setStatus('规则已删除');
         }
     }
@@ -251,28 +259,78 @@ class ConfigManager {
             const checkboxItem = document.createElement('div');
             checkboxItem.className = 'group-checkbox-item';
             checkboxItem.innerHTML = `
-                <input type="checkbox" id="group-${group.id}" value="${group.id}"
-                       ${this.core.activeGroups.has(group.id) ? 'checked' : ''}>
-                <label for="group-${group.id}">${group.name}</label>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                        <div style="display: flex; align-items: center; gap: 4px;">
+                            <input type="checkbox" id="group-${group.id}" value="${group.id}"
+                                   ${this.core.activeGroups.has(group.id) ? 'checked' : ''}>
+                            <label for="group-${group.id}">${group.name}</label>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 4px; margin-left: 20px;">
+                            <input type="checkbox" id="filter-${group.id}" value="${group.id}"
+                                   ${this.core.filterGroups.has(group.id) ? 'checked' : ''}>
+                            <label for="filter-${group.id}" style="font-size: 12px; color: #666;">过滤日志</label>
+                        </div>
+                    </div>
+                </div>
             `;
             this.core.groupCheckboxes.appendChild(checkboxItem);
         });
 
-        // 绑定复选框变化事件
+        // 绑定激活配置组复选框变化事件
         this.core.groupCheckboxes.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
-            checkbox.addEventListener('change', (e) => {
-                const groupId = e.target.value;
-                if (e.target.checked) {
-                    this.core.activeGroups.add(groupId);
-                } else {
-                    this.core.activeGroups.delete(groupId);
-                }
-                this.core.saveConfig();
-                if (this.core.renderLogs) {
-                    this.core.renderLogs();
-                }
-                this.core.setStatus('配置组已更新');
-            });
+            if (checkbox.id.startsWith('group-')) {
+                checkbox.addEventListener('change', (e) => {
+                    const groupId = e.target.value;
+                    if (e.target.checked) {
+                        this.core.activeGroups.add(groupId);
+                    } else {
+                        this.core.activeGroups.delete(groupId);
+                        // 如果取消激活，同时取消过滤
+                        this.core.filterGroups.delete(groupId);
+                        // 更新对应的过滤复选框状态
+                        const filterCheckbox = document.getElementById(`filter-${groupId}`);
+                        if (filterCheckbox) {
+                            filterCheckbox.checked = false;
+                        }
+                    }
+                    this.core.saveConfig();
+                    if (this.core.renderLogs) {
+                        this.core.renderLogs();
+                    }
+                    // 修复：配置组变化时重新渲染排查区
+                    if (this.core.renderInvestigationLogs) {
+                        this.core.renderInvestigationLogs();
+                    }
+                    this.core.setStatus('配置组已更新');
+                });
+            }
+        });
+
+        // 绑定过滤配置组复选框变化事件
+        this.core.groupCheckboxes.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+            if (checkbox.id.startsWith('filter-')) {
+                checkbox.addEventListener('change', (e) => {
+                    const groupId = e.target.value;
+                    if (e.target.checked) {
+                        // 确保配置组已激活
+                        this.core.activeGroups.add(groupId);
+                        this.core.filterGroups.add(groupId);
+                        // 更新对应的激活复选框状态
+                        const groupCheckbox = document.getElementById(`group-${groupId}`);
+                        if (groupCheckbox) {
+                            groupCheckbox.checked = true;
+                        }
+                    } else {
+                        this.core.filterGroups.delete(groupId);
+                    }
+                    this.core.saveConfig();
+                    if (this.core.renderLogs) {
+                        this.core.renderLogs();
+                    }
+                    this.core.setStatus('过滤设置已更新');
+                });
+            }
         });
     }
 
@@ -287,6 +345,7 @@ class ConfigManager {
         if (confirm('确定要删除这个配置组吗？')) {
             const group = this.core.configGroups[index];
             this.core.activeGroups.delete(group.id);
+            this.core.filterGroups.delete(group.id); // 新增：清理过滤配置组
             this.core.configGroups.splice(index, 1);
             this.core.saveConfig();
             this.renderGroupsList();
@@ -406,6 +465,10 @@ class ConfigManager {
         this.renderGroupRulesList(group);
         this.renderAvailableRulesList(group);
         this.renderGroupsList(); // 更新配置组列表显示
+        // 修复：配置组规则变化时重新渲染排查区
+        if (this.core.renderInvestigationLogs) {
+            this.core.renderInvestigationLogs();
+        }
         this.core.setStatus('规则已添加到配置组');
     }
 
@@ -440,6 +503,10 @@ class ConfigManager {
             this.renderGroupRulesList(group);
             this.renderAvailableRulesList(group);
             this.renderGroupsList(); // 更新配置组列表显示
+            // 修复：配置组规则变化时重新渲染排查区
+            if (this.core.renderInvestigationLogs) {
+                this.core.renderInvestigationLogs();
+            }
             this.core.setStatus('规则已从配置组移除');
         }
     }
@@ -451,7 +518,8 @@ class ConfigManager {
             timestamp: new Date().toISOString(),
             regexRules: this.core.regexRules,
             configGroups: this.core.configGroups,
-            activeGroups: Array.from(this.core.activeGroups)
+            activeGroups: Array.from(this.core.activeGroups),
+            filterGroups: Array.from(this.core.filterGroups) // 新增：导出过滤配置组
         };
 
         const jsonString = JSON.stringify(configData, null, 2);
@@ -483,6 +551,11 @@ class ConfigManager {
 
                 // 合并配置
                 this.mergeConfig(configData);
+                
+                // 导入过滤配置组（如果存在）
+                if (configData.filterGroups) {
+                    this.core.filterGroups = new Set(configData.filterGroups);
+                }
                 
                 this.core.saveConfig();
                 this.renderRulesList();
