@@ -1398,6 +1398,13 @@ footer .btn {
     margin-bottom: 12px;
     background: #f8f9fa;
     gap: 16px;
+    transition: all 0.2s ease;
+}
+
+.diagnosis-rule-item.disabled {
+    background: #f1f3f4;
+    opacity: 0.7;
+    border-color: #e8eaed;
 }
 
 .diagnosis-rule-content {
@@ -1417,6 +1424,10 @@ footer .btn {
     font-weight: 600;
     font-size: 16px;
     color: #202124;
+}
+
+.diagnosis-rule-item.disabled .diagnosis-rule-name {
+    color: #9aa0a6;
 }
 
 .diagnosis-rule-severity {
@@ -1443,11 +1454,19 @@ footer .btn {
     color: #137333;
 }
 
+.diagnosis-rule-item.disabled .diagnosis-rule-severity {
+    opacity: 0.6;
+}
+
 .diagnosis-rule-description {
     color: #5f6368;
     font-size: 14px;
     margin-bottom: 8px;
     line-height: 1.4;
+}
+
+.diagnosis-rule-item.disabled .diagnosis-rule-description {
+    color: #9aa0a6;
 }
 
 .diagnosis-rule-patterns,
@@ -1457,10 +1476,86 @@ footer .btn {
     margin-bottom: 4px;
 }
 
+.diagnosis-rule-item.disabled .diagnosis-rule-patterns,
+.diagnosis-rule-item.disabled .diagnosis-rule-category {
+    color: #9aa0a6;
+}
+
 .diagnosis-rule-actions {
     display: flex;
     gap: 8px;
     flex-shrink: 0;
+    align-items: center;
+}
+
+/* 启用/禁用切换开关 */
+.diagnosis-rule-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    padding: 6px 12px;
+    border-radius: 20px;
+    background: #f1f3f4;
+    border: 1px solid #dadce0;
+    transition: all 0.2s ease;
+    font-size: 12px;
+    font-weight: 500;
+    color: #5f6368;
+}
+
+.diagnosis-rule-toggle:hover {
+    background: #e8eaed;
+}
+
+.diagnosis-rule-toggle.enabled {
+    background: #e6f4ea;
+    border-color: #34a853;
+    color: #137333;
+}
+
+.diagnosis-rule-toggle.disabled {
+    background: #fce8e6;
+    border-color: #ea4335;
+    color: #c5221f;
+}
+
+.toggle-switch {
+    position: relative;
+    width: 36px;
+    height: 20px;
+    background: #dadce0;
+    border-radius: 10px;
+    transition: all 0.2s ease;
+}
+
+.toggle-switch::before {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    background: white;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+.diagnosis-rule-toggle.enabled .toggle-switch {
+    background: #34a853;
+}
+
+.diagnosis-rule-toggle.enabled .toggle-switch::before {
+    transform: translateX(16px);
+}
+
+.diagnosis-rule-toggle.disabled .toggle-switch {
+    background: #ea4335;
+}
+
+.toggle-label {
+    font-size: 12px;
+    font-weight: 500;
 }
 
 .edit-diagnosis-rule,

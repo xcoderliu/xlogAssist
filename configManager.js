@@ -685,28 +685,39 @@ class ConfigManager {
             return;
         }
 
-        const newRule = {
-            id: `rule_${Date.now()}`,
-            name,
-            description,
-            patterns,
-            severity,
-            category: category || 'common',
-            solution,
-            customScript: document.getElementById('diagnosisRuleCustomScript').value.trim()
-        };
-
         // 检查是否是编辑模式
         if (this.core.editingDiagnosisIndex !== undefined) {
             // 编辑模式：更新现有规则
-            this.core.diagnosisRules[this.core.editingDiagnosisIndex] = newRule;
+            const existingRule = this.core.diagnosisRules[this.core.editingDiagnosisIndex];
+            existingRule.name = name;
+            existingRule.description = description;
+            existingRule.patterns = patterns;
+            existingRule.severity = severity;
+            existingRule.category = category || 'common';
+            existingRule.solution = solution;
+            existingRule.customScript = document.getElementById('diagnosisRuleCustomScript').value.trim();
+            
             delete this.core.editingDiagnosisIndex;
             this.core.setStatus('诊断规则更新成功');
         } else {
             // 添加模式：添加新规则
+            const newRule = {
+                id: `rule_${Date.now()}`,
+                name,
+                description,
+                patterns,
+                severity,
+                category: category || 'common',
+                solution,
+                customScript: document.getElementById('diagnosisRuleCustomScript').value.trim(),
+                enabled: true // 新增：默认启用规则
+            };
             this.core.addDiagnosisRule(newRule);
             this.core.setStatus('诊断规则添加成功');
         }
+
+        // 保存诊断规则
+        localStorage.setItem('xlogAssist_diagnosisRules', JSON.stringify(this.core.diagnosisRules));
         
         this.renderDiagnosisRulesList();
         this.clearDiagnosisRuleForm();
@@ -717,19 +728,16 @@ class ConfigManager {
         const container = document.getElementById('diagnosisRulesList');
         if (!container) return;
 
-        // 使用core中的diagnosisRules，确保数据同步
-        const diagnosisRules = this.core.diagnosisRules;
-
-        if (diagnosisRules.length === 0) {
+        if (this.core.diagnosisRules.length === 0) {
             container.innerHTML = '<h4>当前诊断规则:</h4><div class="empty-diagnosis-rules">暂无诊断规则</div>';
             return;
         }
 
         container.innerHTML = '<h4>当前诊断规则:</h4>';
         
-        diagnosisRules.forEach((rule, index) => {
+        this.core.diagnosisRules.forEach((rule, index) => {
             const ruleElement = document.createElement('div');
-            ruleElement.className = 'diagnosis-rule-item';
+            ruleElement.className = `diagnosis-rule-item ${rule.enabled ? '' : 'disabled'}`;
             ruleElement.innerHTML = `
                 <div class="diagnosis-rule-content">
                     <div class="diagnosis-rule-header">
@@ -745,6 +753,10 @@ class ConfigManager {
                     </div>
                 </div>
                 <div class="diagnosis-rule-actions">
+                    <div class="diagnosis-rule-toggle ${rule.enabled ? 'enabled' : 'disabled'}" data-index="${index}">
+                        <div class="toggle-switch"></div>
+                        <span class="toggle-label">${rule.enabled ? '已启用' : '已禁用'}</span>
+                    </div>
                     <button class="edit-diagnosis-rule" data-index="${index}">编辑</button>
                     <button class="delete-diagnosis-rule" data-index="${index}">删除</button>
                 </div>
@@ -752,14 +764,23 @@ class ConfigManager {
             container.appendChild(ruleElement);
         });
 
-        // 绑定诊断规则操作事件
-        this.bindDiagnosisRuleActionEvents();
+        // 立即绑定诊断规则操作事件
+        setTimeout(() => {
+            this.bindDiagnosisRuleActionEvents();
+        }, 0);
     }
 
     // 绑定诊断规则操作事件
     bindDiagnosisRuleActionEvents() {
         const container = document.getElementById('diagnosisRulesList');
         if (!container) return;
+
+        container.querySelectorAll('.diagnosis-rule-toggle').forEach(toggle => {
+            toggle.addEventListener('click', (e) => {
+                const index = parseInt(e.currentTarget.dataset.index);
+                this.toggleDiagnosisRule(index);
+            });
+        });
 
         container.querySelectorAll('.edit-diagnosis-rule').forEach(button => {
             button.addEventListener('click', (e) => {
@@ -776,9 +797,18 @@ class ConfigManager {
         });
     }
 
+    // 切换诊断规则状态
+    toggleDiagnosisRule(index) {
+        const rule = this.core.diagnosisRules[index];
+        rule.enabled = !rule.enabled;
+        // 直接调用诊断模块的保存方法
+        localStorage.setItem('xlogAssist_diagnosisRules', JSON.stringify(this.core.diagnosisRules));
+        this.renderDiagnosisRulesList();
+        this.core.setStatus(`诊断规则 "${rule.name}" 已${rule.enabled ? '启用' : '禁用'}`);
+    }
+
     // 编辑诊断规则
     editDiagnosisRule(index) {
-        // 使用core中的diagnosisRules，确保数据同步
         const rule = this.core.diagnosisRules[index];
         
         // 填充表单
@@ -788,6 +818,7 @@ class ConfigManager {
         document.getElementById('diagnosisRuleSeverity').value = rule.severity;
         document.getElementById('diagnosisRuleCategory').value = rule.category;
         document.getElementById('diagnosisRuleSolution').value = rule.solution;
+        document.getElementById('diagnosisRuleCustomScript').value = rule.customScript || '';
 
         // 保存当前编辑的规则索引
         this.core.editingDiagnosisIndex = index;
@@ -801,7 +832,6 @@ class ConfigManager {
     // 删除诊断规则
     deleteDiagnosisRule(index) {
         if (confirm('确定要删除这个诊断规则吗？')) {
-            // 使用core中的diagnosisRules，确保数据同步
             const ruleId = this.core.diagnosisRules[index].id;
             this.core.deleteDiagnosisRule(ruleId);
             this.renderDiagnosisRulesList();
@@ -818,9 +848,10 @@ class ConfigManager {
         document.getElementById('diagnosisRuleCategory').value = '';
         document.getElementById('diagnosisRuleSolution').value = '';
         document.getElementById('diagnosisRuleCustomScript').value = '';
-        document.getElementById('addDiagnosisRule').textContent = '添加诊断规则';
+        document.getElementById('addDiagnosisRule').textContent = '添加规则';
         delete this.core.editingDiagnosisIndex;
     }
+
 }
 
 export default ConfigManager;

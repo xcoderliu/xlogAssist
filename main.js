@@ -102,8 +102,10 @@ Object.assign(LogAnalyzer.prototype, {
     addDiagnosisRule: function(rule) { return new Diagnosis(this).addDiagnosisRule(rule); },
     updateDiagnosisRule: function(ruleId, updatedRule) { return new Diagnosis(this).updateDiagnosisRule(ruleId, updatedRule); },
     deleteDiagnosisRule: function(ruleId) { return new Diagnosis(this).deleteDiagnosisRule(ruleId); },
-    renderDiagnosisRulesList: function() { return new Diagnosis(this).renderDiagnosisRulesList(); },
-    editDiagnosisRule: function(index) { return new Diagnosis(this).editDiagnosisRule(index); }
+    renderDiagnosisRulesList: function() { return new ConfigManager(this).renderDiagnosisRulesList(); },
+    editDiagnosisRule: function(index) { return new ConfigManager(this).editDiagnosisRule(index); },
+    toggleDiagnosisRule: function(index) { return new ConfigManager(this).toggleDiagnosisRule(index); },
+    deleteDiagnosisRuleByIndex: function(index) { return new ConfigManager(this).deleteDiagnosisRule(index); }
 });
 
 // 扩展核心类以包含分隔条功能

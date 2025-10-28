@@ -40,6 +40,11 @@ class Diagnosis {
         // 对每条日志应用诊断规则
         this.core.logs.forEach((log, index) => {
             this.core.diagnosisRules.forEach(rule => {
+                // 检查规则是否启用
+                if (!rule.enabled) {
+                    return; // 跳过禁用的规则
+                }
+                
                 rule.patterns.forEach(pattern => {
                     try {
                         const regex = new RegExp(pattern, 'i');
@@ -149,6 +154,9 @@ class Diagnosis {
             this.bindTabEvents();
             // 绑定诊断按钮事件
             this.bindDiagnosisEvents();
+            
+            // 确保默认显示排查区
+            this.updateControlButtons('investigation');
         }
     }
 
@@ -319,9 +327,11 @@ class Diagnosis {
                             <span class="diagnosis-category">${result.category}</span>
                         </div>
                         <div class="diagnosis-description">${result.description}</div>
+                        ${result.solution ? `
                         <div class="diagnosis-solution">
                             <strong>解决方案:</strong> ${result.solution}
                         </div>
+                        ` : ''}
                         ${result.customResult ? `
                         <div class="diagnosis-custom-result">
                             <strong>自定义分析结果:</strong>
@@ -496,89 +506,6 @@ class Diagnosis {
         this.core.setStatus('诊断结果导出成功');
     }
 
-    // 渲染诊断规则列表（用于配置面板）
-    renderDiagnosisRulesList() {
-        const container = document.getElementById('diagnosisRulesList');
-        if (!container) return;
-
-        if (this.core.diagnosisRules.length === 0) {
-            container.innerHTML = '<h4>当前诊断规则:</h4><div class="empty-diagnosis-rules">暂无诊断规则</div>';
-            return;
-        }
-
-        container.innerHTML = '<h4>当前诊断规则:</h4>';
-        
-        this.core.diagnosisRules.forEach((rule, index) => {
-            const ruleElement = document.createElement('div');
-            ruleElement.className = 'diagnosis-rule-item';
-            ruleElement.innerHTML = `
-                <div class="diagnosis-rule-content">
-                    <div class="diagnosis-rule-header">
-                        <span class="diagnosis-rule-name">${rule.name}</span>
-                        <span class="diagnosis-rule-severity severity-${rule.severity}">${rule.severity}</span>
-                    </div>
-                    <div class="diagnosis-rule-description">${rule.description}</div>
-                    <div class="diagnosis-rule-patterns">
-                        <strong>匹配模式:</strong> ${rule.patterns.join(', ')}
-                    </div>
-                    <div class="diagnosis-rule-category">
-                        <strong>类别:</strong> ${rule.category}
-                    </div>
-                </div>
-                <div class="diagnosis-rule-actions">
-                    <button class="edit-diagnosis-rule" data-index="${index}">编辑</button>
-                    <button class="delete-diagnosis-rule" data-index="${index}">删除</button>
-                </div>
-            `;
-            container.appendChild(ruleElement);
-        });
-
-        // 绑定诊断规则操作事件
-        this.bindDiagnosisRuleActionEvents();
-    }
-
-    // 绑定诊断规则操作事件
-    bindDiagnosisRuleActionEvents() {
-        const container = document.getElementById('diagnosisRulesList');
-        if (!container) return;
-
-        container.querySelectorAll('.edit-diagnosis-rule').forEach(button => {
-            button.addEventListener('click', (e) => {
-                const index = parseInt(e.target.dataset.index);
-                this.editDiagnosisRule(index);
-            });
-        });
-
-        container.querySelectorAll('.delete-diagnosis-rule').forEach(button => {
-            button.addEventListener('click', (e) => {
-                const index = parseInt(e.target.dataset.index);
-                this.deleteDiagnosisRule(this.core.diagnosisRules[index].id);
-                this.renderDiagnosisRulesList();
-            });
-        });
-    }
-
-    // 编辑诊断规则
-    editDiagnosisRule(index) {
-        const rule = this.core.diagnosisRules[index];
-        
-        // 填充表单
-        document.getElementById('diagnosisRuleName').value = rule.name;
-        document.getElementById('diagnosisRuleDescription').value = rule.description;
-        document.getElementById('diagnosisRulePatterns').value = rule.patterns.join('\n');
-        document.getElementById('diagnosisRuleSeverity').value = rule.severity;
-        document.getElementById('diagnosisRuleCategory').value = rule.category;
-        document.getElementById('diagnosisRuleSolution').value = rule.solution;
-        document.getElementById('diagnosisRuleCustomScript').value = rule.customScript || '';
-
-        // 保存当前编辑的规则索引
-        this.editingDiagnosisIndex = index;
-        
-        // 更改按钮文字
-        document.getElementById('addDiagnosisRule').textContent = '更新规则';
-        
-        this.core.setStatus('诊断规则已加载到编辑表单，修改后点击"更新规则"');
-    }
 
     // 执行自定义脚本
     executeCustomScript(script, logContent, matchedPattern) {
