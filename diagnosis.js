@@ -44,6 +44,17 @@ class Diagnosis {
                     try {
                         const regex = new RegExp(pattern, 'i');
                         if (regex.test(log.content)) {
+                            let customResult = null;
+                            
+                            // 如果有自定义脚本，执行脚本处理
+                            if (rule.customScript) {
+                                try {
+                                    customResult = this.executeCustomScript(rule.customScript, log.content, pattern);
+                                } catch (error) {
+                                    console.warn('自定义脚本执行错误:', error);
+                                }
+                            }
+                            
                             this.diagnosisResults.push({
                                 ruleId: rule.id,
                                 ruleName: rule.name,
@@ -54,7 +65,8 @@ class Diagnosis {
                                 logIndex: index,
                                 logContent: log.content,
                                 matchedPattern: pattern,
-                                timestamp: new Date().toISOString()
+                                timestamp: new Date().toISOString(),
+                                customResult: customResult
                             });
                         }
                     } catch (error) {
@@ -280,19 +292,19 @@ class Diagnosis {
         diagnosisContent.innerHTML = `
             <div class="diagnosis-stats">
                 <div class="stats-grid">
-                    <div class="stat-item">
+                    <div class="stat-item" data-filter="all">
                         <span class="stat-value">${stats.total}</span>
                         <span class="stat-label">总问题数</span>
                     </div>
-                    <div class="stat-item">
+                    <div class="stat-item" data-filter="error">
                         <span class="stat-value">${stats.bySeverity.error || 0}</span>
                         <span class="stat-label">严重问题</span>
                     </div>
-                    <div class="stat-item">
+                    <div class="stat-item" data-filter="warning">
                         <span class="stat-value">${stats.bySeverity.warning || 0}</span>
                         <span class="stat-label">警告问题</span>
                     </div>
-                    <div class="stat-item">
+                    <div class="stat-item" data-filter="info">
                         <span class="stat-value">${stats.bySeverity.info || 0}</span>
                         <span class="stat-label">信息问题</span>
                     </div>
@@ -300,7 +312,7 @@ class Diagnosis {
             </div>
             <div class="diagnosis-list">
                 ${this.diagnosisResults.map(result => `
-                    <div class="diagnosis-item severity-${result.severity}" data-log-index="${result.logIndex}">
+                    <div class="diagnosis-item severity-${result.severity}" data-log-index="${result.logIndex}" data-severity="${result.severity}">
                         <div class="diagnosis-header">
                             <span class="severity-badge">${result.severity}</span>
                             <span class="diagnosis-title">${result.ruleName}</span>
@@ -310,6 +322,12 @@ class Diagnosis {
                         <div class="diagnosis-solution">
                             <strong>解决方案:</strong> ${result.solution}
                         </div>
+                        ${result.customResult ? `
+                        <div class="diagnosis-custom-result">
+                            <strong>自定义分析结果:</strong>
+                            <pre>${this.formatCustomResult(result.customResult)}</pre>
+                        </div>
+                        ` : ''}
                         <div class="diagnosis-details">
                             <span>匹配模式: ${result.matchedPattern}</span>
                             <span>日志行: ${result.logIndex + 1}</span>
@@ -321,6 +339,12 @@ class Diagnosis {
                 `).join('')}
             </div>
         `;
+
+        // 绑定统计项点击事件
+        this.bindStatsFilterEvents();
+
+        // 默认选中"全部问题"
+        this.updateStatsFilterStyle('all');
 
         // 绑定诊断项点击事件
         this.bindDiagnosisItemEvents();
@@ -545,6 +569,7 @@ class Diagnosis {
         document.getElementById('diagnosisRuleSeverity').value = rule.severity;
         document.getElementById('diagnosisRuleCategory').value = rule.category;
         document.getElementById('diagnosisRuleSolution').value = rule.solution;
+        document.getElementById('diagnosisRuleCustomScript').value = rule.customScript || '';
 
         // 保存当前编辑的规则索引
         this.editingDiagnosisIndex = index;
@@ -553,6 +578,106 @@ class Diagnosis {
         document.getElementById('addDiagnosisRule').textContent = '更新规则';
         
         this.core.setStatus('诊断规则已加载到编辑表单，修改后点击"更新规则"');
+    }
+
+    // 执行自定义脚本
+    executeCustomScript(script, logContent, matchedPattern) {
+        try {
+            // 创建安全的执行环境
+            const safeFunctions = {
+                console: {
+                    log: (...args) => console.log('[Custom Script]', ...args),
+                    warn: (...args) => console.warn('[Custom Script]', ...args),
+                    error: (...args) => console.error('[Custom Script]', ...args)
+                },
+                JSON: JSON,
+                Math: Math,
+                String: String,
+                Number: Number,
+                Array: Array,
+                Object: Object,
+                Date: Date,
+                RegExp: RegExp
+            };
+
+            // 创建执行上下文
+            const context = {
+                logContent: logContent,
+                matchedPattern: matchedPattern,
+                ...safeFunctions
+            };
+
+            // 使用Function构造函数创建安全的函数
+            const func = new Function(...Object.keys(context), `
+                try {
+                    ${script}
+                } catch (error) {
+                    return { error: error.message };
+                }
+            `);
+
+            // 执行脚本
+            const result = func(...Object.values(context));
+            return result;
+        } catch (error) {
+            return { error: error.message };
+        }
+    
+    }
+
+    // 绑定统计项点击事件
+    bindStatsFilterEvents() {
+        const statItems = document.querySelectorAll('.diagnosis-stats .stat-item');
+        statItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const filter = item.dataset.filter;
+                this.filterDiagnosisResults(filter);
+            });
+        });
+    }
+
+    // 过滤诊断结果
+    filterDiagnosisResults(severityFilter) {
+        const diagnosisItems = document.querySelectorAll('.diagnosis-item');
+        
+        diagnosisItems.forEach(item => {
+            if (severityFilter === 'all') {
+                // 显示所有项目
+                item.style.display = 'block';
+            } else {
+                // 根据严重程度过滤
+                const itemSeverity = item.dataset.severity;
+                if (itemSeverity === severityFilter) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            }
+        });
+
+        // 更新统计项样式
+        this.updateStatsFilterStyle(severityFilter);
+    }
+
+    // 更新统计项过滤样式
+    updateStatsFilterStyle(activeFilter) {
+        const statItems = document.querySelectorAll('.diagnosis-stats .stat-item');
+        statItems.forEach(item => {
+            if (item.dataset.filter === activeFilter) {
+                item.classList.add('active');
+            } else {
+                item.classList.remove('active');
+            }
+        });
+    }
+
+    // 格式化自定义结果
+    formatCustomResult(customResult) {
+        if (!customResult || customResult.error) {
+            return JSON.stringify(customResult, null, 2);
+        }
+        
+        return JSON.stringify(customResult, null, 2);
     }
 }
 

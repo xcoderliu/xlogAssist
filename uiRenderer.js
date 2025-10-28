@@ -5,75 +5,159 @@ class UIRenderer {
     }
 
     // 渲染日志内容
-    renderLogs() {
-        this.core.logContent.innerHTML = '';
+    async renderLogs() {
+        // 显示loading状态
+        this.showLoading('渲染日志中...');
         
-        // 控制拖拽区域的显示
-        const uploadSection = this.core.dropZone.closest('.upload-section');
-        if (this.core.logs.length === 0) {
-            this.core.dropZone.style.display = 'block';
-            uploadSection.style.display = 'block';
-        } else {
-            this.core.dropZone.style.display = 'none';
-            uploadSection.style.display = 'none';
-        }
+        // 添加延迟确保loading能够显示出来
+        await new Promise(resolve => setTimeout(resolve, 100));
         
-        // 获取要渲染的日志（应用过滤）
-        let logsToRender = this.core.filteredLogs || this.core.logs;
-        
-        // 应用配置组过滤（如果启用了过滤）
-        if (this.core.filterGroups.size > 0) {
-            logsToRender = this.applyGroupFiltering(logsToRender);
-        }
-        
-        if (logsToRender.length === 0) {
-            this.core.logContent.innerHTML = `
-                <div class="empty-state">
-                    <p>${this.core.filteredLogs ? '没有找到匹配的日志' : '暂无日志内容'}</p>
-                    <p>${this.core.filteredLogs ? '请尝试其他过滤关键词' : '请上传日志文件开始分析'}</p>
-                </div>
-            `;
-            return;
-        }
-
-        logsToRender.forEach((log, index) => {
-            const lineElement = document.createElement('div');
-            lineElement.className = 'log-line';
-            lineElement.dataset.index = log.originalIndex;
+        try {
+            this.core.logContent.innerHTML = '';
             
-            // 应用正则高亮和搜索高亮
-            let content = this.applyRegexHighlighting(log.content);
-            
-            // 如果是搜索模式，应用搜索高亮
-            if (this.core.isRealSearchMode && this.core.searchTerm) {
-                content = this.applySearchHighlightingToContent(content, log.content);
+            // 控制拖拽区域的显示
+            const uploadSection = this.core.dropZone.closest('.upload-section');
+            if (this.core.logs.length === 0) {
+                this.core.dropZone.style.display = 'block';
+                uploadSection.style.display = 'block';
+            } else {
+                this.core.dropZone.style.display = 'none';
+                uploadSection.style.display = 'none';
             }
             
-            lineElement.innerHTML = content;
+            // 获取要渲染的日志（应用过滤）
+            let logsToRender = this.core.filteredLogs || this.core.logs;
             
-            // 添加点击事件选中行
-            lineElement.addEventListener('click', () => {
-                this.core.selectLine(log.originalIndex);
-            });
+            // 应用配置组过滤（如果启用了过滤）
+            if (this.core.filterGroups.size > 0) {
+                logsToRender = this.applyGroupFiltering(logsToRender);
+            }
             
-            lineElement.addEventListener('contextmenu', (e) => {
-                e.preventDefault();
-                this.core.showContextMenu(e, log.originalIndex);
-            });
+            if (logsToRender.length === 0) {
+                // 检查是否有上次日志
+                const hasLastLogs = this.core.loadLastLogs && this.core.loadLastLogs().length > 0;
+                
+                let emptyContent = `
+                    <div class="empty-state">
+                        <p>${this.core.filteredLogs ? '没有找到匹配的日志' : '暂无日志内容'}</p>
+                        <p>${this.core.filteredLogs ? '请尝试其他过滤关键词' : '请上传日志文件开始分析'}</p>
+                `;
+                
+                // 如果没有过滤且没有日志，显示快速打开按钮
+                if (!this.core.filteredLogs && hasLastLogs) {
+                    emptyContent += `
+                        <div style="margin-top: 16px;">
+                            <button id="quickOpenLastLogs" class="btn" style="background: #34a853;">
+                                快速打开上次日志
+                            </button>
+                        </div>
+                    `;
+                }
+                
+                emptyContent += `</div>`;
+                
+                this.core.logContent.innerHTML = emptyContent;
+                
+                // 绑定快速打开按钮事件
+                const quickOpenBtn = document.getElementById('quickOpenLastLogs');
+                if (quickOpenBtn) {
+                    quickOpenBtn.addEventListener('click', () => {
+                        if (this.core.quickOpenLastLogs) {
+                            this.core.quickOpenLastLogs();
+                        }
+                    });
+                }
+                
+                this.hideLoading();
+                return;
+            }
+
+            // 分批渲染日志，避免阻塞UI
+            const batchSize = 100; // 每批渲染100条日志
+            for (let i = 0; i < logsToRender.length; i += batchSize) {
+                const batch = logsToRender.slice(i, i + batchSize);
+                
+                // 渲染当前批次
+                batch.forEach((log, index) => {
+                    const lineElement = document.createElement('div');
+                    lineElement.className = 'log-line';
+                    lineElement.dataset.index = log.originalIndex;
+                    
+                    // 应用正则高亮和搜索高亮
+                    let content = this.applyRegexHighlighting(log.content);
+                    
+                    // 如果是搜索模式，应用搜索高亮
+                    if (this.core.isRealSearchMode && this.core.searchTerm) {
+                        content = this.applySearchHighlightingToContent(content, log.content);
+                    }
+                    
+                    lineElement.innerHTML = content;
+                    
+                    // 添加点击事件选中行
+                    lineElement.addEventListener('click', () => {
+                        this.core.selectLine(log.originalIndex);
+                    });
+                    
+                    lineElement.addEventListener('contextmenu', (e) => {
+                        e.preventDefault();
+                        this.core.showContextMenu(e, log.originalIndex);
+                    });
+                    
+                    this.core.logContent.appendChild(lineElement);
+                });
+                
+                // 每渲染完一批，让出控制权给浏览器
+                if (i + batchSize < logsToRender.length) {
+                    await new Promise(resolve => setTimeout(resolve, 0));
+                }
+            }
             
-            this.core.logContent.appendChild(lineElement);
-        });
-        
-        // 如果正在搜索模式，重新高亮当前搜索结果并选中对应行
-        if (this.core.isRealSearchMode && this.core.currentSearchIndex >= 0) {
-            this.highlightCurrentSearchResult(this.core.currentSearchIndex);
+            // 如果正在搜索模式，重新高亮当前搜索结果并选中对应行
+            if (this.core.isRealSearchMode && this.core.currentSearchIndex >= 0) {
+                this.highlightCurrentSearchResult(this.core.currentSearchIndex);
+            }
+            
+            // 更新选中行样式
+            this.updateSelectedLine();
+        } finally {
+            // 确保loading总是被隐藏
+            this.hideLoading();
         }
+    }
+    
+    // 显示loading状态
+    showLoading(text = '处理中...') {
+        if (!this.core.logContent) return;
         
-        // 更新选中行样式
-        this.updateSelectedLine();
+        // 先清除可能存在的loading
+        this.hideLoading();
+        
+        // 创建loading覆盖层
+        const loadingOverlay = document.createElement('div');
+        loadingOverlay.className = 'loading-overlay';
+        loadingOverlay.innerHTML = `
+            <div style="text-align: center;">
+                <div class="loading-spinner"></div>
+                <div class="loading-text">${text}</div>
+            </div>
+        `;
+        
+        this.core.logContent.appendChild(loadingOverlay);
+        this.core.logContent.classList.add('loading');
+    }
+    
+    // 隐藏loading状态
+    hideLoading() {
+        if (!this.core.logContent) return;
+        
+        const loadingOverlay = this.core.logContent.querySelector('.loading-overlay');
+        if (loadingOverlay) {
+            loadingOverlay.remove();
+        }
+        this.core.logContent.classList.remove('loading');
     }
 
-    // 应用正则表达式高亮
+    // 应用正则表达式高亮 - 优化性能版本
     applyRegexHighlighting(text) {
         let highlightedText = this.escapeHtml(text);
         let shouldHighlightLine = false;
@@ -82,21 +166,61 @@ class UIRenderer {
         // 获取当前激活的配置组中的规则
         const activeRules = this.core.getActiveRules();
         
-        activeRules.forEach(rule => {
-            try {
-                const regex = new RegExp(rule.pattern, 'gi');
-                if (rule.highlightWholeLine && regex.test(text)) {
-                    shouldHighlightLine = true;
-                    lineStyle = `style="color: ${rule.color}; background: ${rule.bgColor}"`;
-                } else if (!rule.highlightWholeLine) {
-                    highlightedText = highlightedText.replace(regex,
-                        `<span style="color: ${rule.color}; background: ${rule.bgColor}">$&</span>`
-                    );
+        // 如果没有激活的规则，直接返回
+        if (activeRules.length === 0) {
+            return highlightedText;
+        }
+        
+        // 先检查是否需要整行高亮
+        for (const rule of activeRules) {
+            if (rule.highlightWholeLine) {
+                try {
+                    const regex = new RegExp(rule.pattern, 'gi');
+                    if (regex.test(text)) {
+                        shouldHighlightLine = true;
+                        lineStyle = `style="color: ${rule.color}; background: ${rule.bgColor}"`;
+                        break; // 找到第一个整行高亮规则就停止
+                    }
+                } catch (error) {
+                    console.warn('正则表达式错误:', rule.pattern, error);
                 }
-            } catch (error) {
-                console.warn('正则表达式错误:', rule.pattern, error);
             }
-        });
+        }
+        
+        // 如果不需要整行高亮，应用部分高亮
+        if (!shouldHighlightLine) {
+            // 使用单个正则表达式合并所有规则，提高性能
+            const regexPatterns = [];
+            const ruleStyles = [];
+            
+            for (const rule of activeRules) {
+                if (!rule.highlightWholeLine) {
+                    try {
+                        // 转义正则表达式特殊字符
+                        const escapedPattern = rule.pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                        regexPatterns.push(escapedPattern);
+                        ruleStyles.push(`<span style="color: ${rule.color}; background: ${rule.bgColor}">$&</span>`);
+                    } catch (error) {
+                        console.warn('正则表达式错误:', rule.pattern, error);
+                    }
+                }
+            }
+            
+            if (regexPatterns.length > 0) {
+                // 使用单个正则表达式替换
+                const combinedRegex = new RegExp(regexPatterns.join('|'), 'gi');
+                highlightedText = highlightedText.replace(combinedRegex, (match) => {
+                    // 找到匹配的规则索引
+                    for (let i = 0; i < regexPatterns.length; i++) {
+                        const patternRegex = new RegExp(regexPatterns[i], 'i');
+                        if (patternRegex.test(match)) {
+                            return ruleStyles[i].replace('$&', match);
+                        }
+                    }
+                    return match;
+                });
+            }
+        }
         
         if (shouldHighlightLine) {
             return `<div ${lineStyle}>${highlightedText}</div>`;
@@ -107,93 +231,20 @@ class UIRenderer {
 
     // 高亮当前搜索结果
     highlightCurrentSearchResult(index) {
-        // 对所有匹配的日志行应用搜索高亮
-        this.core.logContent.querySelectorAll('.log-line').forEach(lineElement => {
-            const originalIndex = parseInt(lineElement.dataset.index);
-            const log = this.core.logs.find(l => l.originalIndex === originalIndex);
-            if (log) {
-                // 获取原始内容（包含正则高亮）
-                const originalContent = this.applyRegexHighlighting(log.content);
-                
-                // 创建临时元素来操作HTML
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = originalContent;
-                
-                // 获取文本内容（不含HTML标签）
-                const textContent = tempDiv.textContent || tempDiv.innerText || '';
-                
-                // 查找所有匹配位置
-                let matchIndex = -1;
-                const matches = [];
-                let searchText = textContent.toLowerCase();
-                
-                while ((matchIndex = searchText.indexOf(this.core.searchTerm, matchIndex + 1)) !== -1) {
-                    matches.push(matchIndex);
-                }
-                
-                if (matches.length > 0) {
-                    // 重新构建HTML，在所有匹配位置插入搜索高亮
-                    let currentPos = 0;
-                    let highlightedHtml = '';
-                    
-                    // 使用DOM遍历来正确处理HTML结构
-                    const walker = document.createTreeWalker(tempDiv, NodeFilter.SHOW_TEXT, null, false);
-                    let node;
-                    let offset = 0;
-                    
-                    while ((node = walker.nextNode())) {
-                        const nodeText = node.textContent;
-                        const nodeLength = nodeText.length;
-                        
-                        // 查找在当前文本节点内的所有匹配
-                        const nodeMatches = matches.filter(match =>
-                            match >= offset && match < offset + nodeLength
-                        );
-                        
-                        if (nodeMatches.length > 0) {
-                            let nodeHtml = '';
-                            let lastPos = 0;
-                            
-                            nodeMatches.forEach(matchPos => {
-                                const localMatchIndex = matchPos - offset;
-                                const matchEnd = localMatchIndex + this.core.searchTerm.length;
-                                
-                                // 添加匹配前的文本
-                                nodeHtml += this.escapeHtml(nodeText.substring(lastPos, localMatchIndex));
-                                // 添加高亮的匹配文本
-                                nodeHtml += `<span class="search-char-highlight">${this.escapeHtml(nodeText.substring(localMatchIndex, matchEnd))}</span>`;
-                                lastPos = matchEnd;
-                            });
-                            
-                            // 添加剩余的文本
-                            nodeHtml += this.escapeHtml(nodeText.substring(lastPos));
-                            
-                            // 替换当前节点的HTML
-                            const parent = node.parentNode;
-                            const temp = document.createElement('div');
-                            temp.innerHTML = nodeHtml;
-                            
-                            while (temp.firstChild) {
-                                parent.insertBefore(temp.firstChild, node);
-                            }
-                            parent.removeChild(node);
-                        }
-                        
-                        offset += nodeLength;
-                    }
-                    
-                    lineElement.innerHTML = tempDiv.innerHTML;
-                } else {
-                    lineElement.innerHTML = originalContent;
-                }
-            }
-        });
-        
-        // 选中当前搜索结果所在的行
+        // 只对当前搜索结果所在的行应用搜索高亮，而不是所有行
         if (index >= 0 && index < this.core.searchResults.length) {
             const result = this.core.searchResults[index];
             const lineElement = this.core.logContent.querySelector(`[data-index="${result.log.originalIndex}"]`);
+            
             if (lineElement) {
+                // 获取原始内容（包含正则高亮）
+                const originalContent = this.applyRegexHighlighting(result.log.content);
+                
+                // 应用搜索高亮
+                const highlightedContent = this.applySearchHighlightingToContent(originalContent, result.log.content);
+                lineElement.innerHTML = highlightedContent;
+                
+                // 选中并滚动到当前行
                 this.core.selectLine(result.log.originalIndex);
                 lineElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
@@ -228,77 +279,47 @@ class UIRenderer {
         return div.innerHTML;
     }
 
-    // 对内容应用搜索高亮
+    // 对内容应用搜索高亮 - 使用更简单高效的方法
     applySearchHighlightingToContent(htmlContent, originalText) {
-        // 获取纯文本内容用于搜索匹配
+        // 如果htmlContent已经是纯文本（没有HTML标签），直接处理
+        if (htmlContent === this.escapeHtml(htmlContent)) {
+            // 直接使用字符串替换，性能更好
+            const searchTerm = this.core.searchTerm;
+            const regex = new RegExp(this.escapeRegex(searchTerm), 'gi');
+            return htmlContent.replace(regex, '<span class="search-char-highlight">$&</span>');
+        }
+        
+        // 对于包含HTML的内容，使用更简单的方法
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = htmlContent;
-        const textContent = tempDiv.textContent || tempDiv.innerText || '';
         
-        // 查找所有匹配位置
-        let matchIndex = -1;
-        const matches = [];
-        let searchText = textContent.toLowerCase();
-        
-        while ((matchIndex = searchText.indexOf(this.core.searchTerm, matchIndex + 1)) !== -1) {
-            matches.push(matchIndex);
-        }
-        
-        if (matches.length === 0) {
-            return htmlContent;
-        }
-        
-        // 重新构建HTML，在所有匹配位置插入搜索高亮
-        let currentPos = 0;
-        let highlightedHtml = '';
-        
-        // 使用DOM遍历来正确处理HTML结构
+        // 使用更简单的高亮方法：遍历所有文本节点
         const walker = document.createTreeWalker(tempDiv, NodeFilter.SHOW_TEXT, null, false);
         let node;
-        let offset = 0;
         
         while ((node = walker.nextNode())) {
             const nodeText = node.textContent;
-            const nodeLength = nodeText.length;
+            const searchTerm = this.core.searchTerm;
+            const regex = new RegExp(this.escapeRegex(searchTerm), 'gi');
             
-            // 查找在当前文本节点内的所有匹配
-            const nodeMatches = matches.filter(match =>
-                match >= offset && match < offset + nodeLength
-            );
-            
-            if (nodeMatches.length > 0) {
-                let nodeHtml = '';
-                let lastPos = 0;
-                
-                nodeMatches.forEach(matchPos => {
-                    const localMatchIndex = matchPos - offset;
-                    const matchEnd = localMatchIndex + this.core.searchTerm.length;
-                    
-                    // 添加匹配前的文本
-                    nodeHtml += this.escapeHtml(nodeText.substring(lastPos, localMatchIndex));
-                    // 添加高亮的匹配文本
-                    nodeHtml += `<span class="search-char-highlight">${this.escapeHtml(nodeText.substring(localMatchIndex, matchEnd))}</span>`;
-                    lastPos = matchEnd;
-                });
-                
-                // 添加剩余的文本
-                nodeHtml += this.escapeHtml(nodeText.substring(lastPos));
-                
-                // 替换当前节点的HTML
+            if (regex.test(nodeText)) {
                 const parent = node.parentNode;
                 const temp = document.createElement('div');
-                temp.innerHTML = nodeHtml;
+                temp.innerHTML = nodeText.replace(regex, '<span class="search-char-highlight">$&</span>');
                 
                 while (temp.firstChild) {
                     parent.insertBefore(temp.firstChild, node);
                 }
                 parent.removeChild(node);
             }
-            
-            offset += nodeLength;
         }
         
         return tempDiv.innerHTML;
+    }
+    
+    // 转义正则表达式特殊字符
+    escapeRegex(text) {
+        return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     }
 
     // 应用配置组过滤

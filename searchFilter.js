@@ -37,7 +37,7 @@ class SearchFilter {
         this.core.filteredLogs = null;
         this.core.filterTerm = '';
         
-        // 重新渲染日志
+        // 重新渲染日志（会自动显示loading）
         if (this.core.renderLogs) {
             this.core.renderLogs();
         }
@@ -58,51 +58,63 @@ class SearchFilter {
             return;
         }
 
-        // 执行真正的搜索，找到所有匹配项
-        this.core.searchResults = [];
-        this.core.searchTerm = searchTerm.toLowerCase();
+        // 显示搜索中状态
+        this.core.setStatus('搜索中...', 'info');
         
-        // 在过滤后的日志或所有日志中搜索
-        const logsToSearch = this.core.filteredLogs || this.core.logs;
-        
-        logsToSearch.forEach((log, index) => {
-            const content = log.content.toLowerCase();
-            let startIndex = 0;
-            let matchIndex;
+        // 使用 setTimeout 让UI有机会更新
+        setTimeout(() => {
+            // 执行真正的搜索，找到所有匹配项
+            this.core.searchResults = [];
+            this.core.searchTerm = searchTerm.toLowerCase();
             
-            while ((matchIndex = content.indexOf(this.core.searchTerm, startIndex)) !== -1) {
-                this.core.searchResults.push({
-                    log,
-                    index,
-                    matchIndex,
-                    endIndex: matchIndex + this.core.searchTerm.length
-                });
-                startIndex = matchIndex + this.core.searchTerm.length;
+            // 在过滤后的日志或所有日志中搜索
+            const logsToSearch = this.core.filteredLogs || this.core.logs;
+            
+            // 使用更高效的搜索算法
+            const searchTermLower = this.core.searchTerm;
+            const searchTermLength = searchTermLower.length;
+            
+            for (let i = 0; i < logsToSearch.length; i++) {
+                const log = logsToSearch[i];
+                const content = log.content.toLowerCase();
+                let startIndex = 0;
+                let matchIndex;
+                
+                // 使用 while 循环而不是 indexOf 在循环中
+                while ((matchIndex = content.indexOf(searchTermLower, startIndex)) !== -1) {
+                    this.core.searchResults.push({
+                        log,
+                        index: i,
+                        matchIndex,
+                        endIndex: matchIndex + searchTermLength
+                    });
+                    startIndex = matchIndex + searchTermLength;
+                }
             }
-        });
-        
-        this.core.currentSearchIndex = -1;
-        this.core.isRealSearchMode = true;
-        
-        // 显示导航控件
-        this.core.prevMatch.style.display = 'block';
-        this.core.nextMatch.style.display = 'block';
-        this.core.clearSearch.style.display = 'block';
-        
-        if (this.core.searchResults.length === 0) {
-            this.core.setStatus('没有找到匹配的日志');
-            if (this.core.highlightCurrentSearchResult) {
-                this.core.highlightCurrentSearchResult(-1);
+            
+            this.core.currentSearchIndex = -1;
+            this.core.isRealSearchMode = true;
+            
+            // 显示导航控件
+            this.core.prevMatch.style.display = 'block';
+            this.core.nextMatch.style.display = 'block';
+            this.core.clearSearch.style.display = 'block';
+            
+            if (this.core.searchResults.length === 0) {
+                this.core.setStatus('没有找到匹配的日志');
+                if (this.core.highlightCurrentSearchResult) {
+                    this.core.highlightCurrentSearchResult(-1);
+                }
+            } else {
+                this.core.setStatus(`找到 ${this.core.searchResults.length} 个匹配项`);
+                this.navigateToNextMatch(); // 自动导航到第一个匹配项
             }
-        } else {
-            this.core.setStatus(`找到 ${this.core.searchResults.length} 个匹配项`);
-            this.navigateToNextMatch(); // 自动导航到第一个匹配项
-        }
-        
-        // 重新渲染排查区以应用搜索高亮
-        if (this.core.renderInvestigationLogs) {
-            this.core.renderInvestigationLogs();
-        }
+            
+            // 重新渲染排查区以应用搜索高亮
+            if (this.core.renderInvestigationLogs) {
+                this.core.renderInvestigationLogs();
+            }
+        }, 10);
     }
 
     // 导航到下一个匹配项
@@ -227,23 +239,24 @@ class SearchFilter {
         this.core.setStatus(`第 ${this.core.currentSearchIndex + 1}/${this.core.searchResults.length} 个匹配项`);
     }
 
-    // 清除搜索结果
+    // 清除搜索结果 - 优化性能版本
     clearSearchResults() {
         this.core.searchInput.value = '';
         this.core.clearSearch.style.display = 'none';
         this.core.prevMatch.style.display = 'none';
         this.core.nextMatch.style.display = 'none';
         
-        // 先清除搜索状态，然后再重新渲染
+        // 先清除搜索状态
         this.core.isRealSearchMode = false;
         this.core.searchResults = [];
         this.core.currentSearchIndex = -1;
         this.core.searchTerm = '';
         
-        // 重新渲染日志以恢复原始内容
+        // 重新渲染整个日志区域（会自动显示loading）
         if (this.core.renderLogs) {
             this.core.renderLogs();
         }
+        
         this.core.setStatus('已清除搜索');
         
         // 重新渲染排查区以清除搜索高亮

@@ -60,6 +60,7 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
+
 // 文件上传接口
 app.post('/api/upload', upload.single('logFile'), (req, res) => {
     try {
@@ -184,6 +185,7 @@ app.post('/api/export', (req, res) => {
 });
 
 // 工具函数
+
 
 // 解析日志内容
 function parseLogContent(content, filename) {

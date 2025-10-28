@@ -519,7 +519,8 @@ class ConfigManager {
             regexRules: this.core.regexRules,
             configGroups: this.core.configGroups,
             activeGroups: Array.from(this.core.activeGroups),
-            filterGroups: Array.from(this.core.filterGroups) // 新增：导出过滤配置组
+            filterGroups: Array.from(this.core.filterGroups), // 新增：导出过滤配置组
+            diagnosisRules: this.core.diagnosisRules // 新增：导出诊断规则
         };
 
         const jsonString = JSON.stringify(configData, null, 2);
@@ -557,10 +558,16 @@ class ConfigManager {
                     this.core.filterGroups = new Set(configData.filterGroups);
                 }
                 
+                // 导入诊断规则（如果存在）
+                if (configData.diagnosisRules) {
+                    this.mergeDiagnosisRules(configData.diagnosisRules);
+                }
+                
                 this.core.saveConfig();
                 this.renderRulesList();
                 this.renderGroupsList();
                 this.renderGroupSelection();
+                this.renderDiagnosisRulesList();
                 
                 if (this.core.renderLogs) {
                     this.core.renderLogs();
@@ -606,6 +613,19 @@ class ConfigManager {
                         existingGroup.ruleIds.push(ruleId);
                     }
                 });
+            }
+        });
+    }
+
+    // 合并诊断规则
+    mergeDiagnosisRules(diagnosisRules) {
+        diagnosisRules.forEach(newRule => {
+            const existingIndex = this.core.diagnosisRules.findIndex(rule => rule.id === newRule.id);
+            if (existingIndex === -1) {
+                this.core.diagnosisRules.push(newRule);
+            } else {
+                // 更新现有规则
+                this.core.diagnosisRules[existingIndex] = newRule;
             }
         });
     }
@@ -672,14 +692,24 @@ class ConfigManager {
             patterns,
             severity,
             category: category || 'common',
-            solution
+            solution,
+            customScript: document.getElementById('diagnosisRuleCustomScript').value.trim()
         };
 
-        // 通过core的方法添加规则
-        this.core.addDiagnosisRule(newRule);
+        // 检查是否是编辑模式
+        if (this.core.editingDiagnosisIndex !== undefined) {
+            // 编辑模式：更新现有规则
+            this.core.diagnosisRules[this.core.editingDiagnosisIndex] = newRule;
+            delete this.core.editingDiagnosisIndex;
+            this.core.setStatus('诊断规则更新成功');
+        } else {
+            // 添加模式：添加新规则
+            this.core.addDiagnosisRule(newRule);
+            this.core.setStatus('诊断规则添加成功');
+        }
+        
         this.renderDiagnosisRulesList();
         this.clearDiagnosisRuleForm();
-        this.core.setStatus('诊断规则添加成功');
     }
 
     // 渲染诊断规则列表
@@ -787,6 +817,7 @@ class ConfigManager {
         document.getElementById('diagnosisRuleSeverity').value = 'error';
         document.getElementById('diagnosisRuleCategory').value = '';
         document.getElementById('diagnosisRuleSolution').value = '';
+        document.getElementById('diagnosisRuleCustomScript').value = '';
         document.getElementById('addDiagnosisRule').textContent = '添加诊断规则';
         delete this.core.editingDiagnosisIndex;
     }

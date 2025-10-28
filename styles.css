@@ -64,34 +64,70 @@ header h1 {
 
 /* 上传区域 */
 .upload-section {
-    border: 2px dashed #dadce0;
-    border-radius: 8px;
-    padding: 32px 24px;
-    text-align: center;
-    transition: all 0.2s ease;
-    background: #f8f9fa;
     margin-bottom: 20px;
     outline: none;
 }
 
-.upload-section.drag-over {
+.upload-split {
+    display: flex;
+    gap: 16px;
+    height: 200px;
+}
+
+.drop-zone {
+    flex: 1;
+    border: 2px dashed #dadce0;
+    border-radius: 8px;
+    padding: 24px;
+    text-align: center;
+    transition: all 0.2s ease;
+    background: #f8f9fa;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
+
+.drop-zone.drag-over {
     border-color: #1a73e8;
     background: #e8f0fe;
     transform: translateY(-2px);
 }
 
-.drop-content {
+.custom-download-zone {
+    flex: 1;
+    border: 2px dashed #dadce0;
+    border-radius: 8px;
+    padding: 24px;
+    text-align: center;
+    transition: all 0.2s ease;
+    background: #f8f9fa;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
     cursor: pointer;
 }
 
-.drop-icon {
+.custom-download-zone:hover {
+    border-color: #1a73e8;
+    background: #e8f0fe;
+    transform: translateY(-2px);
+}
+
+.drop-content, .download-content {
+    cursor: pointer;
+}
+
+.drop-icon, .download-icon {
     font-size: 48px;
     display: block;
     margin-bottom: 12px;
     color: #5f6368;
 }
 
-.drop-hint {
+.drop-hint, .download-hint {
     font-size: 14px;
     color: #5f6368;
     margin-top: 8px;
@@ -1187,6 +1223,25 @@ footer .btn {
     background: #f8f9fa;
     border-radius: 6px;
     border: 1px solid #e8eaed;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.stat-item:hover {
+    background: #e8f0fe;
+}
+
+.stat-item.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80%;
+    height: 3px;
+    background: #1a73e8;
+    border-radius: 2px;
 }
 
 .stat-value {
@@ -1539,4 +1594,78 @@ footer .btn {
     .diagnosis-rule-actions {
         align-self: flex-end;
     }
+}
+
+/* Loading 状态样式 */
+.loading-overlay {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(255, 255, 255, 0.98);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+    border-radius: 16px;
+    padding: 48px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    border: 2px solid #1a73e8;
+    min-width: 400px;
+    min-height: 150px;
+    text-align: center;
+}
+
+.loading-spinner {
+    width: 60px;
+    height: 60px;
+    border: 6px solid #f3f3f3;
+    border-top: 6px solid #1a73e8;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+    margin-top: 12px;
+    color: #5f6368;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.log-content.loading {
+    position: relative;
+    min-height: 200px;
+}
+
+/* 自定义结果样式 */
+.diagnosis-custom-result {
+    background: #f8f9fa;
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.diagnosis-custom-result strong {
+    color: #202124;
+}
+
+/* 脚本提示样式 */
+.script-hint {
+    margin-top: 4px;
+    color: #9aa0a6;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.script-hint small {
+    font-size: 11px;
 }

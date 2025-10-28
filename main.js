@@ -9,6 +9,7 @@ import Investigation from './investigation.js';
 import ExportManager from './export.js';
 import Resizer from './resizer.js';
 import Diagnosis from './diagnosis.js';
+import CustomDownloadManager from './customDownloadManager.js';
 import { escapeHtml, selectLine, getRuleId, getActiveRules } from './utils.js';
 
 // 扩展核心类的功能
@@ -111,14 +112,91 @@ Object.assign(LogAnalyzer.prototype, {
     initializeResizer: function() { return new Resizer(this); }
 });
 
+// 扩展核心类以包含自定义下载功能
+Object.assign(LogAnalyzer.prototype, {
+    // 自定义下载相关方法
+    initializeCustomDownload: function() {
+        this.customDownloadManager = new CustomDownloadManager(this);
+        return this.customDownloadManager;
+    },
+    showCustomDownloadSources: function() {
+        return this.customDownloadManager.showCustomDownloadSources();
+    },
+    scanCustomSources: function() {
+        return this.customDownloadManager.scanCustomSources();
+    },
+    addFormattedLogs: function(formattedLogs, sourceName) {
+        return this.customDownloadManager.addFormattedLogs(formattedLogs, sourceName);
+    }
+});
+
+// 扩展核心类以包含文件处理功能
+Object.assign(LogAnalyzer.prototype, {
+    // 文件处理相关方法
+    initializeFileHandler: function() {
+        this.fileHandler = new FileHandler(this);
+        return this.fileHandler;
+    },
+    saveLastLogs: function(logs) {
+        if (this.fileHandler && this.fileHandler.saveLastLogs) {
+            return this.fileHandler.saveLastLogs(logs);
+        }
+    },
+    loadLastLogs: function() {
+        if (this.fileHandler && this.fileHandler.loadLastLogs) {
+            return this.fileHandler.loadLastLogs();
+        }
+        return [];
+    },
+    quickOpenLastLogs: function() {
+        if (this.fileHandler && this.fileHandler.quickOpenLastLogs) {
+            return this.fileHandler.quickOpenLastLogs();
+        }
+        return false;
+    }
+});
+
 // 初始化应用
 let app;
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     app = new LogAnalyzer();
+    // 将app暴露到全局作用域，供自定义下载源页面使用
+    window.app = app;
     // 绑定导出导入事件
     app.bindExportImportEvents();
     // 初始化分隔条
     app.initializeResizer();
     // 初始化诊断模块
     app.initializeDiagnosis();
+    // 初始化文件处理器
+    app.initializeFileHandler();
+    // 初始化自定义下载管理器
+    app.initializeCustomDownload();
+    
+    // 扫描自定义下载源
+    await app.scanCustomSources();
+    
+    // 确保app对象有customSources属性
+    if (!app.customSources) {
+        app.customSources = app.customDownloadManager.customSources || [];
+    }
+    
+    // 绑定自定义下载事件
+    const customDownloadZone = document.getElementById('customDownloadZone');
+    if (customDownloadZone) {
+        customDownloadZone.addEventListener('click', () => {
+            app.showCustomDownloadSources();
+        });
+    }
+    
+    // 添加状态显示到页面
+    const statusElement = document.getElementById('status');
+    if (statusElement) {
+        statusElement.textContent = `就绪 - 自定义下载源: ${app.customSources ? app.customSources.length : 0}个`;
+    }
+    
+    // 手动触发检查上次日志按钮显示
+    if (app.renderLogs) {
+        app.renderLogs();
+    }
 });

@@ -16,13 +16,22 @@
             <!-- 左侧日志显示区域 -->
             <div class="log-display-area" id="logDisplayArea">
                 <div class="upload-section">
-                    <div class="drop-zone" id="dropZone">
-                        <div class="drop-content">
-                            <span class="drop-icon">📁</span>
-                            <p>拖拽日志文件到这里上传</p>
-                            <p class="drop-hint">或者点击选择文件</p>
+                    <div class="upload-split">
+                        <div class="drop-zone" id="dropZone">
+                            <div class="drop-content">
+                                <span class="drop-icon">📄</span>
+                                <p>拖拽日志文件到这里上传</p>
+                                <p class="drop-hint">或者点击选择文件</p>
+                            </div>
+                            <input type="file" id="fileInput" accept=".log,.txt,.json" multiple style="display: none;">
                         </div>
-                        <input type="file" id="fileInput" accept=".log,.txt,.json" multiple style="display: none;">
+                        <div class="custom-download-zone" id="customDownloadZone">
+                            <div class="download-content">
+                                <span class="download-icon">🌐</span>
+                                <p>自定义下载日志</p>
+                                <p class="download-hint">从自定义源下载</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -97,7 +106,7 @@
         <!-- 配置面板 -->
         <div class="config-panel" id="configPanel">
             <div class="config-header">
-                <h3>正则配置</h3>
+                <h3>配置</h3>
                 <div class="config-actions">
                     <button id="exportConfig" class="btn btn-small">导出配置</button>
                     <button id="importConfig" class="btn btn-small">导入配置</button>
@@ -107,9 +116,9 @@
             </div>
             <div class="config-content">
                 <div class="config-tabs">
-                    <button class="tab-btn active" data-tab="rules">规则管理</button>
-                    <button class="tab-btn" data-tab="groups">配置组</button>
-                    <button class="tab-btn" data-tab="diagnosis">诊断规则</button>
+                    <button class="tab-btn active" data-tab="rules">高亮配置</button>
+                    <button class="tab-btn" data-tab="groups">高亮配置组</button>
+                    <button class="tab-btn" data-tab="diagnosis">诊断配置</button>
                 </div>
                 
                 <!-- 规则管理标签页 -->
@@ -188,6 +197,13 @@
                         <div class="config-item">
                             <label>解决方案:</label>
                             <textarea id="diagnosisRuleSolution" placeholder="例如: 这是正常用户行为，无需处理" rows="3"></textarea>
+                        </div>
+                        <div class="config-item">
+                            <label>自定义脚本 (JavaScript):</label>
+                            <textarea id="diagnosisRuleCustomScript" placeholder="例如: // 自定义处理逻辑&#10;return { successRate: 0.95 };" rows="6"></textarea>
+                            <div class="script-hint">
+                                <small>脚本可以使用变量: logContent(日志内容), matchedPattern(匹配模式)</small>
+                            </div>
                         </div>
                         <button id="addDiagnosisRule" class="btn">添加诊断规则</button>
                         

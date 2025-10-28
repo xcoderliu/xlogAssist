@@ -3,6 +3,51 @@ class FileHandler {
     constructor(core) {
         this.core = core;
     }
+    
+    // 保存上次日志到本地存储
+    saveLastLogs(logs) {
+        if (logs && logs.length > 0) {
+            const logData = {
+                timestamp: new Date().toISOString(),
+                logs: logs
+            };
+            localStorage.setItem('xlogAssist_lastLogs', JSON.stringify(logData));
+        }
+    }
+    
+    // 加载上次日志
+    loadLastLogs() {
+        const savedData = localStorage.getItem('xlogAssist_lastLogs');
+        if (savedData) {
+            try {
+                const logData = JSON.parse(savedData);
+                return logData.logs || [];
+            } catch (error) {
+                console.error('加载上次日志失败:', error);
+                return [];
+            }
+        }
+        return [];
+    }
+    
+    // 快速打开上次日志
+    quickOpenLastLogs() {
+        const lastLogs = this.loadLastLogs();
+        if (lastLogs.length > 0) {
+            this.core.logs = lastLogs;
+            if (this.core.renderLogs) {
+                this.core.renderLogs();
+            }
+            if (this.core.updateLogCount) {
+                this.core.updateLogCount();
+            }
+            this.core.setStatus('已加载上次日志');
+            return true;
+        } else {
+            this.core.setStatus('没有找到上次日志', 'error');
+            return false;
+        }
+    }
 
     // 拖拽事件处理
     handleDragOver(e) {
@@ -42,6 +87,8 @@ class FileHandler {
                 const content = await this.readFile(file);
                 this.parseLogContent(content, file.name);
             }
+            // 保存上次日志
+            this.saveLastLogs(this.core.logs);
             this.core.setStatus('文件处理完成');
         } catch (error) {
             console.error('文件处理错误:', error);
