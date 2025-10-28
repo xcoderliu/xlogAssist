@@ -1125,3 +1125,418 @@ footer .btn {
     min-width: 60px;
     padding: 10px 16px; /* 与设置按钮保持一致 */
 }
+
+/* 诊断区样式 */
+.investigation-tabs {
+    display: flex;
+    border-bottom: 1px solid #dadce0;
+    margin-bottom: 16px;
+    flex-shrink: 0;
+}
+
+.investigation-tabs .tab-btn {
+    padding: 8px 16px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s ease;
+    font-weight: 500;
+    color: #5f6368;
+    font-size: 14px;
+}
+
+.investigation-tabs .tab-btn.active {
+    border-bottom-color: #1a73e8;
+    color: #1a73e8;
+}
+
+.investigation-tabs .tab-btn:hover {
+    background: #f8f9fa;
+}
+
+.investigation-content .tab-content {
+    display: none;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+.investigation-content .tab-content.active {
+    display: block;
+}
+
+/* 诊断统计样式 */
+.diagnosis-stats {
+    background: #ffffff;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+    border: 1px solid #dadce0;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border: 1px solid #e8eaed;
+}
+
+.stat-value {
+    display: block;
+    font-size: 24px;
+    font-weight: 600;
+    color: #1a73e8;
+    margin-bottom: 4px;
+}
+
+.stat-label {
+    font-size: 12px;
+    color: #5f6368;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* 诊断项样式 */
+.diagnosis-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.diagnosis-item {
+    background: #ffffff;
+    border: 1px solid #dadce0;
+    border-radius: 8px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(60, 64, 67, 0.1);
+}
+
+.diagnosis-item:hover {
+    box-shadow: 0 2px 6px 2px rgba(60, 64, 67, 0.15);
+    transform: translateY(-1px);
+}
+
+.diagnosis-item.severity-error {
+    border-left: 4px solid #ea4335;
+}
+
+.diagnosis-item.severity-warning {
+    border-left: 4px solid #fbbc04;
+}
+
+.diagnosis-item.severity-info {
+    border-left: 4px solid #34a853;
+}
+
+.diagnosis-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+}
+
+.severity-badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.severity-error .severity-badge {
+    background: #fce8e6;
+    color: #c5221f;
+}
+
+.severity-warning .severity-badge {
+    background: #fef7e0;
+    color: #e37400;
+}
+
+.severity-info .severity-badge {
+    background: #e6f4ea;
+    color: #137333;
+}
+
+.diagnosis-title {
+    font-weight: 600;
+    font-size: 16px;
+    color: #202124;
+    flex: 1;
+}
+
+.diagnosis-category {
+    font-size: 12px;
+    color: #5f6368;
+    background: #f1f3f4;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.diagnosis-description {
+    color: #5f6368;
+    font-size: 14px;
+    margin-bottom: 8px;
+    line-height: 1.4;
+}
+
+.diagnosis-solution {
+    background: #f8f9fa;
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.diagnosis-solution strong {
+    color: #202124;
+}
+
+.diagnosis-details {
+    display: flex;
+    gap: 16px;
+    font-size: 12px;
+    color: #9aa0a6;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+}
+
+.diagnosis-log {
+    background: #f8f9fa;
+    border: 1px solid #e8eaed;
+    border-radius: 4px;
+    padding: 8px;
+    margin-top: 8px;
+}
+
+.diagnosis-log pre {
+    margin: 0;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 12px;
+    line-height: 1.4;
+    color: #5f6368;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+/* 诊断规则配置样式 */
+.diagnosis-rule-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 16px;
+    border: 1px solid #dadce0;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    background: #f8f9fa;
+    gap: 16px;
+}
+
+.diagnosis-rule-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.diagnosis-rule-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+}
+
+.diagnosis-rule-name {
+    font-weight: 600;
+    font-size: 16px;
+    color: #202124;
+}
+
+.diagnosis-rule-severity {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.diagnosis-rule-severity.severity-error {
+    background: #fce8e6;
+    color: #c5221f;
+}
+
+.diagnosis-rule-severity.severity-warning {
+    background: #fef7e0;
+    color: #e37400;
+}
+
+.diagnosis-rule-severity.severity-info {
+    background: #e6f4ea;
+    color: #137333;
+}
+
+.diagnosis-rule-description {
+    color: #5f6368;
+    font-size: 14px;
+    margin-bottom: 8px;
+    line-height: 1.4;
+}
+
+.diagnosis-rule-patterns,
+.diagnosis-rule-category {
+    font-size: 13px;
+    color: #5f6368;
+    margin-bottom: 4px;
+}
+
+.diagnosis-rule-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.edit-diagnosis-rule,
+.delete-diagnosis-rule {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.edit-diagnosis-rule {
+    background: #34a853;
+    color: white;
+}
+
+.delete-diagnosis-rule {
+    background: #ea4335;
+    color: white;
+}
+
+.edit-diagnosis-rule:hover {
+    background: #2d8e47;
+}
+
+.delete-diagnosis-rule:hover {
+    background: #d33426;
+}
+
+.empty-diagnosis-rules {
+    color: #9aa0a6;
+    text-align: center;
+    padding: 20px;
+    font-style: italic;
+}
+
+/* 诊断规则表单样式 */
+.config-item textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #dadce0;
+    border-radius: 8px;
+    font-size: 14px;
+    background: #ffffff;
+    transition: all 0.2s ease;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 80px;
+}
+
+.config-item textarea:focus {
+    outline: none;
+    border-color: #1a73e8;
+    box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+}
+
+.config-item select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #dadce0;
+    border-radius: 8px;
+    font-size: 14px;
+    background: #ffffff;
+    transition: all 0.2s ease;
+}
+
+.config-item select:focus {
+    outline: none;
+    border-color: #1a73e8;
+    box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+}
+
+/* 优化界面布局 - 移除不必要的横线 */
+.investigation-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    flex-shrink: 0;
+    padding-bottom: 0; /* 移除底部padding */
+    border-bottom: none; /* 移除底部边框 */
+}
+
+.investigation-content {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+    position: relative;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .diagnosis-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .diagnosis-details {
+        flex-direction: column;
+        gap: 4px;
+    }
+    
+    .investigation-tabs {
+        flex-direction: column;
+    }
+    
+    .investigation-tabs .tab-btn {
+        text-align: left;
+        border-bottom: none;
+        border-left: 2px solid transparent;
+    }
+    
+    .investigation-tabs .tab-btn.active {
+        border-left-color: #1a73e8;
+        border-bottom: none;
+    }
+    
+    .diagnosis-rule-item {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+    
+    .diagnosis-rule-actions {
+        align-self: flex-end;
+    }
+}

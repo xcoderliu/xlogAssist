@@ -1,3 +1,5 @@
+import ConfigManager from './configManager.js';
+
 class LogAnalyzer {
     constructor() {
         this.logs = [];
@@ -6,8 +8,10 @@ class LogAnalyzer {
         this.configGroups = [];
         this.activeGroups = new Set();
         this.filterGroups = new Set(); // 新增：用于存储启用过滤的配置组
+        this.diagnosisRules = []; // 新增：诊断规则
         this.currentFile = null;
         this.editingIndex = undefined;
+        this.editingDiagnosisIndex = undefined; // 新增：编辑诊断规则索引
         
         // 搜索相关属性
         this.searchResults = [];
@@ -167,6 +171,7 @@ class LogAnalyzer {
         const savedActiveGroups = localStorage.getItem('xlogAssist_activeGroups');
         const savedFilterGroups = localStorage.getItem('xlogAssist_filterGroups'); // 新增：加载过滤配置组
         const savedSettings = localStorage.getItem('xlogAssist_settings');
+        const savedDiagnosisRules = localStorage.getItem('xlogAssist_diagnosisRules');
         
         if (savedRules) {
             this.regexRules = JSON.parse(savedRules);
@@ -186,6 +191,11 @@ class LogAnalyzer {
         
         if (savedSettings) {
             this.settings = { ...this.settings, ...JSON.parse(savedSettings) };
+        }
+
+        // 加载诊断规则到core中，供configManager使用
+        if (savedDiagnosisRules) {
+            this.diagnosisRules = JSON.parse(savedDiagnosisRules);
         }
     }
 
@@ -228,6 +238,9 @@ class LogAnalyzer {
         if (tabName === 'groups') {
             this.renderGroupsList();
             this.renderGroupSelection();
+        } else if (tabName === 'diagnosis') {
+            // 调用诊断模块中的诊断规则渲染方法
+            this.renderDiagnosisRulesList();
         }
     }
 

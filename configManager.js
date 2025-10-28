@@ -630,6 +630,165 @@ class ConfigManager {
                 e.target.value = ''; // 清空文件选择器
             }
         });
+
+        // 绑定诊断规则事件
+        this.bindDiagnosisRuleEvents();
+    }
+
+    // 绑定诊断规则事件
+    bindDiagnosisRuleEvents() {
+        const addDiagnosisRuleBtn = document.getElementById('addDiagnosisRule');
+        if (addDiagnosisRuleBtn) {
+            addDiagnosisRuleBtn.addEventListener('click', () => {
+                this.addDiagnosisRule();
+            });
+        }
+    }
+
+    // 添加诊断规则
+    addDiagnosisRule() {
+        const name = document.getElementById('diagnosisRuleName').value.trim();
+        const description = document.getElementById('diagnosisRuleDescription').value.trim();
+        const patternsText = document.getElementById('diagnosisRulePatterns').value.trim();
+        const severity = document.getElementById('diagnosisRuleSeverity').value;
+        const category = document.getElementById('diagnosisRuleCategory').value.trim();
+        const solution = document.getElementById('diagnosisRuleSolution').value.trim();
+
+        if (!name || !patternsText) {
+            alert('请填写规则名称和匹配模式');
+            return;
+        }
+
+        const patterns = patternsText.split('\n').filter(pattern => pattern.trim());
+        if (patterns.length === 0) {
+            alert('请至少填写一个匹配模式');
+            return;
+        }
+
+        const newRule = {
+            id: `rule_${Date.now()}`,
+            name,
+            description,
+            patterns,
+            severity,
+            category: category || 'common',
+            solution
+        };
+
+        // 通过core的方法添加规则
+        this.core.addDiagnosisRule(newRule);
+        this.renderDiagnosisRulesList();
+        this.clearDiagnosisRuleForm();
+        this.core.setStatus('诊断规则添加成功');
+    }
+
+    // 渲染诊断规则列表
+    renderDiagnosisRulesList() {
+        const container = document.getElementById('diagnosisRulesList');
+        if (!container) return;
+
+        // 使用core中的diagnosisRules，确保数据同步
+        const diagnosisRules = this.core.diagnosisRules;
+
+        if (diagnosisRules.length === 0) {
+            container.innerHTML = '<h4>当前诊断规则:</h4><div class="empty-diagnosis-rules">暂无诊断规则</div>';
+            return;
+        }
+
+        container.innerHTML = '<h4>当前诊断规则:</h4>';
+        
+        diagnosisRules.forEach((rule, index) => {
+            const ruleElement = document.createElement('div');
+            ruleElement.className = 'diagnosis-rule-item';
+            ruleElement.innerHTML = `
+                <div class="diagnosis-rule-content">
+                    <div class="diagnosis-rule-header">
+                        <span class="diagnosis-rule-name">${rule.name}</span>
+                        <span class="diagnosis-rule-severity severity-${rule.severity}">${rule.severity}</span>
+                    </div>
+                    <div class="diagnosis-rule-description">${rule.description}</div>
+                    <div class="diagnosis-rule-patterns">
+                        <strong>匹配模式:</strong> ${rule.patterns.join(', ')}
+                    </div>
+                    <div class="diagnosis-rule-category">
+                        <strong>类别:</strong> ${rule.category}
+                    </div>
+                </div>
+                <div class="diagnosis-rule-actions">
+                    <button class="edit-diagnosis-rule" data-index="${index}">编辑</button>
+                    <button class="delete-diagnosis-rule" data-index="${index}">删除</button>
+                </div>
+            `;
+            container.appendChild(ruleElement);
+        });
+
+        // 绑定诊断规则操作事件
+        this.bindDiagnosisRuleActionEvents();
+    }
+
+    // 绑定诊断规则操作事件
+    bindDiagnosisRuleActionEvents() {
+        const container = document.getElementById('diagnosisRulesList');
+        if (!container) return;
+
+        container.querySelectorAll('.edit-diagnosis-rule').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const index = parseInt(e.target.dataset.index);
+                this.editDiagnosisRule(index);
+            });
+        });
+
+        container.querySelectorAll('.delete-diagnosis-rule').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const index = parseInt(e.target.dataset.index);
+                this.deleteDiagnosisRule(index);
+            });
+        });
+    }
+
+    // 编辑诊断规则
+    editDiagnosisRule(index) {
+        // 使用core中的diagnosisRules，确保数据同步
+        const rule = this.core.diagnosisRules[index];
+        
+        // 填充表单
+        document.getElementById('diagnosisRuleName').value = rule.name;
+        document.getElementById('diagnosisRuleDescription').value = rule.description;
+        document.getElementById('diagnosisRulePatterns').value = rule.patterns.join('\n');
+        document.getElementById('diagnosisRuleSeverity').value = rule.severity;
+        document.getElementById('diagnosisRuleCategory').value = rule.category;
+        document.getElementById('diagnosisRuleSolution').value = rule.solution;
+
+        // 保存当前编辑的规则索引
+        this.core.editingDiagnosisIndex = index;
+        
+        // 更改按钮文字
+        document.getElementById('addDiagnosisRule').textContent = '更新规则';
+        
+        this.core.setStatus('诊断规则已加载到编辑表单，修改后点击"更新规则"');
+    }
+
+    // 删除诊断规则
+    deleteDiagnosisRule(index) {
+        if (confirm('确定要删除这个诊断规则吗？')) {
+            // 使用core中的diagnosisRules，确保数据同步
+            const ruleId = this.core.diagnosisRules[index].id;
+            this.core.deleteDiagnosisRule(ruleId);
+            this.renderDiagnosisRulesList();
+            this.core.setStatus('诊断规则已删除');
+        }
+    }
+
+    // 清空诊断规则表单
+    clearDiagnosisRuleForm() {
+        document.getElementById('diagnosisRuleName').value = '';
+        document.getElementById('diagnosisRuleDescription').value = '';
+        document.getElementById('diagnosisRulePatterns').value = '';
+        document.getElementById('diagnosisRuleSeverity').value = 'error';
+        document.getElementById('diagnosisRuleCategory').value = '';
+        document.getElementById('diagnosisRuleSolution').value = '';
+        document.getElementById('addDiagnosisRule').textContent = '添加诊断规则';
+        delete this.core.editingDiagnosisIndex;
     }
 }
 

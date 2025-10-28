@@ -8,6 +8,7 @@ import ContextMenu from './contextMenu.js';
 import Investigation from './investigation.js';
 import ExportManager from './export.js';
 import Resizer from './resizer.js';
+import Diagnosis from './diagnosis.js';
 import { escapeHtml, selectLine, getRuleId, getActiveRules } from './utils.js';
 
 // 扩展核心类的功能
@@ -89,6 +90,21 @@ Object.assign(LogAnalyzer.prototype, {
     getActiveRules
 });
 
+// 扩展核心类以包含诊断功能
+Object.assign(LogAnalyzer.prototype, {
+    // 诊断相关方法
+    initializeDiagnosis: function() { return new Diagnosis(this).initialize(); },
+    performDiagnosis: function() { return new Diagnosis(this).performDiagnosis(); },
+    clearDiagnosisResults: function() { return new Diagnosis(this).clearDiagnosisResults(); },
+    exportDiagnosisRules: function() { return new Diagnosis(this).exportDiagnosisRules(); },
+    importDiagnosisRules: function(file) { return new Diagnosis(this).importDiagnosisRules(file); },
+    addDiagnosisRule: function(rule) { return new Diagnosis(this).addDiagnosisRule(rule); },
+    updateDiagnosisRule: function(ruleId, updatedRule) { return new Diagnosis(this).updateDiagnosisRule(ruleId, updatedRule); },
+    deleteDiagnosisRule: function(ruleId) { return new Diagnosis(this).deleteDiagnosisRule(ruleId); },
+    renderDiagnosisRulesList: function() { return new Diagnosis(this).renderDiagnosisRulesList(); },
+    editDiagnosisRule: function(index) { return new Diagnosis(this).editDiagnosisRule(index); }
+});
+
 // 扩展核心类以包含分隔条功能
 Object.assign(LogAnalyzer.prototype, {
     // 分隔条相关方法
@@ -103,4 +119,6 @@ document.addEventListener('DOMContentLoaded', () => {
     app.bindExportImportEvents();
     // 初始化分隔条
     app.initializeResizer();
+    // 初始化诊断模块
+    app.initializeDiagnosis();
 });

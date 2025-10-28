@@ -109,6 +109,7 @@
                 <div class="config-tabs">
                     <button class="tab-btn active" data-tab="rules">规则管理</button>
                     <button class="tab-btn" data-tab="groups">配置组</button>
+                    <button class="tab-btn" data-tab="diagnosis">诊断规则</button>
                 </div>
                 
                 <!-- 规则管理标签页 -->
@@ -154,6 +155,46 @@
                     <div class="group-selection" id="groupSelection" style="display: none;">
                         <h4>选择生效的配置组:</h4>
                         <div class="group-checkboxes" id="groupCheckboxes"></div>
+                    </div>
+                    
+                    </div>
+                    
+                    <!-- 诊断规则标签页 -->
+                    <div class="tab-content" data-tab="diagnosis">
+                        <div class="config-item">
+                            <label>规则名称:</label>
+                            <input type="text" id="diagnosisRuleName" placeholder="例如: 用户取消充值">
+                        </div>
+                        <div class="config-item">
+                            <label>规则描述:</label>
+                            <input type="text" id="diagnosisRuleDescription" placeholder="例如: 用户主动取消了充值操作">
+                        </div>
+                        <div class="config-item">
+                            <label>匹配模式 (每行一个):</label>
+                            <textarea id="diagnosisRulePatterns" placeholder="例如: 用户取消&#10;user cancelled&#10;cancel by user" rows="4"></textarea>
+                        </div>
+                        <div class="config-item">
+                            <label>严重程度:</label>
+                            <select id="diagnosisRuleSeverity">
+                                <option value="error">错误</option>
+                                <option value="warning">警告</option>
+                                <option value="info">信息</option>
+                            </select>
+                        </div>
+                        <div class="config-item">
+                            <label>问题类别:</label>
+                            <input type="text" id="diagnosisRuleCategory" placeholder="例如: recharge">
+                        </div>
+                        <div class="config-item">
+                            <label>解决方案:</label>
+                            <textarea id="diagnosisRuleSolution" placeholder="例如: 这是正常用户行为，无需处理" rows="3"></textarea>
+                        </div>
+                        <button id="addDiagnosisRule" class="btn">添加诊断规则</button>
+                        
+                        <div class="diagnosis-rules-list" id="diagnosisRulesList">
+                            <h4>当前诊断规则:</h4>
+                            <div class="empty-diagnosis-rules">暂无诊断规则</div>
+                        </div>
                     </div>
                 </div>
             </div>

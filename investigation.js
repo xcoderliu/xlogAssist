@@ -6,10 +6,13 @@ class Investigation {
 
     // 渲染排查区日志
     renderInvestigationLogs() {
-        this.core.investigationContent.innerHTML = '';
+        const investigationContent = document.getElementById('investigationContent');
+        if (!investigationContent) return;
+        
+        investigationContent.innerHTML = '';
         
         if (this.core.investigationLogs.length === 0) {
-            this.core.investigationContent.innerHTML = `
+            investigationContent.innerHTML = `
                 <div class="empty-state">
                     <p>暂无排查日志</p>
                     <p>右键日志行添加到排查区</p>
@@ -50,7 +53,7 @@ class Investigation {
                 this.core.showInvestigationContextMenu(e, log.originalIndex);
             });
             
-            this.core.investigationContent.appendChild(itemElement);
+            investigationContent.appendChild(itemElement);
         });
     }
 
