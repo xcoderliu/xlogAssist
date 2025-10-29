@@ -4,6 +4,7 @@ class Diagnosis {
         this.core = core;
         this.diagnosisResults = [];
         this.editingDiagnosisIndex = undefined;
+        this._regexCache = new Map(); // 正则表达式缓存
     }
 
     // 初始化诊断模块
@@ -47,7 +48,13 @@ class Diagnosis {
                 
                 rule.patterns.forEach(pattern => {
                     try {
-                        const regex = new RegExp(pattern, 'i');
+                        // 使用正则表达式缓存优化性能
+                        let regex = this._regexCache.get(pattern);
+                        if (!regex) {
+                            regex = new RegExp(pattern, 'i');
+                            this._regexCache.set(pattern, regex);
+                        }
+                        
                         if (regex.test(log.content)) {
                             let customResult = null;
                             
@@ -289,7 +296,7 @@ class Diagnosis {
         });
     }
 
-    // 渲染诊断结果
+    // 渲染诊断结果 - 按日志行分组显示
     renderDiagnosisResults() {
         const diagnosisContent = document.getElementById('diagnosisContent');
         if (!diagnosisContent) return;
@@ -304,7 +311,10 @@ class Diagnosis {
             return;
         }
 
+        // 按日志行分组诊断结果
+        const groupedResults = this.groupDiagnosisResultsByLogLine();
         const stats = this.getDiagnosisStats();
+        
         diagnosisContent.innerHTML = `
             <div class="diagnosis-stats">
                 <div class="stats-grid">
@@ -327,31 +337,47 @@ class Diagnosis {
                 </div>
             </div>
             <div class="diagnosis-list">
-                ${this.diagnosisResults.map(result => `
-                    <div class="diagnosis-item severity-${result.severity}" data-log-index="${result.logIndex}" data-severity="${result.severity}">
-                        <div class="diagnosis-header">
-                            <span class="severity-badge">${result.severity}</span>
-                            <span class="diagnosis-title">${result.ruleName}</span>
-                            <span class="diagnosis-category">${result.category}</span>
+                ${groupedResults.map(group => `
+                    <div class="diagnosis-group" data-log-index="${group.logIndex}">
+                        <div class="diagnosis-group-header">
+                            <div class="group-main-info">
+                                <div class="group-title">
+                                    <span class="log-line-number">第 ${group.logIndex + 1} 行</span>
+                                    <span class="rule-count">${group.rules.length} 个匹配规则</span>
+                                </div>
+                                <div class="group-severity-stats">
+                                    ${this.renderGroupSeverityBadges(group)}
+                                </div>
+                            </div>
+                            <div class="diagnosis-log-preview">
+                                <pre>${group.logContent}</pre>
+                            </div>
                         </div>
-                        <div class="diagnosis-description">${result.description}</div>
-                        ${result.solution ? `
-                        <div class="diagnosis-solution">
-                            <strong>解决方案:</strong> ${result.solution}
-                        </div>
-                        ` : ''}
-                        ${result.customResult ? `
-                        <div class="diagnosis-custom-result">
-                            <strong>自定义分析结果:</strong>
-                            <pre>${this.formatCustomResult(result.customResult)}</pre>
-                        </div>
-                        ` : ''}
-                        <div class="diagnosis-details">
-                            <span>匹配模式: ${result.matchedPattern}</span>
-                            <span>日志行: ${result.logIndex + 1}</span>
-                        </div>
-                        <div class="diagnosis-log">
-                            <pre>${result.logContent}</pre>
+                        <div class="diagnosis-rules-container">
+                            ${group.rules.map(result => `
+                                <div class="diagnosis-item severity-${result.severity}" data-log-index="${result.logIndex}" data-severity="${result.severity}">
+                                    <div class="diagnosis-header">
+                                        <span class="severity-badge">${result.severity}</span>
+                                        <span class="diagnosis-title">${result.ruleName}</span>
+                                        <span class="diagnosis-category">${result.category}</span>
+                                    </div>
+                                    <div class="diagnosis-description">${result.description}</div>
+                                    ${result.solution ? `
+                                    <div class="diagnosis-solution">
+                                        <strong>解决方案:</strong> ${result.solution}
+                                    </div>
+                                    ` : ''}
+                                    ${result.customResult ? `
+                                    <div class="diagnosis-custom-result">
+                                        <strong>自定义分析结果:</strong>
+                                        <pre>${this.formatCustomResult(result.customResult)}</pre>
+                                    </div>
+                                    ` : ''}
+                                    <div class="diagnosis-details">
+                                        <span>匹配模式: ${result.matchedPattern}</span>
+                                    </div>
+                                </div>
+                            `).join('')}
                         </div>
                     </div>
                 `).join('')}
@@ -366,6 +392,38 @@ class Diagnosis {
 
         // 绑定诊断项点击事件
         this.bindDiagnosisItemEvents();
+    }
+
+    // 按日志行分组诊断结果
+    groupDiagnosisResultsByLogLine() {
+        const groups = {};
+        
+        this.diagnosisResults.forEach(result => {
+            const logIndex = result.logIndex;
+            if (!groups[logIndex]) {
+                groups[logIndex] = {
+                    logIndex: logIndex,
+                    logContent: result.logContent,
+                    rules: []
+                };
+            }
+            groups[logIndex].rules.push(result);
+        });
+
+        // 转换为数组并按日志行号排序
+        return Object.values(groups).sort((a, b) => a.logIndex - b.logIndex);
+    }
+
+    // 渲染分组严重程度徽章
+    renderGroupSeverityBadges(group) {
+        const severityCounts = {};
+        group.rules.forEach(result => {
+            severityCounts[result.severity] = (severityCounts[result.severity] || 0) + 1;
+        });
+
+        return Object.entries(severityCounts).map(([severity, count]) =>
+            `<span class="severity-badge severity-${severity}">${severity}(${count})</span>`
+        ).join('');
     }
 
     // 绑定诊断项点击事件
@@ -481,6 +539,7 @@ class Diagnosis {
     // 清空诊断结果
     clearDiagnosisResults() {
         this.diagnosisResults = [];
+        this._regexCache.clear(); // 清空正则表达式缓存
         this.renderDiagnosisResults();
         this.core.setStatus('诊断结果已清空');
     }
@@ -571,21 +630,37 @@ class Diagnosis {
         });
     }
 
-    // 过滤诊断结果
+    // 过滤诊断结果 - 支持分组显示
     filterDiagnosisResults(severityFilter) {
-        const diagnosisItems = document.querySelectorAll('.diagnosis-item');
+        const diagnosisGroups = document.querySelectorAll('.diagnosis-group');
         
-        diagnosisItems.forEach(item => {
+        diagnosisGroups.forEach(group => {
             if (severityFilter === 'all') {
-                // 显示所有项目
-                item.style.display = 'block';
+                // 显示所有分组
+                group.style.display = 'block';
+                // 显示分组内所有项目
+                const groupItems = group.querySelectorAll('.diagnosis-item');
+                groupItems.forEach(item => item.style.display = 'block');
             } else {
-                // 根据严重程度过滤
-                const itemSeverity = item.dataset.severity;
-                if (itemSeverity === severityFilter) {
-                    item.style.display = 'block';
+                // 根据严重程度过滤分组
+                const groupItems = group.querySelectorAll('.diagnosis-item');
+                let hasMatchingItem = false;
+                
+                groupItems.forEach(item => {
+                    const itemSeverity = item.dataset.severity;
+                    if (itemSeverity === severityFilter) {
+                        hasMatchingItem = true;
+                        item.style.display = 'block';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+                
+                // 如果分组中有匹配的项目，显示整个分组
+                if (hasMatchingItem) {
+                    group.style.display = 'block';
                 } else {
-                    item.style.display = 'none';
+                    group.style.display = 'none';
                 }
             }
         });
