@@ -81,10 +81,18 @@ class Diagnosis {
             });
         });
 
-        // 按严重程度排序
+        // 按原日志顺序和严重程度排序
         this.diagnosisResults.sort((a, b) => {
-            const severityOrder = { error: 0, warning: 1, info: 2 };
-            return severityOrder[a.severity] - severityOrder[b.severity];
+            // 首先按原日志顺序排序
+            const logIndexDiff = a.logIndex - b.logIndex;
+            
+            // 如果同一行日志，按严重程度排序
+            if (logIndexDiff === 0) {
+                const severityOrder = { error: 0, warning: 1, info: 2 };
+                return severityOrder[a.severity] - severityOrder[b.severity];
+            }
+            
+            return logIndexDiff;
         });
 
         this.core.setStatus(`诊断完成，发现 ${this.diagnosisResults.length} 个问题`);
