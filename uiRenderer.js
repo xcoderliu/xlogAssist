@@ -160,8 +160,6 @@ class UIRenderer {
     // 应用正则表达式高亮 - 优化性能版本
     applyRegexHighlighting(text) {
         let highlightedText = this.escapeHtml(text);
-        let shouldHighlightLine = false;
-        let lineStyle = '';
         
         // 获取当前激活的配置组中的规则
         const activeRules = this.core.getActiveRules();
@@ -171,15 +169,27 @@ class UIRenderer {
             return highlightedText;
         }
         
-        // 先检查是否需要整行高亮
+        // 缓存正则表达式编译结果
+        if (!this._regexCache) {
+            this._regexCache = new Map();
+        }
+        
+        // 检查整行高亮规则
+        let shouldHighlightLine = false;
+        let lineStyle = '';
+        
         for (const rule of activeRules) {
             if (rule.highlightWholeLine) {
                 try {
-                    const regex = new RegExp(rule.pattern, 'gi');
+                    let regex = this._regexCache.get(rule.pattern);
+                    if (!regex) {
+                        regex = new RegExp(rule.pattern, 'gi');
+                        this._regexCache.set(rule.pattern, regex);
+                    }
                     if (regex.test(text)) {
                         shouldHighlightLine = true;
                         lineStyle = `style="color: ${rule.color}; background: ${rule.bgColor}"`;
-                        break; // 找到第一个整行高亮规则就停止
+                        break;
                     }
                 } catch (error) {
                     console.warn('正则表达式错误:', rule.pattern, error);
@@ -189,36 +199,10 @@ class UIRenderer {
         
         // 如果不需要整行高亮，应用部分高亮
         if (!shouldHighlightLine) {
-            // 使用单个正则表达式合并所有规则，提高性能
-            const regexPatterns = [];
-            const ruleStyles = [];
-            
-            for (const rule of activeRules) {
-                if (!rule.highlightWholeLine) {
-                    try {
-                        // 转义正则表达式特殊字符
-                        const escapedPattern = rule.pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                        regexPatterns.push(escapedPattern);
-                        ruleStyles.push(`<span style="color: ${rule.color}; background: ${rule.bgColor}">$&</span>`);
-                    } catch (error) {
-                        console.warn('正则表达式错误:', rule.pattern, error);
-                    }
-                }
-            }
-            
-            if (regexPatterns.length > 0) {
-                // 使用单个正则表达式替换
-                const combinedRegex = new RegExp(regexPatterns.join('|'), 'gi');
-                highlightedText = highlightedText.replace(combinedRegex, (match) => {
-                    // 找到匹配的规则索引
-                    for (let i = 0; i < regexPatterns.length; i++) {
-                        const patternRegex = new RegExp(regexPatterns[i], 'i');
-                        if (patternRegex.test(match)) {
-                            return ruleStyles[i].replace('$&', match);
-                        }
-                    }
-                    return match;
-                });
+            // 使用更高效的部分高亮方法
+            const nonWholeLineRules = activeRules.filter(rule => !rule.highlightWholeLine);
+            if (nonWholeLineRules.length > 0) {
+                highlightedText = this.applyPartialHighlighting(highlightedText, text, nonWholeLineRules);
             }
         }
         
@@ -354,6 +338,34 @@ class UIRenderer {
                 }
             });
         });
+    }
+
+    // 应用部分高亮 - 优化性能版本
+    applyPartialHighlighting(htmlText, originalText, rules) {
+        let result = htmlText;
+        
+        // 缓存正则表达式
+        if (!this._partialRegexCache) {
+            this._partialRegexCache = new Map();
+        }
+        
+        // 对每个规则应用高亮
+        for (const rule of rules) {
+            try {
+                let regex = this._partialRegexCache.get(rule.pattern);
+                if (!regex) {
+                    regex = new RegExp(rule.pattern, 'gi');
+                    this._partialRegexCache.set(rule.pattern, regex);
+                }
+                
+                const replacement = `<span style="color: ${rule.color}; background: ${rule.bgColor}">$&</span>`;
+                result = result.replace(regex, replacement);
+            } catch (error) {
+                console.warn('正则表达式错误:', rule.pattern, error);
+            }
+        }
+        
+        return result;
     }
 }
 

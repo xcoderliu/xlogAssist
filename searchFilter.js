@@ -4,7 +4,7 @@ class SearchFilter {
         this.core = core;
     }
 
-    // 过滤日志
+    // 过滤日志 - 支持正则表达式和普通字符串
     filterLogs() {
         const filterTerm = this.core.filterInput.value.trim();
         
@@ -13,16 +13,47 @@ class SearchFilter {
             return;
         }
 
-        this.core.filterTerm = filterTerm.toLowerCase();
-        this.core.filteredLogs = this.core.logs.filter(log =>
-            log.content.toLowerCase().includes(this.core.filterTerm)
-        );
+        this.core.filterTerm = filterTerm;
+        
+        try {
+            // 智能检测是否为正则表达式
+            let useRegex = false;
+            let regexPattern = filterTerm;
+            
+            // 如果以 / 开头和结尾，认为是显式正则表达式
+            if (filterTerm.startsWith('/') && filterTerm.endsWith('/') && filterTerm.length > 2) {
+                useRegex = true;
+                regexPattern = filterTerm.slice(1, -1);
+            }
+            // 如果包含正则表达式特殊字符，也尝试作为正则表达式
+            else if (/[.*+?^${}()|[\]\\]/.test(filterTerm)) {
+                useRegex = true;
+                regexPattern = filterTerm; // 直接使用原始字符串，让用户自己控制转义
+            }
+            
+            if (useRegex) {
+                const regex = new RegExp(regexPattern, 'i'); // 忽略大小写
+                this.core.filteredLogs = this.core.logs.filter(log =>
+                    regex.test(log.content)
+                );
+                this.core.setStatus(`使用正则表达式过滤到 ${this.core.filteredLogs.length} 条日志`);
+            } else {
+                // 普通字符串匹配
+                const filterTermLower = filterTerm.toLowerCase();
+                this.core.filteredLogs = this.core.logs.filter(log =>
+                    log.content.toLowerCase().includes(filterTermLower)
+                );
+                this.core.setStatus(`过滤到 ${this.core.filteredLogs.length} 条日志`);
+            }
+        } catch (error) {
+            this.core.setStatus(`正则表达式错误: ${error.message}`, 'error');
+            return;
+        }
         
         this.core.clearFilter.style.display = 'block';
         if (this.core.renderLogs) {
             this.core.renderLogs();
         }
-        this.core.setStatus(`过滤到 ${this.core.filteredLogs.length} 条日志`);
         
         // 如果有搜索关键词，重新执行搜索
         if (this.core.searchTerm) {
@@ -49,7 +80,7 @@ class SearchFilter {
         }
     }
 
-    // 执行真正的搜索
+    // 执行真正的搜索 - 支持正则表达式和普通字符串
     realSearchLogs() {
         const searchTerm = this.core.searchInput.value.trim();
         
@@ -63,56 +94,96 @@ class SearchFilter {
         
         // 使用 setTimeout 让UI有机会更新
         setTimeout(() => {
-            // 执行真正的搜索，找到所有匹配项
-            this.core.searchResults = [];
-            this.core.searchTerm = searchTerm.toLowerCase();
-            
-            // 在过滤后的日志或所有日志中搜索
-            const logsToSearch = this.core.filteredLogs || this.core.logs;
-            
-            // 使用更高效的搜索算法
-            const searchTermLower = this.core.searchTerm;
-            const searchTermLength = searchTermLower.length;
-            
-            for (let i = 0; i < logsToSearch.length; i++) {
-                const log = logsToSearch[i];
-                const content = log.content.toLowerCase();
-                let startIndex = 0;
-                let matchIndex;
+            try {
+                // 执行真正的搜索，找到所有匹配项
+                this.core.searchResults = [];
+                this.core.searchTerm = searchTerm;
                 
-                // 使用 while 循环而不是 indexOf 在循环中
-                while ((matchIndex = content.indexOf(searchTermLower, startIndex)) !== -1) {
-                    this.core.searchResults.push({
-                        log,
-                        index: i,
-                        matchIndex,
-                        endIndex: matchIndex + searchTermLength
+                // 在过滤后的日志或所有日志中搜索
+                const logsToSearch = this.core.filteredLogs || this.core.logs;
+                
+                // 智能检测是否为正则表达式
+                let useRegex = false;
+                let regexPattern = searchTerm;
+                
+                // 如果以 / 开头和结尾，认为是显式正则表达式
+                if (searchTerm.startsWith('/') && searchTerm.endsWith('/') && searchTerm.length > 2) {
+                    useRegex = true;
+                    regexPattern = searchTerm.slice(1, -1);
+                }
+                // 如果包含正则表达式特殊字符，也尝试作为正则表达式（不自动转义）
+                else if (/[.*+?^${}()|[\]\\]/.test(searchTerm)) {
+                    useRegex = true;
+                    regexPattern = searchTerm; // 直接使用原始字符串，让用户自己控制转义
+                }
+                
+                if (useRegex) {
+                    const regex = new RegExp(regexPattern, 'gi'); // 全局匹配，忽略大小写
+                    
+                    // 正则表达式搜索
+                    logsToSearch.forEach((log, i) => {
+                        const matches = log.content.matchAll(regex);
+                        for (const match of matches) {
+                            this.core.searchResults.push({
+                                log,
+                                index: i,
+                                matchIndex: match.index,
+                                endIndex: match.index + match[0].length
+                            });
+                        }
                     });
-                    startIndex = matchIndex + searchTermLength;
+                    this.core.setStatus(`使用正则表达式找到 ${this.core.searchResults.length} 个匹配项`);
+                } else {
+                    // 普通字符串搜索
+                    const searchTermLower = searchTerm.toLowerCase();
+                    const searchTermLength = searchTermLower.length;
+                    
+                    logsToSearch.forEach((log, i) => {
+                        const content = log.content.toLowerCase();
+                        let startIndex = 0;
+                        let matchIndex;
+                        
+                        while ((matchIndex = content.indexOf(searchTermLower, startIndex)) !== -1) {
+                            this.core.searchResults.push({
+                                log,
+                                index: i,
+                                matchIndex,
+                                endIndex: matchIndex + searchTermLength
+                            });
+                            startIndex = matchIndex + searchTermLength;
+                            
+                            // 如果搜索词很短，限制每行的匹配数量避免性能问题
+                            if (searchTermLength <= 2 && this.core.searchResults.length > 1000) {
+                                break;
+                            }
+                        }
+                    });
+                    this.core.setStatus(`找到 ${this.core.searchResults.length} 个匹配项`);
                 }
-            }
-            
-            this.core.currentSearchIndex = -1;
-            this.core.isRealSearchMode = true;
-            
-            // 显示导航控件
-            this.core.prevMatch.style.display = 'block';
-            this.core.nextMatch.style.display = 'block';
-            this.core.clearSearch.style.display = 'block';
-            
-            if (this.core.searchResults.length === 0) {
-                this.core.setStatus('没有找到匹配的日志');
-                if (this.core.highlightCurrentSearchResult) {
-                    this.core.highlightCurrentSearchResult(-1);
+                
+                this.core.currentSearchIndex = -1;
+                this.core.isRealSearchMode = true;
+                
+                // 显示导航控件
+                this.core.prevMatch.style.display = 'block';
+                this.core.nextMatch.style.display = 'block';
+                this.core.clearSearch.style.display = 'block';
+                
+                if (this.core.searchResults.length === 0) {
+                    this.core.setStatus('没有找到匹配的日志');
+                    if (this.core.highlightCurrentSearchResult) {
+                        this.core.highlightCurrentSearchResult(-1);
+                    }
+                } else {
+                    this.navigateToNextMatch(); // 自动导航到第一个匹配项
                 }
-            } else {
-                this.core.setStatus(`找到 ${this.core.searchResults.length} 个匹配项`);
-                this.navigateToNextMatch(); // 自动导航到第一个匹配项
-            }
-            
-            // 重新渲染排查区以应用搜索高亮
-            if (this.core.renderInvestigationLogs) {
-                this.core.renderInvestigationLogs();
+                
+                // 重新渲染排查区以应用搜索高亮
+                if (this.core.renderInvestigationLogs) {
+                    this.core.renderInvestigationLogs();
+                }
+            } catch (error) {
+                this.core.setStatus(`正则表达式错误: ${error.message}`, 'error');
             }
         }, 10);
     }
