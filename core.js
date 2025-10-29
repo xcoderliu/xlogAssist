@@ -225,15 +225,15 @@ class LogAnalyzer {
 
     // 标签页切换
     switchTab(tabName) {
-        // 切换标签页按钮状态
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.tab === tabName);
-        });
-        
-        // 切换标签页内容
-        document.querySelectorAll('.tab-content').forEach(content => {
-            content.classList.toggle('active', content.dataset.tab === tabName);
-        });
+        const configPanel = document.getElementById('configPanel');
+        if (configPanel) {
+            configPanel.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.tab === tabName);
+            });
+            configPanel.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.toggle('active', content.dataset.tab === tabName);
+            });
+        }
         
         if (tabName === 'groups') {
             this.renderGroupsList();
