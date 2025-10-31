@@ -279,8 +279,20 @@ header .btn-small:hover {
 }
 
 .log-line.selected {
-    background: #e8f0fe;
     border-left: 3px solid #1a73e8;
+    position: relative;
+}
+
+/* 确保日志行有合适的换行行为 */
+.log-line {
+    white-space: pre-wrap; /* 保持换行但允许水平滚动 */
+    word-break: break-all; /* 长单词可以换行 */
+}
+
+/* 确保日志容器允许水平滚动 */
+.log-content {
+    overflow-x: auto;
+    position: relative;
 }
 
 .log-line.highlighted {

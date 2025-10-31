@@ -240,6 +240,7 @@ class UIRenderer {
         // 清除之前的选中样式
         this.core.logContent.querySelectorAll('.log-line.selected').forEach(el => {
             el.classList.remove('selected');
+            el.style.background = ''; // 清除动态背景色
         });
         
         // 应用新的选中样式
@@ -247,6 +248,8 @@ class UIRenderer {
             const lineElement = this.core.logContent.querySelector(`[data-index="${this.core.selectedLineIndex}"]`);
             if (lineElement) {
                 lineElement.classList.add('selected');
+                // 动态设置背景色以确保覆盖整个宽度
+                lineElement.style.background = '#e8f0fe';
             }
         }
     }
