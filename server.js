@@ -39,13 +39,16 @@ const upload = multer({
             'text/plain',
             'application/json',
             'text/x-log',
-            'text/x-shellscript'
+            'text/x-shellscript',
+            'application/octet-stream'  // 添加通用二进制流类型，macOS上的.log文件可能被识别为此类型
         ];
         
-        if (allowedTypes.includes(file.mimetype) || 
-            file.originalname.endsWith('.log') ||
-            file.originalname.endsWith('.txt') ||
-            file.originalname.endsWith('.json')) {
+        // 检查文件扩展名
+        const allowedExtensions = ['.log', '.txt', '.json'];
+        const fileExtension = file.originalname.toLowerCase();
+        
+        if (allowedTypes.includes(file.mimetype) ||
+            allowedExtensions.some(ext => fileExtension.endsWith(ext))) {
             cb(null, true);
         } else {
             cb(new Error('只支持文本文件格式 (.log, .txt, .json)'));
@@ -162,7 +165,7 @@ app.post('/api/analyze', (req, res) => {
 // 导出接口
 app.post('/api/export', (req, res) => {
     try {
-        const { logs, filename = 'export.txt' } = req.body;
+        const { logs, filename = 'xlogAssistSaved.log' } = req.body;
         
         if (!logs || !Array.isArray(logs)) {
             return res.status(400).json({ error: '无效的日志数据' });

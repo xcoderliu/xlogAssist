@@ -6,7 +6,10 @@ class ExportManager {
 
     // 导出日志
     exportLogs() {
-        this.exportContent(this.core.logs.map(log => log.content).join('\n'), 'logs.txt');
+        // 如果有过滤结果，导出过滤后的日志；否则导出所有日志
+        const logsToExport = this.core.filteredLogs || this.core.logs;
+        const filename = this.core.filteredLogs ? 'xlogAssistFiltered.log' : 'xlogAssistSaved.log';
+        this.exportContent(logsToExport.map(log => log.content).join('\n'), filename);
     }
 
     // 导出排查区日志
