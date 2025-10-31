@@ -563,6 +563,8 @@ class ConfigManager {
                 // 导入诊断规则（如果存在）
                 if (configData.diagnosisRules) {
                     this.mergeDiagnosisRules(configData.diagnosisRules);
+                    // 立即保存诊断规则到localStorage
+                    localStorage.setItem('xlogAssist_diagnosisRules', JSON.stringify(this.core.diagnosisRules));
                 }
 
                 // 导入图表配置（如果存在）
