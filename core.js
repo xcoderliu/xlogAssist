@@ -12,6 +12,7 @@ class LogAnalyzer {
         this.currentFile = null;
         this.editingIndex = undefined;
         this.editingDiagnosisIndex = undefined; // 新增：编辑诊断规则索引
+        this.editingChartConfigId = undefined; // 新增：编辑图表配置ID
         
         // 搜索相关属性
         this.searchResults = [];
@@ -26,10 +27,6 @@ class LogAnalyzer {
         // 选中行相关属性
         this.selectedLineIndex = -1;
         
-        // 设置相关属性
-        this.settings = {
-            investigationClickToJump: true
-        };
         
         // 初始化模块
         this.initializeModules();
@@ -71,14 +68,9 @@ class LogAnalyzer {
         // 导出导入按钮
         this.exportConfigBtn = document.getElementById('exportConfig');
         this.importConfigBtn = document.getElementById('importConfig');
+        this.clearAllStorageBtn = document.getElementById('clearAllStorage');
         this.importConfigFileInput = document.getElementById('importConfigFile');
         
-        // 设置相关元素
-        this.settingsBtn = document.getElementById('settingsBtn');
-        this.settingsPanel = document.getElementById('settingsPanel');
-        this.closeSettingsBtn = document.getElementById('closeSettings');
-        this.investigationClickToJumpCheckbox = document.getElementById('investigationClickToJump');
-        this.saveSettingsBtn = document.getElementById('saveSettings');
     }
 
     bindEvents() {
@@ -137,10 +129,6 @@ class LogAnalyzer {
             });
         });
 
-        // 设置相关事件
-        this.settingsBtn.addEventListener('click', () => this.showSettingsPanel());
-        this.closeSettingsBtn.addEventListener('click', () => this.hideSettingsPanel());
-        this.saveSettingsBtn.addEventListener('click', () => this.saveSettings());
     }
 
     // 状态管理方法
@@ -162,7 +150,6 @@ class LogAnalyzer {
         localStorage.setItem('xlogAssist_configGroups', JSON.stringify(this.configGroups));
         localStorage.setItem('xlogAssist_activeGroups', JSON.stringify(Array.from(this.activeGroups)));
         localStorage.setItem('xlogAssist_filterGroups', JSON.stringify(Array.from(this.filterGroups))); // 新增：保存过滤配置组
-        localStorage.setItem('xlogAssist_settings', JSON.stringify(this.settings));
     }
 
     loadConfig() {
@@ -170,7 +157,6 @@ class LogAnalyzer {
         const savedGroups = localStorage.getItem('xlogAssist_configGroups');
         const savedActiveGroups = localStorage.getItem('xlogAssist_activeGroups');
         const savedFilterGroups = localStorage.getItem('xlogAssist_filterGroups'); // 新增：加载过滤配置组
-        const savedSettings = localStorage.getItem('xlogAssist_settings');
         const savedDiagnosisRules = localStorage.getItem('xlogAssist_diagnosisRules');
         
         if (savedRules) {
@@ -187,10 +173,6 @@ class LogAnalyzer {
         
         if (savedFilterGroups) {
             this.filterGroups = new Set(JSON.parse(savedFilterGroups)); // 新增：加载过滤配置组
-        }
-        
-        if (savedSettings) {
-            this.settings = { ...this.settings, ...JSON.parse(savedSettings) };
         }
 
         // 加载诊断规则到core中，供configManager使用
@@ -244,23 +226,6 @@ class LogAnalyzer {
         }
     }
 
-    // 设置相关方法
-    showSettingsPanel() {
-        // 加载当前设置到表单
-        this.investigationClickToJumpCheckbox.checked = this.settings.investigationClickToJump;
-        this.settingsPanel.style.display = 'block';
-    }
-
-    hideSettingsPanel() {
-        this.settingsPanel.style.display = 'none';
-    }
-
-    saveSettings() {
-        this.settings.investigationClickToJump = this.investigationClickToJumpCheckbox.checked;
-        this.saveConfig();
-        this.hideSettingsPanel();
-        this.setStatus('设置已保存');
-    }
 }
 
 // 导出核心类

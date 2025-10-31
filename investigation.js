@@ -37,13 +37,11 @@ class Investigation {
             
             // 添加点击事件 - 跳转到原日志行
             itemElement.addEventListener('click', () => {
-                if (this.core.settings.investigationClickToJump) {
-                    this.core.selectLine(log.originalIndex);
-                    // 滚动到选中行
-                    const lineElement = this.core.logContent.querySelector(`[data-index="${log.originalIndex}"]`);
-                    if (lineElement) {
-                        lineElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }
+                this.core.selectLine(log.originalIndex);
+                // 滚动到选中行
+                const lineElement = this.core.logContent.querySelector(`[data-index="${log.originalIndex}"]`);
+                if (lineElement) {
+                    lineElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
             });
             

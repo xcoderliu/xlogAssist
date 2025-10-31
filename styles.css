@@ -31,6 +31,10 @@ header {
     padding: 16px 24px;
     border-bottom: 1px solid #dadce0;
     box-shadow: 0 1px 2px rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
 }
 
 header h1 {
@@ -38,6 +42,35 @@ header h1 {
     font-weight: 500;
     color: #1a73e8;
     margin: 0;
+}
+
+.header-status {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.header-status .status {
+    color: #188038;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+header .btn-small {
+    padding: 8px 16px;
+    font-size: 14px;
+    background: #1a73e8;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+header .btn-small:hover {
+    background: #1967d2;
+    box-shadow: 0 1px 2px rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
 }
 
 /* 主内容区域 */
@@ -340,11 +373,7 @@ footer {
     flex-shrink: 0;
 }
 
-.status {
-    color: #188038;
-    font-weight: 500;
-    font-size: 14px;
-}
+/* 状态样式已移动到header中 */
 
 /* 右键菜单 */
 .context-menu {
@@ -1945,4 +1974,963 @@ footer .btn {
         padding: 4px 10px;
         min-width: 60px;
     }
+}
+
+/* 图表可视化样式 */
+.charting-area {
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    padding: 24px;
+    background: #f8f9fa;
+    border-left: 1px solid #dadce0;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.charting-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #dadce0;
+    flex-shrink: 0;
+}
+
+.charting-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 500;
+    color: #202124;
+}
+
+.charting-controls {
+    display: flex;
+    gap: 8px;
+}
+
+.charting-content {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+    position: relative;
+}
+
+/* 图表网格布局 */
+.charts-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+    height: 100%;
+    min-height: 400px;
+}
+
+.chart-item {
+    background: #ffffff;
+    border: 1px solid #dadce0;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    min-height: 300px;
+}
+
+.chart-item:hover {
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+    transform: translateY(-3px);
+    border-color: #1a73e8;
+}
+
+.chart-header {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-shrink: 0;
+}
+
+.chart-title-section {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.chart-name {
+    font-weight: 700;
+    font-size: 16px;
+    color: #202124;
+    margin: 0;
+    line-height: 1.3;
+}
+
+.chart-type-badge {
+    font-size: 12px;
+    font-weight: 600;
+    color: #1a73e8;
+    background: rgba(26, 115, 232, 0.1);
+    padding: 4px 10px;
+    border-radius: 12px;
+    border: 1px solid rgba(26, 115, 232, 0.2);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+
+.chart-description {
+    color: #5f6368;
+    font-size: 14px;
+    line-height: 1.5;
+    margin: 0;
+    padding: 12px 16px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 3px solid #dadce0;
+}
+
+.chart-preview {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px dashed #dadce0;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.chart-item:hover .chart-preview {
+    border-color: #1a73e8;
+    background: #f0f7ff;
+}
+
+.chart-image {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: 4px;
+}
+
+.chart-placeholder {
+    text-align: center;
+    color: #9aa0a6;
+    padding: 20px;
+}
+
+.chart-placeholder-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+    display: block;
+    color: #dadce0;
+}
+
+.chart-placeholder-text {
+    font-size: 14px;
+    margin: 0;
+}
+
+.chart-actions {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.chart-item:hover .chart-actions {
+    opacity: 1;
+}
+
+.chart-action-btn {
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.9);
+    color: #5f6368;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(4px);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.chart-action-btn:hover {
+    background: #1a73e8;
+    color: white;
+    transform: scale(1.1);
+}
+
+/* 图表模态框 */
+.chart-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.chart-modal.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.chart-modal-content {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 90vw;
+    max-height: 90vh;
+    position: relative;
+    transform: scale(0.8);
+    transition: transform 0.3s ease;
+}
+
+.chart-modal.active .chart-modal-content {
+    transform: scale(1);
+}
+
+.chart-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #dadce0;
+}
+
+.chart-modal-title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: #202124;
+}
+
+.chart-modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #5f6368;
+    padding: 4px;
+    border-radius: 50%;
+    transition: background 0.2s ease;
+}
+
+.chart-modal-close:hover {
+    background: #f1f3f4;
+    color: #202124;
+}
+
+.chart-modal-body {
+    max-height: calc(90vh - 120px);
+    overflow: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.chart-modal-image {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* 图表配置样式 - 优化版 */
+.chart-config-item {
+    margin-bottom: 20px;
+    background: #ffffff;
+    border: 1px solid #e8eaed;
+    border-radius: 12px;
+    padding: 20px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    position: relative;
+    overflow: hidden;
+}
+
+.chart-config-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(135deg, #1a73e8, #4285f4);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.chart-config-item:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    border-color: #dadce0;
+    transform: translateY(-2px);
+}
+
+.chart-config-item:hover::before {
+    opacity: 1;
+}
+
+.chart-config-item.disabled {
+    background: #f8f9fa;
+    opacity: 0.6;
+    border-color: #e8eaed;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+.chart-config-item.disabled:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transform: none;
+}
+
+.chart-config-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.chart-config-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.chart-config-title {
+    font-weight: 700;
+    font-size: 18px;
+    color: #202124;
+    margin: 0 0 8px 0;
+    line-height: 1.3;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.chart-config-item.disabled .chart-config-title {
+    color: #9aa0a6;
+}
+
+.chart-config-type {
+    font-size: 12px;
+    font-weight: 600;
+    color: #1a73e8;
+    background: rgba(26, 115, 232, 0.1);
+    padding: 4px 10px;
+    border-radius: 12px;
+    border: 1px solid rgba(26, 115, 232, 0.2);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.chart-config-item.disabled .chart-config-type {
+    color: #9aa0a6;
+    background: rgba(154, 160, 166, 0.1);
+    border-color: rgba(154, 160, 166, 0.2);
+}
+
+.chart-config-description {
+    color: #5f6368;
+    font-size: 14px;
+    line-height: 1.5;
+    margin-bottom: 16px;
+    padding: 12px 16px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 3px solid #dadce0;
+    max-width: 100%;
+}
+
+.chart-config-item.disabled .chart-config-description {
+    color: #9aa0a6;
+    background: #f1f3f4;
+    border-left-color: #e8eaed;
+}
+
+.chart-config-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+    padding: 16px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e8eaed;
+}
+
+.chart-config-item.disabled .chart-config-details {
+    background: #f1f3f4;
+    border-color: #e8eaed;
+}
+
+.chart-config-detail {
+    font-size: 13px;
+    color: #5f6368;
+    line-height: 1.4;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.chart-config-detail::before {
+    content: '•';
+    color: #1a73e8;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+.chart-config-item.disabled .chart-config-detail {
+    color: #9aa0a6;
+}
+
+.chart-config-item.disabled .chart-config-detail::before {
+    color: #9aa0a6;
+}
+
+.chart-config-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    align-items: center;
+    flex-wrap: wrap;
+    padding-top: 16px;
+    border-top: 1px solid #f1f3f4;
+}
+
+.chart-config-actions-left {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-right: auto;
+}
+
+.chart-config-actions-right {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+/* 图表配置切换开关 - 与诊断规则保持一致 */
+.chart-config-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    padding: 6px 12px;
+    border-radius: 20px;
+    background: #f1f3f4;
+    border: 1px solid #dadce0;
+    transition: all 0.2s ease;
+    font-size: 12px;
+    font-weight: 500;
+    color: #5f6368;
+}
+
+.chart-config-toggle:hover {
+    background: #e8eaed;
+}
+
+.chart-config-toggle.enabled {
+    background: #e6f4ea;
+    border-color: #34a853;
+    color: #137333;
+}
+
+.chart-config-toggle.disabled {
+    background: #fce8e6;
+    border-color: #ea4335;
+    color: #c5221f;
+}
+
+.chart-config-toggle .toggle-switch {
+    position: relative;
+    width: 36px;
+    height: 20px;
+    background: #dadce0;
+    border-radius: 10px;
+    transition: all 0.2s ease;
+}
+
+.chart-config-toggle .toggle-switch::before {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    background: white;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+.chart-config-toggle.enabled .toggle-switch {
+    background: #34a853;
+}
+
+.chart-config-toggle.enabled .toggle-switch::before {
+    transform: translateX(16px);
+}
+
+.chart-config-toggle.disabled .toggle-switch {
+    background: #ea4335;
+}
+
+.toggle-label {
+    font-size: 12px;
+    font-weight: 500;
+}
+
+/* 图表配置操作按钮 - 优化版 */
+.edit-chart-config,
+.delete-chart-config {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 80px;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.edit-chart-config::before,
+.delete-chart-config::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.edit-chart-config:hover::before,
+.delete-chart-config:hover::before {
+    left: 100%;
+}
+
+.edit-chart-config {
+    background: linear-gradient(135deg, #34a853, #2d8e47);
+    color: white;
+    box-shadow: 0 2px 8px rgba(52, 168, 83, 0.3);
+}
+
+.edit-chart-config:hover {
+    background: linear-gradient(135deg, #2d8e47, #1e7e34);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(52, 168, 83, 0.4);
+}
+
+.delete-chart-config {
+    background: linear-gradient(135deg, #ea4335, #d33426);
+    color: white;
+    box-shadow: 0 2px 8px rgba(234, 67, 53, 0.3);
+}
+
+.delete-chart-config:hover {
+    background: linear-gradient(135deg, #d33426, #c5221f);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(234, 67, 53, 0.4);
+}
+
+.edit-chart-config:active,
+.delete-chart-config:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* 空状态样式 - 优化版 */
+.empty-chart-configs {
+    color: #9aa0a6;
+    text-align: center;
+    padding: 60px 20px;
+    font-style: italic;
+    font-size: 16px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    border: 2px dashed #dadce0;
+    margin: 20px 0;
+}
+
+.empty-chart-configs::before {
+    content: '📊';
+    font-size: 48px;
+    display: block;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+/* 图表配置表单样式 */
+.chart-config-form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.chart-config-form .config-item {
+    margin-bottom: 0;
+}
+
+.chart-config-form label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 500;
+    color: #202124;
+    font-size: 14px;
+}
+
+.chart-config-form input[type="text"],
+.chart-config-form input[type="color"],
+.chart-config-form select,
+.chart-config-form textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #dadce0;
+    border-radius: 6px;
+    font-size: 14px;
+    background: #ffffff;
+    transition: all 0.2s ease;
+}
+
+.chart-config-form input[type="text"]:focus,
+.chart-config-form input[type="color"]:focus,
+.chart-config-form select:focus,
+.chart-config-form textarea:focus {
+    outline: none;
+    border-color: #1a73e8;
+    box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+}
+
+.chart-config-form textarea {
+    resize: vertical;
+    min-height: 80px;
+    font-family: inherit;
+}
+
+/* 图表脚本提示 */
+.chart-script-hint {
+    margin-top: 4px;
+    color: #9aa0a6;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.chart-script-hint small {
+    font-size: 11px;
+}
+
+/* 响应式调整 */
+@media (max-width: 1024px) {
+    .chart-grid {
+        grid-template-columns: 1fr;
+        grid-template-rows: repeat(4, 1fr);
+    }
+    
+    .chart-config-details {
+        grid-template-columns: 1fr;
+    }
+    
+    .chart-config-form {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .charting-area {
+        padding: 16px;
+    }
+    
+    .charting-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    
+    .charting-controls {
+        align-self: stretch;
+        justify-content: flex-end;
+    }
+    
+    .chart-item-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .chart-config-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .chart-config-actions {
+        align-self: stretch;
+        justify-content: space-between;
+    }
+    
+    .chart-modal-content {
+        padding: 16px;
+        margin: 16px;
+    }
+    
+    .chart-modal-title {
+        font-size: 18px;
+    }
+}
+
+/* 图表加载状态 */
+.chart-loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    z-index: 10;
+}
+
+.chart-loading-spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #1a73e8;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.chart-error {
+    text-align: center;
+    color: #ea4335;
+    padding: 20px;
+}
+
+.chart-error-icon {
+    font-size: 32px;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.chart-error-text {
+    font-size: 14px;
+    margin: 0;
+}
+
+/* 图表标题区域布局 */
+.chart-title-section {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    width: 100%;
+}
+
+.chart-title-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    flex: 1;
+}
+
+.chart-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+/* 图标按钮样式 */
+.btn-icon {
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: #5f6368;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    padding: 0;
+}
+
+.btn-icon:hover {
+    background: #f1f3f4;
+    color: #1a73e8;
+    transform: scale(1.1);
+}
+
+.btn-icon:active {
+    transform: scale(0.95);
+}
+
+/* 全屏模态框样式 */
+.chart-fullscreen-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(8px);
+}
+
+.chart-fullscreen-modal.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.chart-fullscreen-content {
+    background: #ffffff;
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform: scale(0.95);
+    transition: transform 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.chart-fullscreen-modal.active .chart-fullscreen-content {
+    transform: scale(1);
+}
+
+.chart-fullscreen-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 24px;
+    border-bottom: 1px solid #dadce0;
+    background: #ffffff;
+    flex-shrink: 0;
+}
+
+.chart-fullscreen-header .chart-title-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.chart-fullscreen-header .chart-name {
+    font-weight: 700;
+    font-size: 16px;
+    color: #202124;
+    margin: 0;
+    line-height: 1.3;
+}
+
+.chart-fullscreen-header .chart-type-badge {
+    font-size: 12px;
+    font-weight: 600;
+    color: #1a73e8;
+    background: rgba(26, 115, 232, 0.1);
+    padding: 4px 10px;
+    border-radius: 12px;
+    border: 1px solid rgba(26, 115, 232, 0.2);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+
+.chart-fullscreen-body {
+    flex: 1;
+    padding: 0;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8f9fa;
+}
+
+.chart-fullscreen-canvas-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.chart-fullscreen-canvas-container canvas {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100%;
+    max-height: 100%;
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.close-fullscreen-btn {
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: #5f6368;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    padding: 0;
+}
+
+.close-fullscreen-btn:hover {
+    background: #f1f3f4;
+    color: #ea4335;
+    transform: scale(1.1);
 }

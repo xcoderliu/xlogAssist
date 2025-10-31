@@ -5,11 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>xlogAssist - 日志分析工具</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="container">
         <header>
             <h1>xlogAssist</h1>
+            <div class="header-status">
+                <span class="status" id="status">就绪</span>
+            </div>
+            <button id="configBtn" class="btn btn-small">配置</button>
         </header>
 
         <div class="main-content">
@@ -110,6 +115,7 @@
                 <div class="config-actions">
                     <button id="exportConfig" class="btn btn-small">导出配置</button>
                     <button id="importConfig" class="btn btn-small">导入配置</button>
+                    <button id="clearAllStorage" class="btn btn-small btn-danger">清空Storage</button>
                     <input type="file" id="importConfigFile" accept=".json" style="display: none;">
                 </div>
                 <button class="close-btn" id="closeConfig">×</button>
@@ -119,6 +125,7 @@
                     <button class="tab-btn active" data-tab="rules">高亮配置</button>
                     <button class="tab-btn" data-tab="groups">高亮配置组</button>
                     <button class="tab-btn" data-tab="diagnosis">诊断配置</button>
+                    <button class="tab-btn" data-tab="charting">图表配置</button>
                 </div>
                 
                 <!-- 规则管理标签页 -->
@@ -212,6 +219,112 @@
                             <div class="empty-diagnosis-rules">暂无诊断规则</div>
                         </div>
                     </div>
+                    
+                    <!-- 图表配置标签页 -->
+                    <div class="tab-content" data-tab="charting">
+                        <div class="config-item">
+                            <label>图表名称:</label>
+                            <input type="text" id="chartName" placeholder="例如: 网络成功率趋势">
+                        </div>
+                        <div class="config-item">
+                            <label>图表类型:</label>
+                            <select id="chartType">
+                                <option value="line">折线图</option>
+                                <option value="bar">柱状图</option>
+                                <option value="pie">饼图</option>
+                            </select>
+                        </div>
+                        <div class="config-item">
+                            <label>图表描述:</label>
+                            <textarea id="chartDescription" placeholder="图表用途描述" rows="2"></textarea>
+                        </div>
+                        <div class="config-item">
+                            <label>JavaScript数据提取脚本:</label>
+                            <textarea id="chartScript" placeholder="输入JavaScript代码，从日志中提取数据" rows="8" style="font-family: monospace;">// 示例：使用假数据生成图表
+// 返回格式：{ labels: ['标签1', '标签2', ...], datasets: [{ data: [数值1, 数值2, ...] }] }
+
+// 生成假数据
+const data = {
+    labels: ['一月', '二月', '三月', '四月', '五月', '六月'],
+    datasets: [{
+        label: '示例数据',
+        data: [65, 59, 80, 81, 56, 55]
+    }]
+};
+
+// 如果日志存在，可以结合日志数据
+if (logs && logs.length > 0) {
+    // 这里可以添加从日志中提取数据的逻辑
+    // 例如：统计每行日志中的关键词出现次数
+    // const keywordCounts = logs.map(log => (log.content.match(/error/gi) || []).length);
+    // data.datasets[0].data = keywordCounts;
+}
+
+// 返回数据对象
+return data;</textarea>
+                            <div class="script-hint">
+                                <small>脚本必须返回包含 labels 和 datasets 字段的对象</small>
+                            </div>
+                        </div>
+                        
+                        <!-- 折线图配置 -->
+                        <div class="config-section" id="lineChartConfig" style="display: block;">
+                            <h4>折线图配置</h4>
+                            <div class="config-item">
+                                <label>X轴字段:</label>
+                                <input type="text" id="lineXField" placeholder="例如: timestamp (时间戳)">
+                            </div>
+                            <div class="config-item">
+                                <label>Y轴字段:</label>
+                                <input type="text" id="lineYField" placeholder="例如: value (数值)">
+                            </div>
+                            <div class="config-item">
+                                <label>系列名称:</label>
+                                <input type="text" id="lineSeriesName" placeholder="例如: 成功率">
+                            </div>
+                        </div>
+                        
+                        <!-- 柱状图配置 -->
+                        <div class="config-section" id="barChartConfig" style="display: none;">
+                            <h4>柱状图配置</h4>
+                            <div class="config-item">
+                                <label>X轴字段:</label>
+                                <input type="text" id="barXField" placeholder="例如: category (分类)">
+                            </div>
+                            <div class="config-item">
+                                <label>Y轴字段:</label>
+                                <input type="text" id="barYField" placeholder="例如: value (数值)">
+                            </div>
+                            <div class="config-item">
+                                <label>系列名称:</label>
+                                <input type="text" id="barSeriesName" placeholder="例如: 错误数量">
+                            </div>
+                        </div>
+                        
+                        <!-- 饼图配置 -->
+                        <div class="config-section" id="pieChartConfig" style="display: none;">
+                            <h4>饼图配置</h4>
+                            <div class="config-item">
+                                <label>分类字段:</label>
+                                <input type="text" id="pieNameField" placeholder="例如: name (分类名称)">
+                            </div>
+                            <div class="config-item">
+                                <label>数值字段:</label>
+                                <input type="text" id="pieValueField" placeholder="例如: value (占比数值)">
+                            </div>
+                            <div class="config-item">
+                                <label>系列名称:</label>
+                                <input type="text" id="pieSeriesName" placeholder="例如: 分布比例">
+                            </div>
+                        </div>
+                        
+                        <button id="addChartConfig" class="btn">添加图表配置</button>
+                        
+                        <div class="chart-configs-list" id="chartConfigsList">
+                            <h4>当前图表配置:</h4>
+                            <div class="empty-chart-configs">暂无图表配置</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -227,31 +340,8 @@
             </div>
         </div>
 
-        <!-- 设置面板 -->
-        <div class="settings-panel" id="settingsPanel">
-            <div class="settings-header">
-                <h3>设置</h3>
-                <button class="close-btn" id="closeSettings">×</button>
-            </div>
-            <div class="settings-content">
-                <div class="settings-item">
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="investigationClickToJump">
-                        点击排查区跳转原日志行
-                    </label>
-                </div>
-                <div class="settings-actions">
-                    <button id="saveSettings" class="btn">保存设置</button>
-                </div>
-            </div>
-        </div>
-
         <footer>
-            <div class="button-group">
-                <button id="settingsBtn" class="btn btn-small">设置</button>
-                <button id="configBtn" class="btn">配置</button>
-            </div>
-            <span class="status" id="status">就绪</span>
+            <!-- 状态信息已移动到header -->
         </footer>
     </div>
 

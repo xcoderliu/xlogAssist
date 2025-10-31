@@ -9,124 +9,15 @@ class Diagnosis {
 
     // 初始化诊断模块
     initialize() {
-        this.loadDiagnosisRules();
-        this.initializeDiagnosisUI();
-    }
-
-    // 加载诊断规则
-    loadDiagnosisRules() {
-        const savedRules = localStorage.getItem('xlogAssist_diagnosisRules');
-        if (savedRules && savedRules.trim() !== '') {
-            this.core.diagnosisRules = JSON.parse(savedRules);
-        } else {
-            // 如果没有保存的规则，初始化为空数组
-            this.core.diagnosisRules = [];
+        try {
+            this.loadDiagnosisRules();
+            this.initializeDiagnosisUI();
+        } catch (error) {
+            alert('诊断模块初始化出错: ' + error.message);
         }
     }
 
-    // 保存诊断规则
-    saveDiagnosisRules() {
-        localStorage.setItem('xlogAssist_diagnosisRules', JSON.stringify(this.core.diagnosisRules));
-    }
-
-    // 执行问题诊断
-    performDiagnosis() {
-        this.diagnosisResults = [];
-        
-        if (this.core.logs.length === 0) {
-            this.core.setStatus('请先上传日志文件', 'error');
-            return;
-        }
-
-        // 对每条日志应用诊断规则
-        this.core.logs.forEach((log, index) => {
-            this.core.diagnosisRules.forEach(rule => {
-                // 检查规则是否启用
-                if (!rule.enabled) {
-                    return; // 跳过禁用的规则
-                }
-                
-                rule.patterns.forEach(pattern => {
-                    try {
-                        // 使用正则表达式缓存优化性能
-                        let regex = this._regexCache.get(pattern);
-                        if (!regex) {
-                            regex = new RegExp(pattern, 'i');
-                            this._regexCache.set(pattern, regex);
-                        }
-                        
-                        if (regex.test(log.content)) {
-                            let customResult = null;
-                            
-                            // 如果有自定义脚本，执行脚本处理
-                            if (rule.customScript) {
-                                try {
-                                    customResult = this.executeCustomScript(rule.customScript, log.content, pattern);
-                                } catch (error) {
-                                    console.warn('自定义脚本执行错误:', error);
-                                }
-                            }
-                            
-                            this.diagnosisResults.push({
-                                ruleId: rule.id,
-                                ruleName: rule.name,
-                                description: rule.description,
-                                severity: rule.severity,
-                                category: rule.category,
-                                solution: rule.solution,
-                                logIndex: index,
-                                logContent: log.content,
-                                matchedPattern: pattern,
-                                timestamp: new Date().toISOString(),
-                                customResult: customResult
-                            });
-                        }
-                    } catch (error) {
-                        console.warn('诊断规则正则表达式错误:', pattern, error);
-                    }
-                });
-            });
-        });
-
-        // 按原日志顺序和严重程度排序
-        this.diagnosisResults.sort((a, b) => {
-            // 首先按原日志顺序排序
-            const logIndexDiff = a.logIndex - b.logIndex;
-            
-            // 如果同一行日志，按严重程度排序
-            if (logIndexDiff === 0) {
-                const severityOrder = { error: 0, warning: 1, info: 2 };
-                return severityOrder[a.severity] - severityOrder[b.severity];
-            }
-            
-            return logIndexDiff;
-        });
-
-        this.core.setStatus(`诊断完成，发现 ${this.diagnosisResults.length} 个问题`);
-        this.renderDiagnosisResults();
-        return this.diagnosisResults;
-    }
-
-    // 获取诊断结果统计
-    getDiagnosisStats() {
-        const stats = {
-            total: this.diagnosisResults.length,
-            bySeverity: {},
-            byCategory: {}
-        };
-
-        this.diagnosisResults.forEach(result => {
-            // 按严重程度统计
-            stats.bySeverity[result.severity] = (stats.bySeverity[result.severity] || 0) + 1;
-            
-            // 按类别统计
-            stats.byCategory[result.category] = (stats.byCategory[result.category] || 0) + 1;
-        });
-
-        return stats;
-    }
-
-    // 初始化诊断UI
+    // 初始化诊断UI - 恢复原始逻辑
     initializeDiagnosisUI() {
         // 修改右侧区域为标签页结构
         const investigationArea = document.getElementById('investigationArea');
@@ -136,11 +27,13 @@ class Diagnosis {
                     <div class="investigation-tabs">
                         <button class="tab-btn active" data-tab="investigation">排查区</button>
                         <button class="tab-btn" data-tab="diagnosis">诊断区</button>
+                        <button class="tab-btn" data-tab="charting">绘图区</button>
                     </div>
                     <div class="investigation-controls">
                         <button id="clearBtn" class="btn btn-small">清空</button>
                         <button id="exportBtn" class="btn btn-small">导出</button>
                         <button id="performDiagnosis" class="btn btn-small" style="display: none;">执行诊断</button>
+                        <button id="generateChart" class="btn btn-small" style="display: none;">生成图表</button>
                     </div>
                 </div>
                 <div class="investigation-content">
@@ -162,6 +55,15 @@ class Diagnosis {
                             </div>
                         </div>
                     </div>
+                    <!-- 绘图区内容 -->
+                    <div class="tab-content" data-tab="charting">
+                        <div class="charts-container" id="chartsContainer">
+                            <div class="empty-state">
+                                <p>暂无图表</p>
+                                <p>请在配置面板中添加图表配置</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             `;
 
@@ -169,7 +71,7 @@ class Diagnosis {
             this.bindTabEvents();
             // 绑定诊断按钮事件
             this.bindDiagnosisEvents();
-            
+
             // 确保默认显示排查区
             this.updateControlButtons('investigation');
         }
@@ -183,11 +85,11 @@ class Diagnosis {
         tabButtons.forEach(button => {
             button.addEventListener('click', () => {
                 const tabName = button.dataset.tab;
-                
+
                 // 更新按钮状态
                 tabButtons.forEach(btn => btn.classList.remove('active'));
                 button.classList.add('active');
-                
+
                 // 更新内容显示
                 tabContents.forEach(content => {
                     content.classList.remove('active');
@@ -203,6 +105,12 @@ class Diagnosis {
                 if (tabName === 'diagnosis') {
                     this.renderDiagnosisResults();
                 }
+                // 如果是绘图标签，显示图表
+                else if (tabName === 'charting') {
+                    if (this.core.charting && this.core.charting.renderCharts) {
+                        this.core.charting.renderCharts();
+                    }
+                }
             });
         });
     }
@@ -212,17 +120,19 @@ class Diagnosis {
         const clearBtn = document.getElementById('clearBtn');
         const exportBtn = document.getElementById('exportBtn');
         const performDiagnosisBtn = document.getElementById('performDiagnosis');
+        const generateChartBtn = document.getElementById('generateChart');
 
         if (tabName === 'investigation') {
-            // 排查区：显示清空和导出按钮，隐藏执行诊断按钮
+            // 排查区：显示清空和导出按钮，隐藏其他按钮
             clearBtn.style.display = 'inline-block';
             exportBtn.style.display = 'inline-block';
             performDiagnosisBtn.style.display = 'none';
-            
+            generateChartBtn.style.display = 'none';
+
             // 更新按钮文本
             clearBtn.textContent = '清空';
             exportBtn.textContent = '导出';
-            
+
             // 重新绑定事件
             this.bindInvestigationEvents();
         } else if (tabName === 'diagnosis') {
@@ -230,13 +140,26 @@ class Diagnosis {
             clearBtn.style.display = 'inline-block';
             exportBtn.style.display = 'inline-block';
             performDiagnosisBtn.style.display = 'inline-block';
-            
+            generateChartBtn.style.display = 'none';
+
             // 更新按钮文本
             clearBtn.textContent = '清空';
             exportBtn.textContent = '导出';
-            
+
             // 重新绑定事件
             this.bindDiagnosisEvents();
+        } else if (tabName === 'charting') {
+            // 绘图区：显示生成图表按钮，隐藏其他按钮
+            clearBtn.style.display = 'none';
+            exportBtn.style.display = 'none';
+            performDiagnosisBtn.style.display = 'none';
+            generateChartBtn.style.display = 'inline-block';
+
+            // 更新按钮文本
+            generateChartBtn.textContent = '生成图表';
+
+            // 重新绑定事件
+            this.bindChartingEvents();
         }
     }
 
@@ -296,6 +219,139 @@ class Diagnosis {
         });
     }
 
+    // 绑定绘图区事件
+    bindChartingEvents() {
+        const generateChartBtn = document.getElementById('generateChart');
+
+        // 移除之前的事件监听器
+        generateChartBtn.replaceWith(generateChartBtn.cloneNode(true));
+
+        // 重新获取元素
+        const newGenerateChartBtn = document.getElementById('generateChart');
+
+        // 绑定生成图表事件
+        newGenerateChartBtn.addEventListener('click', () => {
+            if (this.core.charting && this.core.charting.generateAllCharts) {
+                this.core.charting.generateAllCharts();
+            }
+        });
+    }
+
+    // 加载诊断规则
+    loadDiagnosisRules() {
+        const savedRules = localStorage.getItem('xlogAssist_diagnosisRules');
+        if (savedRules && savedRules.trim() !== '') {
+            this.core.diagnosisRules = JSON.parse(savedRules);
+        } else {
+            // 如果没有保存的规则，初始化为空数组
+            this.core.diagnosisRules = [];
+        }
+    }
+
+    // 保存诊断规则
+    saveDiagnosisRules() {
+        localStorage.setItem('xlogAssist_diagnosisRules', JSON.stringify(this.core.diagnosisRules));
+    }
+
+    // 执行问题诊断
+    performDiagnosis() {
+        this.diagnosisResults = [];
+
+        if (this.core.logs.length === 0) {
+            alert('没有日志数据');
+            this.core.setStatus('请先上传日志文件', 'error');
+            return;
+        }
+
+        // 对每条日志应用诊断规则
+        this.core.logs.forEach((log, index) => {
+            this.core.diagnosisRules.forEach(rule => {
+                // 检查规则是否启用
+                if (!rule.enabled) {
+                    return; // 跳过禁用的规则
+                }
+
+                rule.patterns.forEach(pattern => {
+                    try {
+                        // 使用正则表达式缓存优化性能
+                        let regex = this._regexCache.get(pattern);
+                        if (!regex) {
+                            regex = new RegExp(pattern, 'i');
+                            this._regexCache.set(pattern, regex);
+                        }
+
+                        if (regex.test(log.content)) {
+                            let customResult = null;
+
+                            // 如果有自定义脚本，执行脚本处理
+                            if (rule.customScript) {
+                                try {
+                                    customResult = this.executeCustomScript(rule.customScript, log.content, pattern);
+                                } catch (error) {
+                                    console.warn('自定义脚本执行错误:', error);
+                                }
+                            }
+
+                            this.diagnosisResults.push({
+                                ruleId: rule.id,
+                                ruleName: rule.name,
+                                description: rule.description,
+                                severity: rule.severity,
+                                category: rule.category,
+                                solution: rule.solution,
+                                logIndex: index,
+                                logContent: log.content,
+                                matchedPattern: pattern,
+                                timestamp: new Date().toISOString(),
+                                customResult: customResult
+                            });
+                        }
+                    } catch (error) {
+                        console.warn('诊断规则正则表达式错误:', pattern, error);
+                    }
+                });
+            });
+        });
+
+        // 按原日志顺序和严重程度排序
+        this.diagnosisResults.sort((a, b) => {
+            // 首先按原日志顺序排序
+            const logIndexDiff = a.logIndex - b.logIndex;
+
+            // 如果同一行日志，按严重程度排序
+            if (logIndexDiff === 0) {
+                const severityOrder = { error: 0, warning: 1, info: 2 };
+                return severityOrder[a.severity] - severityOrder[b.severity];
+            }
+
+            return logIndexDiff;
+        });
+
+        this.core.setStatus(`诊断完成，发现 ${this.diagnosisResults.length} 个问题`);
+        this.renderDiagnosisResults();
+        return this.diagnosisResults;
+    }
+
+    // 获取诊断结果统计
+    getDiagnosisStats() {
+        const stats = {
+            total: this.diagnosisResults.length,
+            bySeverity: {},
+            byCategory: {}
+        };
+
+        this.diagnosisResults.forEach(result => {
+            // 按严重程度统计
+            stats.bySeverity[result.severity] = (stats.bySeverity[result.severity] || 0) + 1;
+
+            // 按类别统计
+            stats.byCategory[result.category] = (stats.byCategory[result.category] || 0) + 1;
+        });
+
+        return stats;
+    }
+
+
     // 渲染诊断结果 - 按日志行分组显示
     renderDiagnosisResults() {
         const diagnosisContent = document.getElementById('diagnosisContent');
@@ -314,7 +370,7 @@ class Diagnosis {
         // 按日志行分组诊断结果
         const groupedResults = this.groupDiagnosisResultsByLogLine();
         const stats = this.getDiagnosisStats();
-        
+
         diagnosisContent.innerHTML = `
             <div class="diagnosis-stats">
                 <div class="stats-grid">
@@ -397,7 +453,7 @@ class Diagnosis {
     // 按日志行分组诊断结果
     groupDiagnosisResultsByLogLine() {
         const groups = {};
-        
+
         this.diagnosisResults.forEach(result => {
             const logIndex = result.logIndex;
             if (!groups[logIndex]) {
@@ -492,7 +548,7 @@ class Diagnosis {
         const jsonString = JSON.stringify(exportData, null, 2);
         const blob = new Blob([jsonString], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
-        
+
         const a = document.createElement('a');
         a.href = url;
         a.download = `xlogassist-diagnosis-rules-${new Date().toISOString().slice(0, 10)}.json`;
@@ -500,7 +556,7 @@ class Diagnosis {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        
+
         this.core.setStatus('诊断规则导出成功');
     }
 
@@ -510,7 +566,7 @@ class Diagnosis {
         reader.onload = (e) => {
             try {
                 const importData = JSON.parse(e.target.result);
-                
+
                 if (!importData.diagnosisRules) {
                     throw new Error('无效的诊断规则文件格式');
                 }
@@ -561,7 +617,7 @@ class Diagnosis {
         const jsonString = JSON.stringify(exportData, null, 2);
         const blob = new Blob([jsonString], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
-        
+
         const a = document.createElement('a');
         a.href = url;
         a.download = `xlogassist-diagnosis-results-${new Date().toISOString().slice(0, 10)}.json`;
@@ -569,7 +625,7 @@ class Diagnosis {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        
+
         this.core.setStatus('诊断结果导出成功');
     }
 
@@ -616,7 +672,7 @@ class Diagnosis {
         } catch (error) {
             return { error: error.message };
         }
-    
+
     }
 
     // 绑定统计项点击事件
@@ -633,7 +689,7 @@ class Diagnosis {
     // 过滤诊断结果 - 支持分组显示
     filterDiagnosisResults(severityFilter) {
         const diagnosisGroups = document.querySelectorAll('.diagnosis-group');
-        
+
         diagnosisGroups.forEach(group => {
             if (severityFilter === 'all') {
                 // 显示所有分组
@@ -645,7 +701,7 @@ class Diagnosis {
                 // 根据严重程度过滤分组
                 const groupItems = group.querySelectorAll('.diagnosis-item');
                 let hasMatchingItem = false;
-                
+
                 groupItems.forEach(item => {
                     const itemSeverity = item.dataset.severity;
                     if (itemSeverity === severityFilter) {
@@ -655,7 +711,7 @@ class Diagnosis {
                         item.style.display = 'none';
                     }
                 });
-                
+
                 // 如果分组中有匹配的项目，显示整个分组
                 if (hasMatchingItem) {
                     group.style.display = 'block';
@@ -686,7 +742,7 @@ class Diagnosis {
         if (!customResult || customResult.error) {
             return JSON.stringify(customResult, null, 2);
         }
-        
+
         return JSON.stringify(customResult, null, 2);
     }
 }
