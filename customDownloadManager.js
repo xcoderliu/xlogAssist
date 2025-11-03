@@ -3,10 +3,10 @@ class CustomDownloadManager {
     constructor(core) {
         this.core = core;
         this.customSources = [];
-        this.basePath = 'customDownLoadLogSources';
+        this.basePath = 'customDownloadLogSources';
         this.activeDownloads = new Map(); // 存储活跃的下载任务
         this.currentDownloadId = 0; // 下载任务ID计数器
-        
+
         // 确保customSources属性存在
         if (!this.customSources) {
             this.customSources = [];
@@ -18,11 +18,11 @@ class CustomDownloadManager {
         try {
             // 动态扫描目录结构
             const availableSources = [];
-            
+
             // 扫描SensorLog目录
             const sensorLogUrl = `${this.basePath}/SensorLog/index.html`;
             const sensorLogAvailable = await this.checkSourceAvailability(sensorLogUrl);
-            
+
             if (sensorLogAvailable) {
                 availableSources.push({
                     name: 'SensorLog',
@@ -31,10 +31,10 @@ class CustomDownloadManager {
                     description: '从神策埋点系统下载用户行为日志'
                 });
             }
-            
+
             // 这里可以添加更多目录的扫描逻辑
             // 例如：扫描其他自定义下载源目录
-            
+
             this.customSources = availableSources;
             return this.customSources;
         } catch (error) {
@@ -50,19 +50,19 @@ class CustomDownloadManager {
             const xhr = new XMLHttpRequest();
             xhr.open('HEAD', url, true);
             xhr.timeout = 3000; // 3秒超时
-            
-            xhr.onload = function() {
+
+            xhr.onload = function () {
                 resolve(xhr.status === 200);
             };
-            
-            xhr.onerror = function() {
+
+            xhr.onerror = function () {
                 resolve(false);
             };
-            
-            xhr.ontimeout = function() {
+
+            xhr.ontimeout = function () {
                 resolve(false);
             };
-            
+
             xhr.send();
         });
     }
@@ -75,7 +75,7 @@ class CustomDownloadManager {
             'CustomLog': '自定义日志',
             'APILog': 'API日志'
         };
-        
+
         return nameMap[name] || name.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
     }
 
@@ -376,12 +376,12 @@ class CustomDownloadManager {
         }));
 
         this.core.logs.push(...logsToAdd);
-        
+
         // 保存上次日志到本地存储
         if (this.core.fileHandler && this.core.fileHandler.saveLastLogs) {
             this.core.fileHandler.saveLastLogs(this.core.logs);
         }
-        
+
         // 通知核心模块重新渲染
         if (this.core.renderLogs) {
             this.core.renderLogs();
@@ -389,7 +389,7 @@ class CustomDownloadManager {
         if (this.core.updateLogCount) {
             this.core.updateLogCount();
         }
-        
+
         this.core.setStatus(`已添加 ${logsToAdd.length} 条日志`);
     }
 }

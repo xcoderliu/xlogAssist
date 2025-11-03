@@ -405,9 +405,6 @@ class Diagnosis {
                                     ${this.renderGroupSeverityBadges(group)}
                                 </div>
                             </div>
-                            <div class="diagnosis-log-preview">
-                                <pre>${group.logContent}</pre>
-                            </div>
                         </div>
                         <div class="diagnosis-rules-container">
                             ${group.rules.map(result => `
@@ -431,6 +428,9 @@ class Diagnosis {
                                     ` : ''}
                                     <div class="diagnosis-details">
                                         <span>匹配模式: ${result.matchedPattern}</span>
+                                    </div>
+                                    <div class="diagnosis-log-preview">
+                                        <pre>${result.logContent}</pre>
                                     </div>
                                 </div>
                             `).join('')}

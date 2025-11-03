@@ -26,7 +26,7 @@ xlogAssist/
 ├── MODULARIZATION_README.md    # 模块化说明文档
 ├── ARCHITECTURE_UPDATE_README.md # 架构更新说明
 ├── CHARTING_README.md          # 图表功能使用说明
-├── customDownLoadLogSources/   # 自定义下载源目录
+├── customDownloadLogSources/   # 自定义下载源目录
 │   └── SensorLog/              # 示例自定义下载源
 │       └── index.html          # 自定义下载页面
 └── python/                     # Python绘图服务

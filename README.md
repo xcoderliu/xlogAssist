@@ -189,12 +189,12 @@
 
 ### 自定义下载源
 1. 在左侧上传区域点击"自定义下载日志"
-2. 系统会自动扫描 `customDownLoadLogSources` 目录下的自定义源
+2. 系统会自动扫描 `customDownloadLogSources` 目录下的自定义源
 3. 选择需要下载的日志源
 4. 点击下载按钮获取日志数据
 
 ### 创建自定义下载源
-1. 在 `customDownLoadLogSources` 目录下创建子目录
+1. 在 `customDownloadLogSources` 目录下创建子目录
 2. 在子目录中创建 `index.html` 文件
 3. 实现自定义的日志获取逻辑
 4. 使用 `window.app.addFormattedLogs()` 方法添加日志到分析器
@@ -289,7 +289,7 @@ xlogAssist/
 ├── README.md                   # 说明文档
 ├── MODULARIZATION_README.md    # 模块化说明文档
 ├── CONFIG_EXPORT_IMPORT_README.md # 配置导入导出说明
-├── customDownLoadLogSources/   # 自定义下载源目录
+├── customDownloadLogSources/   # 自定义下载源目录
 │   └── SensorLog/              # 示例自定义下载源
 │       └── index.html          # 自定义下载页面
 ```
