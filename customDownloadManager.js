@@ -1,4 +1,7 @@
 // 自定义下载源管理模块 - 负责扫描和管理自定义下载源
+import MonacoRenderer from './monacoRenderer.js';
+import UIRenderer from './uiRenderer.js';
+
 class CustomDownloadManager {
     constructor(core) {
         this.core = core;
@@ -376,6 +379,22 @@ class CustomDownloadManager {
         }));
 
         this.core.logs.push(...logsToAdd);
+
+        // 在添加日志后确定渲染器选择
+        // 如果日志超过1000行，使用Monaco渲染器，否则使用传统渲染器
+        if (this.core.logs.length > 1000) {
+            if (!this.core.monacoRenderer) {
+                this.core.monacoRenderer = new MonacoRenderer(this.core);
+            }
+            // 设置当前渲染器为Monaco
+            this.core.currentRenderer = this.core.monacoRenderer;
+        } else {
+            if (!this.core.legacyRenderer) {
+                this.core.legacyRenderer = new UIRenderer(this.core);
+            }
+            // 设置当前渲染器为传统渲染器
+            this.core.currentRenderer = this.core.legacyRenderer;
+        }
 
         // 保存上次日志到本地存储
         if (this.core.fileHandler && this.core.fileHandler.saveLastLogs) {
