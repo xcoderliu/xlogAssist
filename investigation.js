@@ -38,10 +38,15 @@ class Investigation {
             // 添加点击事件 - 跳转到原日志行
             itemElement.addEventListener('click', () => {
                 this.core.selectLine(log.originalIndex);
-                // 滚动到选中行
-                const lineElement = this.core.logContent.querySelector(`[data-index="${log.originalIndex}"]`);
-                if (lineElement) {
-                    lineElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                // 滚动到选中行 - 兼容Monaco和传统渲染器
+                if (this.core.scrollToLine) {
+                    this.core.scrollToLine(log.originalIndex);
+                } else {
+                    // 传统渲染器的滚动方式
+                    const lineElement = this.core.logContent.querySelector(`[data-index="${log.originalIndex}"]`);
+                    if (lineElement) {
+                        lineElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
                 }
             });
             

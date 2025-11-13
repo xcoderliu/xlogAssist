@@ -6,6 +6,8 @@
     <title>xlogAssist - 日志分析工具</title>
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Monaco Editor -->
+    <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
 </head>
 <body>
     <div class="container">
@@ -66,6 +68,11 @@
                         <span>日志内容</span>
                         <span class="log-count" id="logCount">0 行</span>
                     </div>
+                    <!-- Monaco Editor 容器 -->
+                    <div id="monacoEditorContainer" style="height: 100%; display: none;">
+                        <div id="monacoEditor" style="height: 100%;"></div>
+                    </div>
+                    <!-- 传统渲染容器（兼容模式） -->
                     <div class="log-content" id="logContent">
                         <div class="empty-state">
                             <p>暂无日志内容</p>

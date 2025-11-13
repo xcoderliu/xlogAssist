@@ -491,10 +491,15 @@ class Diagnosis {
                 if (!isNaN(logIndex)) {
                     // 跳转到原日志行
                     this.core.selectLine(logIndex);
-                    // 滚动到选中行
-                    const lineElement = this.core.logContent.querySelector(`[data-index="${logIndex}"]`);
-                    if (lineElement) {
-                        lineElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    // 滚动到选中行 - 兼容Monaco和传统渲染器
+                    if (this.core.scrollToLine) {
+                        this.core.scrollToLine(logIndex);
+                    } else {
+                        // 传统渲染器的滚动方式
+                        const lineElement = this.core.logContent.querySelector(`[data-index="${logIndex}"]`);
+                        if (lineElement) {
+                            lineElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
                     }
                 }
             });

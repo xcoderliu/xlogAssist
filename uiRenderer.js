@@ -1,7 +1,11 @@
 // UI渲染模块 - 负责日志显示、高亮和样式处理
-class UIRenderer {
+import RendererInterface from './rendererInterface.js';
+
+class UIRenderer extends RendererInterface {
     constructor(core) {
-        this.core = core;
+        super(core);
+        this._regexCache = new Map();
+        this._partialRegexCache = new Map();
     }
 
     // 渲染日志内容
@@ -16,58 +20,15 @@ class UIRenderer {
             this.core.logContent.innerHTML = '';
             
             // 控制拖拽区域的显示
-            const uploadSection = this.core.dropZone.closest('.upload-section');
-            if (this.core.logs.length === 0) {
-                this.core.dropZone.style.display = 'block';
-                uploadSection.style.display = 'block';
-            } else {
-                this.core.dropZone.style.display = 'none';
-                uploadSection.style.display = 'none';
-            }
+            this.controlUploadSection();
             
-            // 获取要渲染的日志（应用过滤）
-            let logsToRender = this.core.filteredLogs || this.core.logs;
-            
-            // 应用配置组过滤（如果启用了过滤）
-            if (this.core.filterGroups.size > 0) {
-                logsToRender = this.applyGroupFiltering(logsToRender);
-            }
+            // 获取要渲染的日志
+            let logsToRender = this.getLogsToRender();
             
             if (logsToRender.length === 0) {
-                // 检查是否有上次日志
-                const hasLastLogs = this.core.loadLastLogs && this.core.loadLastLogs().length > 0;
-                
-                let emptyContent = `
-                    <div class="empty-state">
-                        <p>${this.core.filteredLogs ? '没有找到匹配的日志' : '暂无日志内容'}</p>
-                        <p>${this.core.filteredLogs ? '请尝试其他过滤关键词' : '请上传日志文件开始分析'}</p>
-                `;
-                
-                // 如果没有过滤且没有日志，显示快速打开按钮
-                if (!this.core.filteredLogs && hasLastLogs) {
-                    emptyContent += `
-                        <div style="margin-top: 16px;">
-                            <button id="quickOpenLastLogs" class="btn" style="background: #34a853;">
-                                快速打开上次日志
-                            </button>
-                        </div>
-                    `;
-                }
-                
-                emptyContent += `</div>`;
-                
-                this.core.logContent.innerHTML = emptyContent;
-                
-                // 绑定快速打开按钮事件
-                const quickOpenBtn = document.getElementById('quickOpenLastLogs');
-                if (quickOpenBtn) {
-                    quickOpenBtn.addEventListener('click', () => {
-                        if (this.core.quickOpenLastLogs) {
-                            this.core.quickOpenLastLogs();
-                        }
-                    });
-                }
-                
+                const isFiltered = !!this.core.filteredLogs;
+                this.core.logContent.innerHTML = this.showEmptyState(isFiltered);
+                this.bindQuickOpenButton();
                 this.hideLoading();
                 return;
             }
@@ -94,13 +55,14 @@ class UIRenderer {
                     lineElement.innerHTML = content;
                     
                     // 添加点击事件选中行
-                    lineElement.addEventListener('click', () => {
+                    this.addLineClickHandler(log.originalIndex, () => {
                         this.core.selectLine(log.originalIndex);
                     });
                     
-                    lineElement.addEventListener('contextmenu', (e) => {
+                    // 添加右键菜单事件
+                    this.addLineContextMenuHandler(log.originalIndex, (e) => {
                         e.preventDefault();
-                        this.core.showContextMenu(e, log.originalIndex);
+                        this.showContextMenu(e, log.originalIndex);
                     });
                     
                     this.core.logContent.appendChild(lineElement);
@@ -162,16 +124,11 @@ class UIRenderer {
         let highlightedText = this.escapeHtml(text);
         
         // 获取当前激活的配置组中的规则
-        const activeRules = this.core.getActiveRules();
+        const activeRules = this.getActiveRules();
         
         // 如果没有激活的规则，直接返回
         if (activeRules.length === 0) {
             return highlightedText;
-        }
-        
-        // 缓存正则表达式编译结果
-        if (!this._regexCache) {
-            this._regexCache = new Map();
         }
         
         // 检查整行高亮规则
@@ -218,7 +175,7 @@ class UIRenderer {
         // 只对当前搜索结果所在的行应用搜索高亮，而不是所有行
         if (index >= 0 && index < this.core.searchResults.length) {
             const result = this.core.searchResults[index];
-            const lineElement = this.core.logContent.querySelector(`[data-index="${result.log.originalIndex}"]`);
+            const lineElement = this.getLineElement(result.log.originalIndex);
             
             if (lineElement) {
                 // 获取原始内容（包含正则高亮）
@@ -230,7 +187,7 @@ class UIRenderer {
                 
                 // 选中并滚动到当前行
                 this.core.selectLine(result.log.originalIndex);
-                lineElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                this.scrollToLine(result.log.originalIndex);
             }
         }
     }
@@ -245,7 +202,7 @@ class UIRenderer {
         
         // 应用新的选中样式
         if (this.core.selectedLineIndex >= 0) {
-            const lineElement = this.core.logContent.querySelector(`[data-index="${this.core.selectedLineIndex}"]`);
+            const lineElement = this.getLineElement(this.core.selectedLineIndex);
             if (lineElement) {
                 lineElement.classList.add('selected');
                 // 动态设置背景色以确保覆盖整个宽度
@@ -259,11 +216,78 @@ class UIRenderer {
         this.core.logCount.textContent = `${this.core.logs.length} 行`;
     }
 
-    // HTML转义
-    escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
+    // 应用搜索高亮
+    applySearchHighlighting() {
+        // 传统渲染器在renderLogs中已经处理了搜索高亮
+        // 这个方法主要用于接口兼容性
+    }
+
+    // 应用配置组过滤
+    applyGroupFiltering(logs) {
+        // 获取启用过滤的配置组中的规则
+        const filterRuleIds = new Set();
+        this.core.configGroups.forEach(group => {
+            if (this.core.filterGroups.has(group.id)) {
+                group.ruleIds.forEach(ruleId => filterRuleIds.add(ruleId));
+            }
+        });
+
+        // 如果没有启用过滤的规则，返回所有日志
+        if (filterRuleIds.size === 0) {
+            return logs;
+        }
+
+        // 获取对应的规则对象
+        const filterRules = this.core.regexRules.filter(rule =>
+            filterRuleIds.has(this.core.getRuleId(rule))
+        );
+
+        // 过滤日志：只显示匹配任意过滤规则的日志
+        return logs.filter(log => {
+            return filterRules.some(rule => {
+                try {
+                    const regex = new RegExp(rule.pattern, 'gi');
+                    return regex.test(log.content);
+                } catch (error) {
+                    console.warn('正则表达式错误:', rule.pattern, error);
+                    return false;
+                }
+            });
+        });
+    }
+
+    // 滚动到指定行
+    scrollToLine(lineIndex) {
+        const lineElement = this.getLineElement(lineIndex);
+        if (lineElement) {
+            lineElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }
+
+    // 获取行元素
+    getLineElement(lineIndex) {
+        return this.core.logContent.querySelector(`[data-index="${lineIndex}"]`);
+    }
+
+    // 显示右键菜单
+    showContextMenu(event, lineIndex) {
+        this.core.showContextMenu(event, lineIndex);
+    }
+
+    // 添加行点击事件
+    addLineClickHandler(lineIndex, handler) {
+        const lineElement = this.getLineElement(lineIndex);
+        if (lineElement) {
+            lineElement.addEventListener('click', handler);
+        }
+    }
+
+    // 添加行右键菜单事件
+    addLineContextMenuHandler(lineIndex, handler) {
+        const lineElement = this.getLineElement(lineIndex);
+        if (lineElement) {
+            lineElement.addEventListener('contextmenu', handler);
+        }
     }
 
     // 对内容应用搜索高亮 - 使用更简单高效的方法
@@ -303,54 +327,10 @@ class UIRenderer {
         
         return tempDiv.innerHTML;
     }
-    
-    // 转义正则表达式特殊字符
-    escapeRegex(text) {
-        return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    }
-
-    // 应用配置组过滤
-    applyGroupFiltering(logs) {
-        // 获取启用过滤的配置组中的规则
-        const filterRuleIds = new Set();
-        this.core.configGroups.forEach(group => {
-            if (this.core.filterGroups.has(group.id)) {
-                group.ruleIds.forEach(ruleId => filterRuleIds.add(ruleId));
-            }
-        });
-
-        // 如果没有启用过滤的规则，返回所有日志
-        if (filterRuleIds.size === 0) {
-            return logs;
-        }
-
-        // 获取对应的规则对象
-        const filterRules = this.core.regexRules.filter(rule =>
-            filterRuleIds.has(this.core.getRuleId(rule))
-        );
-
-        // 过滤日志：只显示匹配任意过滤规则的日志
-        return logs.filter(log => {
-            return filterRules.some(rule => {
-                try {
-                    const regex = new RegExp(rule.pattern, 'gi');
-                    return regex.test(log.content);
-                } catch (error) {
-                    console.warn('正则表达式错误:', rule.pattern, error);
-                    return false;
-                }
-            });
-        });
-    }
 
     // 应用部分高亮 - 优化性能版本
     applyPartialHighlighting(htmlText, originalText, rules) {
         let result = htmlText;
-        
-        // 缓存正则表达式
-        if (!this._partialRegexCache) {
-            this._partialRegexCache = new Map();
-        }
         
         // 对每个规则应用高亮
         for (const rule of rules) {

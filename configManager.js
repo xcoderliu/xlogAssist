@@ -59,6 +59,10 @@ class ConfigManager {
             if (this.core.renderInvestigationLogs) {
                 this.core.renderInvestigationLogs();
             }
+            // 强制刷新高亮（如果正在使用Monaco）
+            if (this.core.currentRenderer === this.core.monacoRenderer && this.core.currentRenderer.refreshHighlighting) {
+                this.core.currentRenderer.refreshHighlighting();
+            }
 
             // 清空表单并重置按钮文字
             document.getElementById('regexPattern').value = '';
@@ -170,6 +174,10 @@ class ConfigManager {
             // 修复：规则删除时重新渲染排查区
             if (this.core.renderInvestigationLogs) {
                 this.core.renderInvestigationLogs();
+            }
+            // 强制刷新高亮（如果正在使用Monaco）
+            if (this.core.currentRenderer === this.core.monacoRenderer && this.core.currentRenderer.refreshHighlighting) {
+                this.core.currentRenderer.refreshHighlighting();
             }
             this.core.setStatus('规则已删除');
         }
@@ -302,6 +310,10 @@ class ConfigManager {
                     // 修复：配置组变化时重新渲染排查区
                     if (this.core.renderInvestigationLogs) {
                         this.core.renderInvestigationLogs();
+                    }
+                    // 强制刷新高亮（如果正在使用Monaco）
+                    if (this.core.currentRenderer === this.core.monacoRenderer && this.core.currentRenderer.refreshHighlighting) {
+                        this.core.currentRenderer.refreshHighlighting();
                     }
                     this.core.setStatus('配置组已更新');
                 });

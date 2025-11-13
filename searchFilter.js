@@ -51,13 +51,21 @@ class SearchFilter {
         }
         
         this.core.clearFilter.style.display = 'block';
-        if (this.core.renderLogs) {
-            this.core.renderLogs();
-        }
         
-        // 如果有搜索关键词，重新执行搜索
+        // 过滤后如果有搜索词，重新执行搜索
         if (this.core.searchTerm) {
-            this.realSearchLogs();
+            // 先渲染过滤后的日志
+            if (this.core.renderLogs) {
+                this.core.renderLogs();
+            }
+            // 然后重新执行搜索
+            setTimeout(() => {
+                this.realSearchLogs();
+            }, 100);
+        } else {
+            if (this.core.renderLogs) {
+                this.core.renderLogs();
+            }
         }
     }
 
@@ -68,16 +76,16 @@ class SearchFilter {
         this.core.filteredLogs = null;
         this.core.filterTerm = '';
         
-        // 重新渲染日志（会自动显示loading）
-        if (this.core.renderLogs) {
-            this.core.renderLogs();
-        }
-        this.core.setStatus('已清除过滤');
-        
-        // 如果有搜索关键词，重新执行搜索
+        // 如果之前有搜索词，重新执行搜索
         if (this.core.searchTerm) {
             this.realSearchLogs();
+        } else {
+            // 重新渲染日志（会自动显示loading）
+            if (this.core.renderLogs) {
+                this.core.renderLogs();
+            }
         }
+        this.core.setStatus('已清除过滤');
     }
 
     // 执行真正的搜索 - 支持正则表达式和普通字符串
@@ -175,6 +183,10 @@ class SearchFilter {
                         this.core.highlightCurrentSearchResult(-1);
                     }
                 } else {
+                    // 重新渲染日志以应用搜索高亮
+                    if (this.core.renderLogs) {
+                        this.core.renderLogs();
+                    }
                     this.navigateToNextMatch(); // 自动导航到第一个匹配项
                 }
                 
@@ -192,32 +204,12 @@ class SearchFilter {
     navigateToNextMatch() {
         if (this.core.searchResults.length === 0) return;
         
-        // 总是基于当前选中行来导航
-        if (this.core.selectedLineIndex >= 0) {
-            const currentLogIndex = this.core.logs.findIndex(log => log.originalIndex === this.core.selectedLineIndex);
-            if (currentLogIndex !== -1) {
-                // 找到当前选中行在搜索结果中的位置
-                let startIndex = this.core.searchResults.findIndex(result =>
-                    result.log.originalIndex > this.core.selectedLineIndex
-                );
-                
-                if (startIndex === -1) {
-                    // 如果当前行之后没有匹配项，从头开始
-                    startIndex = 0;
-                }
-                
-                this.core.currentSearchIndex = startIndex;
-            } else {
-                this.core.currentSearchIndex = 0;
-            }
-        } else {
-            // 正常导航到下一个
-            this.core.currentSearchIndex = this.core.currentSearchIndex + 1;
-            
-            // 如果超出范围，回到第一个
-            if (this.core.currentSearchIndex >= this.core.searchResults.length) {
-                this.core.currentSearchIndex = 0;
-            }
+        // 正常导航到下一个
+        this.core.currentSearchIndex = this.core.currentSearchIndex + 1;
+        
+        // 如果超出范围，回到第一个
+        if (this.core.currentSearchIndex >= this.core.searchResults.length) {
+            this.core.currentSearchIndex = 0;
         }
         
         // 检查是否还在同一行，如果是则继续跳到下一行
@@ -251,36 +243,12 @@ class SearchFilter {
     navigateToPrevMatch() {
         if (this.core.searchResults.length === 0) return;
         
-        // 总是基于当前选中行来导航
-        if (this.core.selectedLineIndex >= 0) {
-            const currentLogIndex = this.core.logs.findIndex(log => log.originalIndex === this.core.selectedLineIndex);
-            if (currentLogIndex !== -1) {
-                // 找到当前选中行在搜索结果中的位置（从后往前找）
-                let startIndex = -1;
-                for (let i = this.core.searchResults.length - 1; i >= 0; i--) {
-                    if (this.core.searchResults[i].log.originalIndex < this.core.selectedLineIndex) {
-                        startIndex = i;
-                        break;
-                    }
-                }
-                
-                if (startIndex === -1) {
-                    // 如果当前行之前没有匹配项，从最后一个开始
-                    startIndex = this.core.searchResults.length - 1;
-                }
-                
-                this.core.currentSearchIndex = startIndex;
-            } else {
-                this.core.currentSearchIndex = this.core.searchResults.length - 1;
-            }
-        } else {
-            // 正常导航到上一个
-            this.core.currentSearchIndex = this.core.currentSearchIndex - 1;
-            
-            // 如果超出范围，回到最后一个
-            if (this.core.currentSearchIndex < 0) {
-                this.core.currentSearchIndex = this.core.searchResults.length - 1;
-            }
+        // 正常导航到上一个
+        this.core.currentSearchIndex = this.core.currentSearchIndex - 1;
+        
+        // 如果超出范围，回到最后一个
+        if (this.core.currentSearchIndex < 0) {
+            this.core.currentSearchIndex = this.core.searchResults.length - 1;
         }
         
         // 检查是否还在同一行，如果是则继续跳到上一行

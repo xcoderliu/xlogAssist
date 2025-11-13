@@ -15,6 +15,20 @@ class ContextMenu {
             const investigationItem = e.target.closest('.investigation-item');
             const originalIndex = parseInt(investigationItem.dataset.index);
             this.showInvestigationContextMenu(e, originalIndex);
+        } else if (e.target.closest('.monaco-editor')) {
+            // 处理Monaco Editor中的右键点击
+            e.preventDefault();
+            // 通过Monaco渲染器获取当前行索引
+            if (this.core.currentRenderer === this.core.monacoRenderer && this.core.currentRenderer.editor) {
+                const position = this.core.currentRenderer.editor.getPosition();
+                if (position) {
+                    const lineIndex = position.lineNumber - 1;
+                    // 确保日志索引正确
+                    if (lineIndex >= 0 && lineIndex < this.core.logs.length) {
+                        this.showContextMenu(e, lineIndex);
+                    }
+                }
+            }
         }
     }
 
@@ -44,13 +58,13 @@ class ContextMenu {
     handleMenuAction(e) {
         const action = e.target.dataset.action;
         const index = parseInt(this.core.contextMenu.dataset.index);
-        
+
         if (action === 'add-to-investigation') {
             this.addToInvestigation(index);
         } else if (action === 'copy-line') {
             this.copyLine(index);
         }
-        
+
         this.hideContextMenu();
     }
 
@@ -58,13 +72,13 @@ class ContextMenu {
     handleInvestigationMenuAction(e) {
         const action = e.target.dataset.action;
         const originalIndex = parseInt(this.core.investigationContextMenu.dataset.originalIndex);
-        
+
         if (action === 'remove-from-investigation') {
             this.removeFromInvestigation(originalIndex);
         } else if (action === 'copy-line') {
             this.copyLineFromInvestigation(originalIndex);
         }
-        
+
         this.hideContextMenu();
     }
 
@@ -72,7 +86,7 @@ class ContextMenu {
     addToInvestigation(index) {
         const log = this.core.logs[index];
         if (!this.core.investigationLogs.some(item => item.originalIndex === log.originalIndex)) {
-            this.core.investigationLogs.push({...log});
+            this.core.investigationLogs.push({ ...log });
             if (this.core.renderInvestigationLogs) {
                 this.core.renderInvestigationLogs();
             }

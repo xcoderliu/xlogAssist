@@ -4,6 +4,7 @@ import FileHandler from './fileHandler.js';
 import SearchFilter from './searchFilter.js';
 import ConfigManager from './configManager.js';
 import UIRenderer from './uiRenderer.js';
+import MonacoRenderer from './monacoRenderer.js';
 import ContextMenu from './contextMenu.js';
 import Investigation from './investigation.js';
 import ExportManager from './export.js';
@@ -58,11 +59,102 @@ Object.assign(LogAnalyzer.prototype, {
     bindExportImportEvents: function () { return new ConfigManager(this).bindExportImportEvents(); },
 
     // UI渲染相关方法
-    renderLogs: function () { return new UIRenderer(this).renderLogs(); },
-    applyRegexHighlighting: function (text) { return new UIRenderer(this).applyRegexHighlighting(text); },
-    highlightCurrentSearchResult: function (index) { return new UIRenderer(this).highlightCurrentSearchResult(index); },
-    updateSelectedLine: function () { return new UIRenderer(this).updateSelectedLine(); },
-    updateLogCount: function () { return new UIRenderer(this).updateLogCount(); },
+    renderLogs: function () {
+        // 如果已经选择了渲染器，继续使用它（在文件打开时就确定）
+        if (this.currentRenderer) {
+            return this.currentRenderer.renderLogs();
+        }
+        
+        // 如果没有选择渲染器，根据日志数量选择（这应该只在初始化时发生）
+        const logsToRender = this.filteredLogs || this.logs;
+        
+        // 如果日志超过1000行，使用Monaco渲染器
+        if (logsToRender.length > 1000) {
+            if (!this.monacoRenderer) {
+                this.monacoRenderer = new MonacoRenderer(this);
+            }
+            // 设置当前渲染器为Monaco
+            this.currentRenderer = this.monacoRenderer;
+            return this.monacoRenderer.renderLogs();
+        } else {
+            if (!this.legacyRenderer) {
+                this.legacyRenderer = new UIRenderer(this);
+            }
+            // 设置当前渲染器为传统渲染器
+            this.currentRenderer = this.legacyRenderer;
+            return this.legacyRenderer.renderLogs();
+        }
+    },
+    applyRegexHighlighting: function (text) {
+        // 使用传统渲染器的高亮逻辑
+        if (!this.legacyRenderer) {
+            this.legacyRenderer = new UIRenderer(this);
+        }
+        return this.legacyRenderer.applyRegexHighlighting(text);
+    },
+    highlightCurrentSearchResult: function (index) {
+        // 根据当前使用的渲染器调用对应方法
+        if (this.currentRenderer === this.monacoRenderer) {
+            return this.monacoRenderer.highlightCurrentSearchResult(index);
+        } else {
+            if (!this.legacyRenderer) {
+                this.legacyRenderer = new UIRenderer(this);
+            }
+            return this.legacyRenderer.highlightCurrentSearchResult(index);
+        }
+    },
+    updateSelectedLine: function () {
+        // 根据当前使用的渲染器调用对应方法
+        if (this.currentRenderer === this.monacoRenderer) {
+            return this.monacoRenderer.updateSelectedLine();
+        } else {
+            if (!this.legacyRenderer) {
+                this.legacyRenderer = new UIRenderer(this);
+            }
+            return this.legacyRenderer.updateSelectedLine();
+        }
+    },
+    updateLogCount: function () {
+        // 使用传统渲染器的计数逻辑
+        if (!this.legacyRenderer) {
+            this.legacyRenderer = new UIRenderer(this);
+        }
+        return this.legacyRenderer.updateLogCount();
+    },
+    // 新增渲染器接口方法
+    scrollToLine: function (lineIndex) {
+        // 根据当前使用的渲染器调用对应方法
+        if (this.currentRenderer === this.monacoRenderer) {
+            return this.monacoRenderer.scrollToLine(lineIndex);
+        } else {
+            if (!this.legacyRenderer) {
+                this.legacyRenderer = new UIRenderer(this);
+            }
+            return this.legacyRenderer.scrollToLine(lineIndex);
+        }
+    },
+    getLineElement: function (lineIndex) {
+        // 根据当前使用的渲染器调用对应方法
+        if (this.currentRenderer === this.monacoRenderer) {
+            return this.monacoRenderer.getLineElement(lineIndex);
+        } else {
+            if (!this.legacyRenderer) {
+                this.legacyRenderer = new UIRenderer(this);
+            }
+            return this.legacyRenderer.getLineElement(lineIndex);
+        }
+    },
+    refreshHighlighting: function () {
+        // 根据当前使用的渲染器调用对应方法
+        if (this.currentRenderer === this.monacoRenderer) {
+            return this.monacoRenderer.refreshHighlighting();
+        } else {
+            if (!this.legacyRenderer) {
+                this.legacyRenderer = new UIRenderer(this);
+            }
+            return this.legacyRenderer.refreshHighlighting();
+        }
+    },
 
     // 右键菜单相关方法
     handleContextMenu: function (e) { return new ContextMenu(this).handleContextMenu(e); },

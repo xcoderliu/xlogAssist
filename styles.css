@@ -2946,3 +2946,48 @@ footer .btn {
     color: #ea4335;
     transform: scale(1.1);
 }
+
+/* Monaco Editor 样式 */
+#monacoEditorContainer {
+    position: relative;
+    min-height: 400px;
+    border-radius: 0 0 8px 8px;
+    overflow: hidden;
+}
+
+/* Monaco Editor 选中行样式 */
+.selected-line {
+    background: #e8f0fe !important;
+}
+
+.selected-line-decoration {
+    background: #1a73e8 !important;
+    width: 3px !important;
+    margin-left: 4px !important;
+}
+
+/* Monaco Editor 自定义主题 */
+.monaco-editor .view-overlays .current-line {
+    border: none !important;
+}
+
+/* 确保 Monaco Editor 容器正确显示 */
+.log-container {
+    position: relative;
+}
+
+/* 搜索高亮样式 */
+.monaco-editor .view-overlays .search-highlight {
+    background: #ffff00 !important;
+    color: #000000 !important;
+    padding: 1px 2px;
+    border-radius: 2px;
+    font-weight: bold;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    #monacoEditorContainer {
+        min-height: 300px;
+    }
+}

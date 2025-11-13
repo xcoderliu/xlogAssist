@@ -1,4 +1,7 @@
 // 文件处理模块 - 负责文件上传、读取和解析
+import MonacoRenderer from './monacoRenderer.js';
+import UIRenderer from './uiRenderer.js';
+
 class FileHandler {
     constructor(core) {
         this.core = core;
@@ -70,6 +73,22 @@ class FileHandler {
             timestamp: new Date().toISOString()
         })));
 
+        // 在文件打开时就确定渲染器选择
+        // 如果日志超过1000行，使用Monaco渲染器，否则使用传统渲染器
+        if (this.core.logs.length > 1000) {
+            if (!this.core.monacoRenderer) {
+                this.core.monacoRenderer = new MonacoRenderer(this.core);
+            }
+            // 设置当前渲染器为Monaco
+            this.core.currentRenderer = this.core.monacoRenderer;
+        } else {
+            if (!this.core.legacyRenderer) {
+                this.core.legacyRenderer = new UIRenderer(this.core);
+            }
+            // 设置当前渲染器为传统渲染器
+            this.core.currentRenderer = this.core.legacyRenderer;
+        }
+
         // 通知核心模块重新渲染
         if (this.core.renderLogs) {
             this.core.renderLogs();
@@ -98,6 +117,15 @@ class FileHandler {
             this.core.isRealSearchMode = false;
 
             this.core.selectedLineIndex = -1;
+
+            // 重置渲染器选择，下次打开文件时重新决定
+            this.core.currentRenderer = null;
+
+            // 隐藏Monaco容器，显示传统容器
+            const monacoContainer = document.getElementById('monacoEditorContainer');
+            const legacyContainer = document.getElementById('logContent');
+            if (monacoContainer) monacoContainer.style.display = 'none';
+            if (legacyContainer) legacyContainer.style.display = 'block';
 
             // 重置文件输入框，允许重新选择相同的文件
             this.core.fileInput.value = '';
