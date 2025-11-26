@@ -1,6 +1,5 @@
 // 文件处理模块 - 负责文件上传、读取和解析
 import MonacoRenderer from './monacoRenderer.js';
-import UIRenderer from './uiRenderer.js';
 
 class FileHandler {
     constructor(core) {
@@ -73,20 +72,12 @@ class FileHandler {
             timestamp: new Date().toISOString()
         })));
 
-        // 在文件打开时就确定渲染器选择
-        if (this.core.logs.length > 1) {
-            if (!this.core.monacoRenderer) {
-                this.core.monacoRenderer = new MonacoRenderer(this.core);
-            }
-            // 设置当前渲染器为Monaco
-            this.core.currentRenderer = this.core.monacoRenderer;
-        } else {
-            if (!this.core.legacyRenderer) {
-                this.core.legacyRenderer = new UIRenderer(this.core);
-            }
-            // 设置当前渲染器为传统渲染器
-            this.core.currentRenderer = this.core.legacyRenderer;
+        // 使用Monaco渲染器
+        if (!this.core.monacoRenderer) {
+            this.core.monacoRenderer = new MonacoRenderer(this.core);
         }
+        // 设置当前渲染器为Monaco
+        this.core.currentRenderer = this.core.monacoRenderer;
 
         // 通知核心模块重新渲染
         if (this.core.renderLogs) {
@@ -120,11 +111,9 @@ class FileHandler {
             // 重置渲染器选择，下次打开文件时重新决定
             this.core.currentRenderer = null;
 
-            // 隐藏Monaco容器，显示传统容器
+            // 隐藏Monaco容器
             const monacoContainer = document.getElementById('monacoEditorContainer');
-            const legacyContainer = document.getElementById('logContent');
             if (monacoContainer) monacoContainer.style.display = 'none';
-            if (legacyContainer) legacyContainer.style.display = 'block';
 
             // 重置文件输入框，允许重新选择相同的文件
             this.core.fileInput.value = '';
@@ -132,7 +121,7 @@ class FileHandler {
             // 重新显示上传区域
             const uploadSection = this.core.dropZone.closest('.upload-section');
             this.core.dropZone.style.display = 'block';
-            uploadSection.style.display = 'block';
+            if (uploadSection) uploadSection.style.display = 'block';
 
             // 通知核心模块重新渲染
             if (this.core.renderLogs) {
@@ -141,6 +130,12 @@ class FileHandler {
             if (this.core.updateLogCount) {
                 this.core.updateLogCount();
             }
+            
+            // 确保上传区域正确显示 - 通过Monaco渲染器调用
+            if (this.core.monacoRenderer && this.core.monacoRenderer.controlUploadSection) {
+                this.core.monacoRenderer.controlUploadSection();
+            }
+            
             this.core.setStatus('日志已清空，可以重新上传');
         }
     }

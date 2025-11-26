@@ -255,49 +255,7 @@ header .btn-small:hover {
     font-size: 13px;
 }
 
-.log-content {
-    flex: 1;
-    overflow-y: auto;
-    background: #ffffff;
-    min-height: 0;
-}
-
-/* 日志行样式 */
-.log-line {
-    padding: 10px 16px;
-    border-bottom: 1px solid #f1f3f4;
-    font-family: 'Roboto Mono', 'Monaco', 'Menlo', monospace;
-    font-size: 13px;
-    line-height: 1.5;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    min-height: 24px;
-}
-
-.log-line:hover {
-    background: #f8f9fa;
-}
-
-.log-line.selected {
-    border-left: 3px solid #1a73e8;
-    position: relative;
-}
-
-/* 确保日志行有合适的换行行为 */
-.log-line {
-    white-space: pre-wrap; /* 保持换行但允许水平滚动 */
-    word-break: break-all; /* 长单词可以换行 */
-}
-
-/* 确保日志容器允许水平滚动 */
-.log-content {
-    overflow-x: auto;
-    position: relative;
-}
-
-.log-line.highlighted {
-    background: #fef7e0;
-}
+/* 传统渲染器样式已移除 - 完全使用 Monaco Editor */
 
 .search-char-highlight {
     background: #ffff00;  /* 标准的黄色高亮 */
@@ -1795,10 +1753,7 @@ footer .btn {
     font-weight: 500;
 }
 
-.log-content.loading {
-    position: relative;
-    min-height: 200px;
-}
+/* Loading 状态样式已整合到 Monaco Editor 中 */
 
 /* 自定义结果样式 */
 .diagnosis-custom-result {
@@ -2953,6 +2908,15 @@ footer .btn {
     min-height: 400px;
     border-radius: 0 0 8px 8px;
     overflow: hidden;
+    height: 100%;
+    width: 100%;
+    background: #ffffff;
+}
+
+/* 确保 Monaco Editor 正确填充容器 */
+#monacoEditor {
+    width: 100% !important;
+    height: 100% !important;
 }
 
 /* Monaco Editor 选中行样式 */

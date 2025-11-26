@@ -3,7 +3,6 @@ import LogAnalyzer from './core.js';
 import FileHandler from './fileHandler.js';
 import SearchFilter from './searchFilter.js';
 import ConfigManager from './configManager.js';
-import UIRenderer from './uiRenderer.js';
 import MonacoRenderer from './monacoRenderer.js';
 import ContextMenu from './contextMenu.js';
 import Investigation from './investigation.js';
@@ -61,100 +60,54 @@ Object.assign(LogAnalyzer.prototype, {
 
     // UI渲染相关方法
     renderLogs: function () {
-        // 如果已经选择了渲染器，继续使用它（在文件打开时就确定）
-        if (this.currentRenderer) {
-            return this.currentRenderer.renderLogs();
+        if (!this.monacoRenderer) {
+            this.monacoRenderer = new MonacoRenderer(this);
         }
-
-        // 如果没有选择渲染器，根据日志数量选择（这应该只在初始化时发生）
-        const logsToRender = this.filteredLogs || this.logs;
-
-        // 如果日志超过1000行，使用Monaco渲染器
-        if (logsToRender.length > 1) {
-            if (!this.monacoRenderer) {
-                this.monacoRenderer = new MonacoRenderer(this);
-            }
-            // 设置当前渲染器为Monaco
-            this.currentRenderer = this.monacoRenderer;
-            return this.monacoRenderer.renderLogs();
-        } else {
-            if (!this.legacyRenderer) {
-                this.legacyRenderer = new UIRenderer(this);
-            }
-            // 设置当前渲染器为传统渲染器
-            this.currentRenderer = this.legacyRenderer;
-            return this.legacyRenderer.renderLogs();
-        }
+        return this.monacoRenderer.renderLogs();
     },
     applyRegexHighlighting: function (text) {
-        // 使用传统渲染器的高亮逻辑
-        if (!this.legacyRenderer) {
-            this.legacyRenderer = new UIRenderer(this);
+        // 使用Monaco渲染器的高亮逻辑
+        if (!this.monacoRenderer) {
+            this.monacoRenderer = new MonacoRenderer(this);
         }
-        return this.legacyRenderer.applyRegexHighlighting(text);
+        return this.monacoRenderer.applyRegexHighlighting(text);
     },
     highlightCurrentSearchResult: function (index) {
-        // 根据当前使用的渲染器调用对应方法
-        if (this.currentRenderer === this.monacoRenderer) {
-            return this.monacoRenderer.highlightCurrentSearchResult(index);
-        } else {
-            if (!this.legacyRenderer) {
-                this.legacyRenderer = new UIRenderer(this);
-            }
-            return this.legacyRenderer.highlightCurrentSearchResult(index);
+        if (!this.monacoRenderer) {
+            this.monacoRenderer = new MonacoRenderer(this);
         }
+        return this.monacoRenderer.highlightCurrentSearchResult(index);
     },
     updateSelectedLine: function () {
-        // 根据当前使用的渲染器调用对应方法
-        if (this.currentRenderer === this.monacoRenderer) {
-            return this.monacoRenderer.updateSelectedLine();
-        } else {
-            if (!this.legacyRenderer) {
-                this.legacyRenderer = new UIRenderer(this);
-            }
-            return this.legacyRenderer.updateSelectedLine();
+        if (!this.monacoRenderer) {
+            this.monacoRenderer = new MonacoRenderer(this);
         }
+        return this.monacoRenderer.updateSelectedLine();
     },
     updateLogCount: function () {
-        // 使用传统渲染器的计数逻辑
-        if (!this.legacyRenderer) {
-            this.legacyRenderer = new UIRenderer(this);
+        if (!this.monacoRenderer) {
+            this.monacoRenderer = new MonacoRenderer(this);
         }
-        return this.legacyRenderer.updateLogCount();
+        return this.monacoRenderer.updateLogCount();
     },
     // 新增渲染器接口方法
     scrollToLine: function (lineIndex) {
-        // 根据当前使用的渲染器调用对应方法
-        if (this.currentRenderer === this.monacoRenderer) {
-            return this.monacoRenderer.scrollToLine(lineIndex);
-        } else {
-            if (!this.legacyRenderer) {
-                this.legacyRenderer = new UIRenderer(this);
-            }
-            return this.legacyRenderer.scrollToLine(lineIndex);
+        if (!this.monacoRenderer) {
+            this.monacoRenderer = new MonacoRenderer(this);
         }
+        return this.monacoRenderer.scrollToLine(lineIndex);
     },
     getLineElement: function (lineIndex) {
-        // 根据当前使用的渲染器调用对应方法
-        if (this.currentRenderer === this.monacoRenderer) {
-            return this.monacoRenderer.getLineElement(lineIndex);
-        } else {
-            if (!this.legacyRenderer) {
-                this.legacyRenderer = new UIRenderer(this);
-            }
-            return this.legacyRenderer.getLineElement(lineIndex);
+        if (!this.monacoRenderer) {
+            this.monacoRenderer = new MonacoRenderer(this);
         }
+        return this.monacoRenderer.getLineElement(lineIndex);
     },
     refreshHighlighting: function () {
-        // 根据当前使用的渲染器调用对应方法
-        if (this.currentRenderer === this.monacoRenderer) {
-            return this.monacoRenderer.refreshHighlighting();
-        } else {
-            if (!this.legacyRenderer) {
-                this.legacyRenderer = new UIRenderer(this);
-            }
-            return this.legacyRenderer.refreshHighlighting();
+        if (!this.monacoRenderer) {
+            this.monacoRenderer = new MonacoRenderer(this);
         }
+        return this.monacoRenderer.refreshHighlighting();
     },
 
     // 右键菜单相关方法

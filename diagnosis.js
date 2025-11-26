@@ -495,10 +495,9 @@ class Diagnosis {
                     if (this.core.scrollToLine) {
                         this.core.scrollToLine(logIndex);
                     } else {
-                        // 传统渲染器的滚动方式
-                        const lineElement = this.core.logContent.querySelector(`[data-index="${logIndex}"]`);
-                        if (lineElement) {
-                            lineElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        // 使用Monaco渲染器的滚动方式
+                        if (this.core.monacoRenderer) {
+                            this.core.monacoRenderer.scrollToLine(logIndex);
                         }
                     }
                 }

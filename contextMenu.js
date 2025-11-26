@@ -6,11 +6,7 @@ class ContextMenu {
 
     // 处理右键菜单事件
     handleContextMenu(e) {
-        if (e.target.classList.contains('log-line')) {
-            e.preventDefault();
-            const index = parseInt(e.target.dataset.index);
-            this.showContextMenu(e, index);
-        } else if (e.target.closest('.investigation-item')) {
+        if (e.target.closest('.investigation-item')) {
             e.preventDefault();
             const investigationItem = e.target.closest('.investigation-item');
             const originalIndex = parseInt(investigationItem.dataset.index);

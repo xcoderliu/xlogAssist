@@ -1,4 +1,4 @@
-// Monaco Editor 渲染模块 - 高性能日志渲染
+// 日志渲染模块 - 基于Monaco Editor的高性能日志渲染
 import RendererInterface from './rendererInterface.js';
 
 class MonacoRenderer extends RendererInterface {
@@ -185,19 +185,11 @@ class MonacoRenderer extends RendererInterface {
     // 显示Monaco容器
     showMonacoContainer() {
         const monacoContainer = document.getElementById('monacoEditorContainer');
-        const legacyContainer = document.getElementById('logContent');
-
-        if (monacoContainer) monacoContainer.style.display = 'block';
-        if (legacyContainer) legacyContainer.style.display = 'none';
-    }
-
-    // 隐藏Monaco容器
-    hideMonacoContainer() {
-        const monacoContainer = document.getElementById('monacoEditorContainer');
-        const legacyContainer = document.getElementById('logContent');
-
-        if (monacoContainer) monacoContainer.style.display = 'none';
-        if (legacyContainer) legacyContainer.style.display = 'block';
+        if (monacoContainer) {
+            monacoContainer.style.display = 'block';
+            // 确保Monaco容器不会覆盖拖拽区域
+            monacoContainer.style.zIndex = '1';
+        }
     }
 
     // 应用正则高亮
@@ -221,8 +213,15 @@ class MonacoRenderer extends RendererInterface {
             // 限制处理的日志行数，避免性能问题
             const maxLines = Math.min(model.getLineCount(), 10000);
 
-            // 对每个规则应用高亮
-            for (const [index, rule] of activeRules.entries()) {
+            // 对每个规则应用高亮 - 整行高亮规则放在前面处理
+            const sortedRules = [...activeRules].sort((a, b) => {
+                // 整行高亮规则排在前面
+                if (a.highlightWholeLine && !b.highlightWholeLine) return -1;
+                if (!a.highlightWholeLine && b.highlightWholeLine) return 1;
+                return 0;
+            });
+            
+            for (const [index, rule] of sortedRules.entries()) {
                 try {
                     // 为这个规则添加CSS样式
                     this.addHighlightStyle(rule, index);
@@ -269,7 +268,7 @@ class MonacoRenderer extends RendererInterface {
                                         range: new monaco.Range(lineNumber, startColumn, lineNumber, endColumn),
                                         options: {
                                             inlineClassName: `regex-highlight-${index}`,
-                                            stickiness: 1
+                                            stickiness: 2  // 更高的优先级，可以覆盖整行高亮
                                         }
                                     });
                                 }
@@ -296,7 +295,7 @@ class MonacoRenderer extends RendererInterface {
     // 添加高亮样式
     addHighlightStyle(rule, index) {
         const styleId = `regex-highlight-${index}`;
-        
+
         // 如果样式已存在，先移除它，确保使用最新的颜色
         const existingStyle = document.getElementById(styleId);
         if (existingStyle) {
@@ -315,6 +314,8 @@ class MonacoRenderer extends RendererInterface {
             .regex-line-highlight-${index} {
                 color: ${rule.color} !important;
                 background-color: ${rule.bgColor} !important;
+                border-radius: 2px;
+                padding: 1px 2px;
             }
             .search-highlight {
                 background-color: #ffff00 !important;
@@ -354,7 +355,7 @@ class MonacoRenderer extends RendererInterface {
             // 遍历所有行
             for (let lineNumber = 1; lineNumber <= totalLines; lineNumber++) {
                 const lineText = model.getLineContent(lineNumber);
-                
+
                 if (shouldUseRegex) {
                     // 作为正则表达式处理，不转义特殊字符
                     const regex = new RegExp(searchTerm, 'gi');
@@ -554,8 +555,11 @@ class MonacoRenderer extends RendererInterface {
 
     // 更新空状态
     updateEmptyState() {
-        // 空状态由传统渲染器处理
-        this.switchToLegacyMode();
+        // 空状态处理
+        const logsToRender = this.getLogsToRender();
+        if (logsToRender.length === 0) {
+            this.editor.setValue('');
+        }
     }
 
     // 清理资源

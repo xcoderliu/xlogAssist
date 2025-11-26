@@ -65,9 +65,9 @@ class ConfigManager {
             if (this.core.renderInvestigationLogs) {
                 this.core.renderInvestigationLogs();
             }
-            // 强制刷新高亮（如果正在使用Monaco）
-            if (this.core.currentRenderer === this.core.monacoRenderer && this.core.currentRenderer.refreshHighlighting) {
-                this.core.currentRenderer.refreshHighlighting();
+            // 强制刷新高亮
+            if (this.core.monacoRenderer && this.core.monacoRenderer.refreshHighlighting) {
+                this.core.monacoRenderer.refreshHighlighting();
             }
 
             // 清空表单并重置按钮文字
@@ -181,9 +181,9 @@ class ConfigManager {
             if (this.core.renderInvestigationLogs) {
                 this.core.renderInvestigationLogs();
             }
-            // 强制刷新高亮（如果正在使用Monaco）
-            if (this.core.currentRenderer === this.core.monacoRenderer && this.core.currentRenderer.refreshHighlighting) {
-                this.core.currentRenderer.refreshHighlighting();
+            // 强制刷新高亮
+            if (this.core.monacoRenderer && this.core.monacoRenderer.refreshHighlighting) {
+                this.core.monacoRenderer.refreshHighlighting();
             }
             this.core.setStatus('规则已删除');
         }
@@ -317,9 +317,9 @@ class ConfigManager {
                     if (this.core.renderInvestigationLogs) {
                         this.core.renderInvestigationLogs();
                     }
-                    // 强制刷新高亮（如果正在使用Monaco）
-                    if (this.core.currentRenderer === this.core.monacoRenderer && this.core.currentRenderer.refreshHighlighting) {
-                        this.core.currentRenderer.refreshHighlighting();
+                    // 强制刷新高亮
+                    if (this.core.monacoRenderer && this.core.monacoRenderer.refreshHighlighting) {
+                        this.core.monacoRenderer.refreshHighlighting();
                     }
                     this.core.setStatus('配置组已更新');
                 });
@@ -346,6 +346,10 @@ class ConfigManager {
                     this.core.saveConfig();
                     if (this.core.renderLogs) {
                         this.core.renderLogs();
+                    }
+                    // 强制刷新高亮
+                    if (this.core.monacoRenderer && this.core.monacoRenderer.refreshHighlighting) {
+                        this.core.monacoRenderer.refreshHighlighting();
                     }
                     this.core.setStatus('过滤设置已更新');
                 });

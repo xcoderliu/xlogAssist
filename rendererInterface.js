@@ -109,12 +109,32 @@ class RendererInterface {
     // 工具方法 - 控制拖拽区域显示
     controlUploadSection() {
         const uploadSection = this.core.dropZone.closest('.upload-section');
+        const searchControls = document.querySelector('.search-controls');
+        const logsToRender = this.getLogsToRender();
+        
+        // 只有当完全没有日志时才显示上传区域，隐藏搜索过滤UI
+        // 过滤或搜索没有结果时不显示上传区域
         if (this.core.logs.length === 0) {
+            // 没有日志时显示拖拽区域
             this.core.dropZone.style.display = 'block';
-            uploadSection.style.display = 'block';
+            if (uploadSection) uploadSection.style.display = 'block';
+            
+            // 隐藏搜索和过滤控件
+            if (searchControls) searchControls.style.display = 'none';
+            
+            // 确保Monaco容器隐藏
+            const monacoContainer = document.getElementById('monacoEditorContainer');
+            if (monacoContainer) monacoContainer.style.display = 'none';
         } else {
+            // 有日志时隐藏拖拽区域，显示Monaco容器和搜索过滤UI
             this.core.dropZone.style.display = 'none';
-            uploadSection.style.display = 'none';
+            if (uploadSection) uploadSection.style.display = 'none';
+            
+            // 显示搜索和过滤控件
+            if (searchControls) searchControls.style.display = 'flex';
+            
+            const monacoContainer = document.getElementById('monacoEditorContainer');
+            if (monacoContainer) monacoContainer.style.display = 'block';
         }
     }
 

@@ -38,15 +38,9 @@ class Investigation {
             // 添加点击事件 - 跳转到原日志行
             itemElement.addEventListener('click', () => {
                 this.core.selectLine(log.originalIndex);
-                // 滚动到选中行 - 兼容Monaco和传统渲染器
-                if (this.core.scrollToLine) {
-                    this.core.scrollToLine(log.originalIndex);
-                } else {
-                    // 传统渲染器的滚动方式
-                    const lineElement = this.core.logContent.querySelector(`[data-index="${log.originalIndex}"]`);
-                    if (lineElement) {
-                        lineElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }
+                // 滚动到选中行 - 使用Monaco渲染器
+                if (this.core.monacoRenderer) {
+                    this.core.monacoRenderer.scrollToLine(log.originalIndex);
                 }
             });
             
@@ -71,7 +65,22 @@ class Investigation {
 
     // 应用搜索高亮
     applySearchHighlighting(text) {
-        let highlightedText = this.core.applyRegexHighlighting ? this.core.applyRegexHighlighting(text) : text;
+        let highlightedText = text;
+        
+        // 应用正则高亮（同步版本，专门用于排查区）
+        if (this.core.regexRules && this.core.regexRules.length > 0) {
+            const activeRules = this.core.getActiveRules ? this.core.getActiveRules() : this.core.regexRules;
+            activeRules.forEach((rule, index) => {
+                try {
+                    const regex = new RegExp(rule.pattern, 'gi');
+                    highlightedText = highlightedText.replace(regex, match =>
+                        `<span style="color: ${rule.color}; background-color: ${rule.bgColor}; border-radius: 2px; padding: 1px 2px;">${match}</span>`
+                    );
+                } catch (error) {
+                    // 忽略正则表达式错误
+                }
+            });
+        }
         
         // 如果有搜索关键词，应用搜索高亮
         if (this.core.searchTerm && this.core.isRealSearchMode) {
