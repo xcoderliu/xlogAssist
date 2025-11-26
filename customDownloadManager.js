@@ -19,28 +19,36 @@ class CustomDownloadManager {
     // 扫描自定义下载源
     async scanCustomSources() {
         try {
-            // 动态扫描目录结构
-            const availableSources = [];
-
-            // 扫描SensorLog目录
-            const sensorLogUrl = `${this.basePath}/SensorLog/index.html`;
-            const sensorLogAvailable = await this.checkSourceAvailability(sensorLogUrl);
-
-            if (sensorLogAvailable) {
-                availableSources.push({
+            // 硬编码已知的下载源列表
+            const knownSources = [
+                {
                     name: 'SensorLog',
                     displayName: '神策埋点',
-                    url: sensorLogUrl,
+                    url: `${this.basePath}/SensorLog/index.html`,
                     description: '从神策埋点系统下载用户行为日志'
-                });
-            }
+                },
+                {
+                    name: 'SensorNetworkLog',
+                    displayName: '神策网络埋点',
+                    url: `${this.basePath}/SensorNetworkLog/index.html`,
+                    description: '从神策埋点系统下载网络性能日志，仅获取jsons字段并过滤domain_performance事件'
+                }
+            ];
 
-            // 这里可以添加更多目录的扫描逻辑
-            // 例如：扫描其他自定义下载源目录
+            const availableSources = [];
+
+            // 检查每个源是否可用
+            for (const source of knownSources) {
+                const isAvailable = await this.checkSourceAvailability(source.url);
+                if (isAvailable) {
+                    availableSources.push(source);
+                }
+            }
 
             this.customSources = availableSources;
             return this.customSources;
         } catch (error) {
+            console.error('扫描自定义下载源失败:', error);
             // 如果扫描失败，返回空数组
             this.customSources = [];
             return this.customSources;
@@ -382,7 +390,7 @@ class CustomDownloadManager {
 
         // 在添加日志后确定渲染器选择
         // 如果日志超过1000行，使用Monaco渲染器，否则使用传统渲染器
-        if (this.core.logs.length > 1000) {
+        if (this.core.logs.length > 1) {
             if (!this.core.monacoRenderer) {
                 this.core.monacoRenderer = new MonacoRenderer(this.core);
             }

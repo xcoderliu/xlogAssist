@@ -17,8 +17,16 @@ export function selectLine(index) {
 
 // 获取规则ID函数
 export function getRuleId(rule) {
-    // 为规则生成唯一ID（基于内容和配置）
-    return `${rule.pattern}|${rule.color}|${rule.bgColor}|${rule.highlightWholeLine}`;
+    // 确保规则有ID，如果没有则生成一个
+    if (!rule.id) {
+        rule.id = `rule_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    }
+    return rule.id;
+}
+
+// 生成规则ID
+export function generateRuleId() {
+    return `rule_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 }
 
 // 获取激活的规则
@@ -27,7 +35,7 @@ export function getActiveRules() {
     if (this.activeGroups.size === 0) {
         return this.regexRules;
     }
-    
+
     // 获取激活配置组中的规则ID
     const activeRuleIds = new Set();
     this.configGroups.forEach(group => {
@@ -35,7 +43,7 @@ export function getActiveRules() {
             group.ruleIds.forEach(ruleId => activeRuleIds.add(ruleId));
         }
     });
-    
+
     // 返回对应的规则对象
     return this.regexRules.filter(rule => activeRuleIds.has(this.getRuleId(rule)));
 }

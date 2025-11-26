@@ -2991,3 +2991,368 @@ footer .btn {
         min-height: 300px;
     }
 }
+
+/* 订阅源管理样式 */
+.subscription-list {
+    margin-top: 24px;
+    border-top: 1px solid #dadce0;
+    padding-top: 16px;
+}
+
+.subscription-list h4 {
+    margin-bottom: 12px;
+    font-size: 16px;
+    font-weight: 500;
+    color: #202124;
+}
+
+.empty-subscriptions {
+    color: #9aa0a6;
+    text-align: center;
+    padding: 20px;
+    font-style: italic;
+}
+
+.subscription-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    border: 1px solid #dadce0;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    background: #f8f9fa;
+    gap: 16px;
+    transition: all 0.2s ease;
+}
+
+.subscription-item:hover {
+    border-color: #1a73e8;
+    box-shadow: 0 2px 8px rgba(26, 115, 232, 0.1);
+}
+
+.subscription-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.subscription-name {
+    font-weight: 600;
+    font-size: 16px;
+    color: #202124;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.subscription-url {
+    color: #5f6368;
+    font-size: 13px;
+    font-family: 'Roboto Mono', monospace;
+    margin-bottom: 4px;
+    word-break: break-all;
+}
+
+.subscription-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #5f6368;
+}
+
+.status-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #34a853;
+}
+
+.status-indicator.error {
+    background: #ea4335;
+}
+
+.status-indicator.pending {
+    background: #fbbc04;
+}
+
+.last-updated {
+    font-size: 11px;
+    color: #9aa0a6;
+}
+
+.subscription-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+    align-items: center;
+}
+
+.update-subscription,
+.remove-subscription {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+}
+
+.update-subscription {
+    background: #1a73e8;
+    color: white;
+}
+
+.remove-subscription {
+    background: #ea4335;
+    color: white;
+}
+
+.update-subscription:hover {
+    background: #1967d2;
+}
+
+.remove-subscription:hover {
+    background: #d33426;
+}
+
+.update-subscription:disabled {
+    background: #f1f3f4;
+    color: #9aa0a6;
+    cursor: not-allowed;
+}
+
+/* 订阅源切换开关样式 */
+.subscription-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    padding: 6px 12px;
+    border-radius: 20px;
+    background: #f1f3f4;
+    border: 1px solid #dadce0;
+    transition: all 0.2s ease;
+    font-size: 12px;
+    font-weight: 500;
+    color: #5f6368;
+}
+
+.subscription-toggle:hover {
+    background: #e8eaed;
+}
+
+.subscription-toggle.enabled {
+    background: #e6f4ea;
+    border-color: #34a853;
+    color: #137333;
+}
+
+.subscription-toggle.disabled {
+    background: #fce8e6;
+    border-color: #ea4335;
+    color: #c5221f;
+}
+
+.subscription-toggle .toggle-switch {
+    position: relative;
+    width: 36px;
+    height: 20px;
+    background: #dadce0;
+    border-radius: 10px;
+    transition: all 0.2s ease;
+}
+
+.subscription-toggle .toggle-switch::before {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    background: white;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+.subscription-toggle.enabled .toggle-switch {
+    background: #34a853;
+}
+
+.subscription-toggle.enabled .toggle-switch::before {
+    transform: translateX(16px);
+}
+
+.subscription-toggle.disabled .toggle-switch {
+    background: #ea4335;
+}
+
+/* 添加订阅源表单 */
+.add-subscription-form {
+    margin-top: 24px;
+    border-top: 1px solid #dadce0;
+    padding-top: 20px;
+}
+
+.add-subscription-form h4 {
+    margin-bottom: 16px;
+    font-size: 16px;
+    font-weight: 500;
+    color: #202124;
+}
+
+.subscription-form-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+    align-items: flex-end;
+}
+
+.subscription-form-row .config-item {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.subscription-form-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 8px;
+}
+
+/* 订阅源更新状态 */
+.subscription-updating {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.subscription-updating .subscription-actions button {
+    opacity: 0.5;
+}
+
+/* 订阅源错误状态 */
+.subscription-error {
+    border-color: #ea4335;
+    background: #fce8e6;
+}
+
+.subscription-error .subscription-name {
+    color: #c5221f;
+}
+
+.subscription-error .subscription-url {
+    color: #c5221f;
+}
+
+/* 订阅源成功状态 */
+.subscription-success {
+    border-color: #34a853;
+    background: #e6f4ea;
+}
+
+.subscription-success .subscription-name {
+    color: #137333;
+}
+
+/* 订阅源配置操作 */
+.subscription-config-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #dadce0;
+    justify-content: flex-end;
+}
+
+.subscription-config-actions .btn-small {
+    padding: 8px 16px;
+    font-size: 13px;
+}
+
+/* 订阅源导入/导出样式 */
+.subscription-import-export {
+    margin-top: 20px;
+    border-top: 1px solid #dadce0;
+    padding-top: 16px;
+}
+
+.subscription-import-export h4 {
+    margin-bottom: 12px;
+    font-size: 16px;
+    font-weight: 500;
+    color: #202124;
+}
+
+.subscription-io-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.subscription-io-actions .btn-small {
+    padding: 8px 16px;
+    font-size: 13px;
+    background: #f1f3f4;
+    color: #5f6368;
+    border: 1px solid #dadce0;
+}
+
+.subscription-io-actions .btn-small:hover {
+    background: #e8eaed;
+    color: #202124;
+}
+
+/* 订阅源更新进度 */
+.subscription-progress {
+    margin-top: 8px;
+    background: #f1f3f4;
+    border-radius: 4px;
+    height: 4px;
+    overflow: hidden;
+    position: relative;
+}
+
+.subscription-progress-bar {
+    height: 100%;
+    background: #1a73e8;
+    transition: width 0.3s ease;
+    border-radius: 4px;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .subscription-item {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+    
+    .subscription-actions {
+        align-self: flex-end;
+    }
+    
+    .subscription-form-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .subscription-form-actions {
+        justify-content: stretch;
+    }
+    
+    .subscription-form-actions .btn {
+        flex: 1;
+    }
+    
+    .subscription-io-actions {
+        flex-direction: column;
+    }
+    
+    .subscription-io-actions .btn-small {
+        flex: 1;
+        text-align: center;
+    }
+}

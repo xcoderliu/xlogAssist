@@ -74,8 +74,7 @@ class FileHandler {
         })));
 
         // 在文件打开时就确定渲染器选择
-        // 如果日志超过1000行，使用Monaco渲染器，否则使用传统渲染器
-        if (this.core.logs.length > 1000) {
+        if (this.core.logs.length > 1) {
             if (!this.core.monacoRenderer) {
                 this.core.monacoRenderer = new MonacoRenderer(this.core);
             }

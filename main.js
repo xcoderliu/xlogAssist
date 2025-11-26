@@ -12,6 +12,7 @@ import Resizer from './resizer.js';
 import Diagnosis from './diagnosis.js';
 import CustomDownloadManager from './customDownloadManager.js';
 import Charting from './charting.js';
+import SubscriptionManager from './subscriptionManager.js';
 import { escapeHtml, selectLine, getRuleId, getActiveRules } from './utils.js';
 
 // 扩展核心类的功能
@@ -64,12 +65,12 @@ Object.assign(LogAnalyzer.prototype, {
         if (this.currentRenderer) {
             return this.currentRenderer.renderLogs();
         }
-        
+
         // 如果没有选择渲染器，根据日志数量选择（这应该只在初始化时发生）
         const logsToRender = this.filteredLogs || this.logs;
-        
+
         // 如果日志超过1000行，使用Monaco渲染器
-        if (logsToRender.length > 1000) {
+        if (logsToRender.length > 1) {
             if (!this.monacoRenderer) {
                 this.monacoRenderer = new MonacoRenderer(this);
             }
@@ -197,6 +198,7 @@ Object.assign(LogAnalyzer.prototype, {
     deleteDiagnosisRule: function (ruleId) { return new Diagnosis(this).deleteDiagnosisRule(ruleId); },
     renderDiagnosisRulesList: function () { return new ConfigManager(this).renderDiagnosisRulesList(); },
     editDiagnosisRule: function (index) { return new ConfigManager(this).editDiagnosisRule(index); },
+    renderChartConfigsList: function () { return new ConfigManager(this).renderChartConfigsList(); },
     toggleDiagnosisRule: function (index) { return new ConfigManager(this).toggleDiagnosisRule(index); },
     deleteDiagnosisRuleByIndex: function (index) { return new ConfigManager(this).deleteDiagnosisRule(index); }
 });
@@ -285,6 +287,24 @@ Object.assign(LogAnalyzer.prototype, {
     }
 });
 
+// 扩展核心类以包含订阅源功能
+Object.assign(LogAnalyzer.prototype, {
+    // 订阅源相关方法
+    initializeSubscriptionManager: function () {
+        this.subscriptionManager = new SubscriptionManager(this);
+        return this.subscriptionManager;
+    },
+    showSubscriptionPanel: function () {
+        return this.subscriptionManager.showSubscriptionPanel();
+    },
+    updateAllSubscriptions: function () {
+        return this.subscriptionManager.updateAllSubscriptions();
+    },
+    checkSubscriptionUpdates: function () {
+        return this.subscriptionManager.checkForUpdates();
+    }
+});
+
 // 初始化应用
 let app;
 document.addEventListener('DOMContentLoaded', async () => {
@@ -303,6 +323,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     app.initializeCustomDownload();
     // 初始化绘图模块
     app.initializeCharting();
+    // 初始化订阅源管理器
+    app.initializeSubscriptionManager();
 
     // 扫描自定义下载源
     await app.scanCustomSources();
@@ -334,5 +356,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 初始化绘图区UI
     if (app.initializeChartingUI) {
         app.initializeChartingUI();
+    }
+
+    // 检查订阅源更新
+    if (app.checkSubscriptionUpdates) {
+        app.checkSubscriptionUpdates();
     }
 });

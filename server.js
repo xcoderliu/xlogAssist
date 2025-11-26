@@ -12,6 +12,59 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('.')); // 提供静态文件服务
 
+// 代理中间件 - 解决CORS问题
+app.get('/api/proxy', async (req, res) => {
+    try {
+        const { url } = req.query;
+        
+        if (!url) {
+            return res.status(400).json({ error: '缺少URL参数' });
+        }
+
+        // 验证URL格式
+        let targetUrl;
+        try {
+            targetUrl = new URL(url);
+        } catch {
+            return res.status(400).json({ error: '无效的URL格式' });
+        }
+
+        // 只允许HTTP/HTTPS协议
+        if (!['http:', 'https:'].includes(targetUrl.protocol)) {
+            return res.status(400).json({ error: '只支持HTTP/HTTPS协议' });
+        }
+
+        const response = await fetch(targetUrl.toString(), {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'User-Agent': 'xlogAssist/1.0.0'
+            },
+            timeout: 10000
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            const data = await response.json();
+            res.json(data);
+        } else {
+            const text = await response.text();
+            res.send(text);
+        }
+
+    } catch (error) {
+        console.error('代理请求失败:', error);
+        res.status(500).json({
+            error: '代理请求失败',
+            message: error.message
+        });
+    }
+});
+
 // 配置multer用于文件上传
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {

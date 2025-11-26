@@ -1,4 +1,3 @@
-// 配置管理模块 - 负责正则规则和配置组管理
 class ConfigManager {
     constructor(core) {
         this.core = core;
@@ -9,6 +8,7 @@ class ConfigManager {
         this.core.configPanel.style.display = 'block';
         this.renderRulesList();
         this.renderChartConfigsList();
+        this.renderSubscriptionsList();
     }
 
     // 隐藏配置面板
@@ -45,7 +45,8 @@ class ConfigManager {
                 delete this.core.editingIndex;
                 this.core.setStatus('规则更新成功');
             } else {
-                // 添加模式：添加新规则
+                // 添加模式：添加新规则，确保有ID
+                this.core.getRuleId(newRule); // 这会确保规则有ID
                 this.core.regexRules.push(newRule);
                 this.core.setStatus('规则添加成功');
             }
@@ -529,7 +530,7 @@ class ConfigManager {
         const configData = {
             version: '1.0',
             timestamp: new Date().toISOString(),
-            regexRules: this.core.regexRules,
+            regexRules: rulesWithIds,
             configGroups: this.core.configGroups,
             activeGroups: Array.from(this.core.activeGroups),
             filterGroups: Array.from(this.core.filterGroups), // 新增：导出过滤配置组
@@ -608,14 +609,19 @@ class ConfigManager {
     mergeConfig(configData) {
         // 合并正则规则
         configData.regexRules.forEach(newRule => {
+            // 确保导入的规则有ID
+            this.core.getRuleId(newRule);
+
+            // 检查是否已存在相同ID的规则
             const existingIndex = this.core.regexRules.findIndex(rule =>
-                rule.pattern === newRule.pattern &&
-                rule.color === newRule.color &&
-                rule.bgColor === newRule.bgColor
+                this.core.getRuleId(rule) === this.core.getRuleId(newRule)
             );
 
             if (existingIndex === -1) {
                 this.core.regexRules.push(newRule);
+            } else {
+                // 如果存在相同ID的规则，更新现有规则
+                this.core.regexRules[existingIndex] = newRule;
             }
         });
 
@@ -701,6 +707,9 @@ class ConfigManager {
 
         // 绑定图表配置事件
         this.bindChartConfigEvents();
+
+        // 绑定订阅源事件
+        this.bindSubscriptionEvents();
     }
 
     // 绑定诊断规则事件
@@ -1239,6 +1248,317 @@ class ConfigManager {
                 this.clearAllStorage();
             });
         }
+    }
+
+    // 绑定订阅源事件（只绑定一次）
+    bindSubscriptionEvents() {
+        // 添加订阅源按钮
+        const addSubscriptionBtn = document.getElementById('addSubscription');
+        if (addSubscriptionBtn && !addSubscriptionBtn._bound) {
+            addSubscriptionBtn.addEventListener('click', () => {
+                this.addSubscription();
+            });
+            addSubscriptionBtn._bound = true;
+        }
+
+        // 更新所有订阅源按钮
+        const updateAllSubscriptionsBtn = document.getElementById('updateAllSubscriptions');
+        if (updateAllSubscriptionsBtn && !updateAllSubscriptionsBtn._bound) {
+            updateAllSubscriptionsBtn.addEventListener('click', () => {
+                this.updateAllSubscriptions();
+            });
+            updateAllSubscriptionsBtn._bound = true;
+        }
+
+        // 导出订阅源按钮
+        const exportSubscriptionsBtn = document.getElementById('exportSubscriptions');
+        if (exportSubscriptionsBtn && !exportSubscriptionsBtn._bound) {
+            exportSubscriptionsBtn.addEventListener('click', () => {
+                this.exportSubscriptions();
+            });
+            exportSubscriptionsBtn._bound = true;
+        }
+
+        // 导入订阅源按钮
+        const importSubscriptionsBtn = document.getElementById('importSubscriptions');
+        if (importSubscriptionsBtn && !importSubscriptionsBtn._bound) {
+            importSubscriptionsBtn.addEventListener('click', () => {
+                this.importSubscriptions();
+            });
+            importSubscriptionsBtn._bound = true;
+        }
+
+        // 订阅源文件选择事件
+        const importSubscriptionsFileInput = document.getElementById('importSubscriptionsFile');
+        if (importSubscriptionsFileInput && !importSubscriptionsFileInput._bound) {
+            importSubscriptionsFileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    this.importSubscriptionsFile(file);
+                    e.target.value = ''; // 清空文件选择器
+                }
+            });
+            importSubscriptionsFileInput._bound = true;
+        }
+    }
+
+    // 绑定订阅源列表操作事件（由subscriptionManager处理）
+    bindSubscriptionListEvents() {
+        // 所有订阅源列表事件由subscriptionManager处理
+        // 这里不再重复绑定事件
+    }
+
+    // 添加订阅源
+    addSubscription() {
+        const name = document.getElementById('subscriptionName').value.trim();
+        const url = document.getElementById('subscriptionUrl').value.trim();
+
+        if (!name || !url) {
+            alert('请填写订阅源名称和URL');
+            return;
+        }
+
+        // 验证URL格式
+        try {
+            new URL(url);
+        } catch (error) {
+            alert('请输入有效的URL');
+            return;
+        }
+
+        // 检查是否已存在相同URL的订阅源
+        if (this.core.subscriptionManager && this.core.subscriptionManager.subscriptions.some(sub => sub.url === url)) {
+            alert('该URL的订阅源已存在');
+            return;
+        }
+
+        const subscription = {
+            name,
+            url,
+            enabled: true,
+            status: 'pending'
+        };
+
+        if (this.core.subscriptionManager && this.core.subscriptionManager.addSubscription(subscription)) {
+            this.renderSubscriptionsList();
+            this.clearSubscriptionForm();
+            this.core.setStatus('订阅源添加成功');
+        } else {
+            alert('添加订阅源失败：订阅源管理器未初始化');
+        }
+    }
+
+    // 更新订阅源
+    updateSubscription(subscriptionId) {
+        if (!this.core.subscriptionManager) {
+            alert('订阅源管理器未初始化');
+            return;
+        }
+
+        this.core.subscriptionManager.updateSubscription(subscriptionId)
+            .then(() => {
+                this.renderSubscriptionsList();
+                this.core.setStatus('订阅源更新成功');
+            })
+            .catch(error => {
+                this.core.setStatus(`订阅源更新失败: ${error.message}`, 'error');
+                this.renderSubscriptionsList(); // 重新渲染以更新状态
+            });
+    }
+
+    // 更新所有订阅源
+    updateAllSubscriptions() {
+        if (!this.core.subscriptionManager) {
+            alert('订阅源管理器未初始化');
+            return;
+        }
+
+        this.core.subscriptionManager.updateAllSubscriptions()
+            .then(() => {
+                this.renderSubscriptionsList();
+                this.core.setStatus('所有订阅源更新完成');
+            })
+            .catch(error => {
+                this.core.setStatus(`订阅源更新失败: ${error.message}`, 'error');
+                this.renderSubscriptionsList(); // 重新渲染以更新状态
+            });
+    }
+
+    // 删除订阅源
+    deleteSubscription(subscriptionId) {
+        if (!this.core.subscriptionManager) {
+            alert('订阅源管理器未初始化');
+            return;
+        }
+
+        if (confirm('确定要删除这个订阅源吗？')) {
+            this.core.subscriptionManager.deleteSubscription(subscriptionId);
+            this.renderSubscriptionsList();
+            this.core.setStatus('订阅源已删除');
+        }
+    }
+
+    // 渲染订阅源列表
+    renderSubscriptionsList() {
+        const container = document.getElementById('subscriptionsList');
+        if (!container) return;
+
+        const subscriptions = this.core.subscriptionManager ? this.core.subscriptionManager.subscriptions : [];
+
+        if (subscriptions.length === 0) {
+            container.innerHTML = '<h4>当前订阅源:</h4><div class="empty-subscriptions">暂无订阅源</div>';
+            return;
+        }
+
+        container.innerHTML = '<h4>当前订阅源:</h4>';
+
+        subscriptions.forEach(subscription => {
+            const subscriptionElement = document.createElement('div');
+            subscriptionElement.className = 'subscription-item';
+
+            const lastUpdate = subscription.lastUpdate ?
+                new Date(subscription.lastUpdate).toLocaleString() : '从未更新';
+
+            subscriptionElement.innerHTML = `
+                <div class="subscription-content">
+                    <div class="subscription-header">
+                        <span class="subscription-name">${subscription.name}</span>
+                        <span class="subscription-status ${subscription.enabled ? 'enabled' : 'disabled'}">
+                            ${subscription.enabled ? '已启用' : '已禁用'}
+                        </span>
+                    </div>
+                    <div class="subscription-url">${subscription.url}</div>
+                    <div class="subscription-info">
+                        <span>最后更新: ${lastUpdate}</span>
+                    </div>
+                </div>
+                <div class="subscription-actions">
+                    <div class="subscription-toggle ${subscription.enabled ? 'enabled' : 'disabled'}" data-id="${subscription.id}">
+                        <div class="toggle-switch"></div>
+                        <span class="toggle-label">${subscription.enabled ? '启用' : '禁用'}</span>
+                    </div>
+                    <button class="update-subscription" data-id="${subscription.id}" ${subscription.status === 'updating' ? 'disabled' : ''}>
+                        ${subscription.status === 'updating' ? '更新中...' : '更新'}
+                    </button>
+                    <button class="remove-subscription" data-id="${subscription.id}">删除</button>
+                </div>
+            `;
+            container.appendChild(subscriptionElement);
+        });
+
+        // 调用subscriptionManager的事件绑定方法
+        if (this.core.subscriptionManager && this.core.subscriptionManager.bindSubscriptionEvents) {
+            this.core.subscriptionManager.bindSubscriptionEvents();
+        } else {
+            console.error('subscriptionManager或bindSubscriptionEvents方法不存在');
+        }
+
+        // 绑定订阅源切换事件
+        this.bindSubscriptionToggleEvents();
+    }
+
+    // 绑定订阅源切换事件
+    bindSubscriptionToggleEvents() {
+        const container = document.getElementById('subscriptionsList');
+        if (!container) return;
+
+        container.querySelectorAll('.subscription-toggle').forEach(toggle => {
+            toggle.onclick = (e) => {
+                const id = e.currentTarget.dataset.id;
+                if (this.core.subscriptionManager && this.core.subscriptionManager.toggleSubscription(id)) {
+                    this.renderSubscriptionsList();
+                    this.core.setStatus('订阅源状态已更新');
+                }
+            };
+        });
+    }
+
+    // 清空订阅源表单
+    clearSubscriptionForm() {
+        document.getElementById('subscriptionName').value = '';
+        document.getElementById('subscriptionUrl').value = '';
+    }
+
+    // 导出订阅源
+    exportSubscriptions() {
+        const subscriptions = this.core.subscriptionManager.subscriptions;
+
+        if (subscriptions.length === 0) {
+            alert('没有订阅源可导出');
+            return;
+        }
+
+        const exportData = {
+            version: '1.0',
+            timestamp: new Date().toISOString(),
+            subscriptions: subscriptions
+        };
+
+        const jsonString = JSON.stringify(exportData, null, 2);
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `xlogassist-subscriptions-${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        this.core.setStatus('订阅源导出成功');
+    }
+
+    // 导入订阅源
+    importSubscriptions() {
+        document.getElementById('importSubscriptionsFile').click();
+    }
+
+    // 导入订阅源文件
+    importSubscriptionsFile(file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const importData = JSON.parse(e.target.result);
+
+                // 验证导入数据格式
+                if (!importData.subscriptions || !Array.isArray(importData.subscriptions)) {
+                    throw new Error('无效的订阅源文件格式');
+                }
+
+                // 合并订阅源
+                importData.subscriptions.forEach(newSubscription => {
+                    // 检查是否已存在相同URL的订阅源
+                    const existingIndex = this.core.subscriptionManager.subscriptions.findIndex(
+                        sub => sub.url === newSubscription.url
+                    );
+
+                    if (existingIndex === -1) {
+                        // 确保新订阅源有ID
+                        if (!newSubscription.id) {
+                            newSubscription.id = `subscription_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                        }
+                        this.core.subscriptionManager.subscriptions.push(newSubscription);
+                    } else {
+                        // 如果存在相同URL的订阅源，更新现有订阅源
+                        this.core.subscriptionManager.subscriptions[existingIndex] = {
+                            ...this.core.subscriptionManager.subscriptions[existingIndex],
+                            ...newSubscription,
+                            id: this.core.subscriptionManager.subscriptions[existingIndex].id // 保持原有ID
+                        };
+                    }
+                });
+
+                // 保存订阅源
+                this.core.subscriptionManager.saveSubscriptions();
+                this.renderSubscriptionsList();
+                this.core.setStatus('订阅源导入成功');
+            } catch (error) {
+                alert('导入订阅源失败: ' + error.message);
+                this.core.setStatus('订阅源导入失败', 'error');
+            }
+        };
+        reader.readAsText(file);
     }
 }
 

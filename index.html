@@ -133,6 +133,7 @@
                     <button class="tab-btn" data-tab="groups">高亮配置组</button>
                     <button class="tab-btn" data-tab="diagnosis">诊断配置</button>
                     <button class="tab-btn" data-tab="charting">图表配置</button>
+                    <button class="tab-btn" data-tab="subscriptions">订阅源</button>
                 </div>
                 
                 <!-- 规则管理标签页 -->
@@ -330,6 +331,46 @@ return data;</textarea>
                         <div class="chart-configs-list" id="chartConfigsList">
                             <h4>当前图表配置:</h4>
                             <div class="empty-chart-configs">暂无图表配置</div>
+                        </div>
+                    </div>
+                    
+                    <!-- 订阅源标签页 -->
+                    <div class="tab-content" data-tab="subscriptions">
+                        <div class="config-section">
+                            <h4>订阅源管理</h4>
+                            <p class="subscription-description">
+                                通过订阅源可以自动获取最新的高亮规则配置。支持JSON格式的订阅源URL。
+                            </p>
+                            
+                            <div class="subscription-form">
+                                <div class="subscription-form-row">
+                                    <div class="config-item">
+                                        <label>订阅源URL:</label>
+                                        <input type="text" id="subscriptionUrl" placeholder="https://example.com/rules.json" style="width: 100%;">
+                                    </div>
+                                    <div class="config-item">
+                                        <label>自定义名称 (可选):</label>
+                                        <input type="text" id="subscriptionName" placeholder="例如: 官方规则库">
+                                    </div>
+                                </div>
+                                <div class="subscription-form-actions">
+                                    <button id="addSubscription" class="btn">添加订阅源</button>
+                                </div>
+                            </div>
+                            
+                            <div class="subscription-config-actions">
+                                <button id="updateAllSubscriptions" class="btn btn-success">更新所有订阅源</button>
+                                <button id="exportSubscriptions" class="btn btn-primary">导出订阅源</button>
+                                <button id="importSubscriptions" class="btn btn-primary">导入订阅源</button>
+                                <input type="file" id="importSubscriptionsFile" accept=".json" style="display: none;">
+                            </div>
+                            
+                            <div class="subscription-list">
+                                <h4>订阅源状态</h4>
+                                <div id="subscriptionsList">
+                                    <div class="empty-subscriptions">暂无订阅源</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
