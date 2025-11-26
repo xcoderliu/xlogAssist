@@ -32,7 +32,13 @@ class ConfigManager {
             // 测试正则表达式是否有效
             new RegExp(pattern, 'gi');
 
-            const newRule = { pattern, color, bgColor, highlightWholeLine };
+            const newRule = {
+                pattern,
+                color,
+                bgColor,
+                highlightWholeLine,
+                id: `rule_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+            };
 
             if (this.core.editingIndex !== undefined) {
                 // 编辑模式：替换原有规则
@@ -45,8 +51,7 @@ class ConfigManager {
                 delete this.core.editingIndex;
                 this.core.setStatus('规则更新成功');
             } else {
-                // 添加模式：添加新规则，确保有ID
-                this.core.getRuleId(newRule); // 这会确保规则有ID
+                // 添加模式：添加新规则
                 this.core.regexRules.push(newRule);
                 this.core.setStatus('规则添加成功');
             }
@@ -530,7 +535,7 @@ class ConfigManager {
         const configData = {
             version: '1.0',
             timestamp: new Date().toISOString(),
-            regexRules: rulesWithIds,
+            regexRules: this.core.regexRules,
             configGroups: this.core.configGroups,
             activeGroups: Array.from(this.core.activeGroups),
             filterGroups: Array.from(this.core.filterGroups), // 新增：导出过滤配置组

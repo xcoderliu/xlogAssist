@@ -1,4 +1,5 @@
 import ConfigManager from './configManager.js';
+import { getRuleId } from './utils.js';
 
 class LogAnalyzer {
     constructor() {
@@ -159,8 +160,17 @@ class LogAnalyzer {
         const savedFilterGroups = localStorage.getItem('xlogAssist_filterGroups'); // 新增：加载过滤配置组
         const savedDiagnosisRules = localStorage.getItem('xlogAssist_diagnosisRules');
         
+        let needSave = false;
+        
         if (savedRules) {
             this.regexRules = JSON.parse(savedRules);
+            // 确保老数据有ID
+            this.regexRules.forEach(rule => {
+                if (!rule.id) {
+                    rule.id = `rule_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                    needSave = true;
+                }
+            });
         }
         
         if (savedGroups) {
@@ -178,6 +188,11 @@ class LogAnalyzer {
         // 加载诊断规则到core中，供configManager使用
         if (savedDiagnosisRules) {
             this.diagnosisRules = JSON.parse(savedDiagnosisRules);
+        }
+        
+        // 如果更新了老数据的ID，保存配置
+        if (needSave) {
+            this.saveConfig();
         }
     }
 
@@ -201,8 +216,8 @@ class LogAnalyzer {
     }
 
     getRuleId(rule) {
-        // 为规则生成唯一ID（基于内容和配置）
-        return `${rule.pattern}|${rule.color}|${rule.bgColor}|${rule.highlightWholeLine}`;
+        // 使用utils.js中的getRuleId函数，确保规则有ID
+        return getRuleId(rule);
     }
 
     // 标签页切换

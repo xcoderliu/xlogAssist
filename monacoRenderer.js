@@ -296,7 +296,12 @@ class MonacoRenderer extends RendererInterface {
     // 添加高亮样式
     addHighlightStyle(rule, index) {
         const styleId = `regex-highlight-${index}`;
-        if (document.getElementById(styleId)) return;
+        
+        // 如果样式已存在，先移除它，确保使用最新的颜色
+        const existingStyle = document.getElementById(styleId);
+        if (existingStyle) {
+            existingStyle.remove();
+        }
 
         const style = document.createElement('style');
         style.id = styleId;
