@@ -87,6 +87,8 @@ class ConfigManager {
                 this.core.setStatus('规则添加成功');
             }
 
+            // 添加后自动排序
+            this.sortRules();
             this.core.saveConfig();
             this.renderRulesList();
             if (this.core.renderLogs) {
@@ -120,7 +122,29 @@ class ConfigManager {
         });
     }
 
-    // 渲染规则列表
+    // 自动排序规则 - 非整行规则排在整行规则前面
+    sortRules() {
+        const originalOrder = [...this.core.regexRules];
+        this.core.regexRules.sort((a, b) => {
+            // 非整行规则排在整行规则前面
+            if (!a.highlightWholeLine && b.highlightWholeLine) return -1;
+            if (a.highlightWholeLine && !b.highlightWholeLine) return 1;
+            // 如果类型相同，保持原有顺序
+            return 0;
+        });
+        
+        // 检查排序是否改变了顺序
+        const orderChanged = originalOrder.some((rule, index) =>
+            this.core.getRuleId(rule) !== this.core.getRuleId(this.core.regexRules[index])
+        );
+        
+        // 如果顺序改变，保存配置
+        if (orderChanged) {
+            this.core.saveConfig();
+        }
+    }
+
+    // 渲染规则列表 - 支持拖拽排序
     renderRulesList() {
         const rulesList = document.getElementById('rulesList');
         rulesList.innerHTML = '<h4>当前规则:</h4>';
@@ -130,11 +154,17 @@ class ConfigManager {
             return;
         }
 
+        // 渲染前确保排序
+        this.sortRules();
+
         this.core.regexRules.forEach((rule, index) => {
             const ruleElement = document.createElement('div');
             ruleElement.className = 'rule-item';
+            ruleElement.draggable = true;
+            ruleElement.dataset.index = index;
             ruleElement.innerHTML = `
                 <div style="display: flex; align-items: center; flex-wrap: wrap;">
+                    <div class="drag-handle" style="cursor: move; margin-right: 8px; color: #666;">≡</div>
                     <div class="rule-preview" style="background: ${rule.bgColor}; color: ${rule.color}; display: flex; align-items: center; justify-content: center; font-weight: bold;">A</div>
                     <span class="rule-text">${rule.pattern}</span>
                     ${rule.highlightWholeLine ? '<span style="font-size: 12px; color: #666; margin-left: 8px;">(整行)</span>' : ''}
@@ -160,6 +190,79 @@ class ConfigManager {
             button.addEventListener('click', (e) => {
                 const index = parseInt(e.target.dataset.index);
                 this.deleteRule(index, e);
+            });
+        });
+
+        // 绑定拖拽排序事件
+        this.bindDragSortEvents();
+    }
+
+    // 绑定拖拽排序事件
+    bindDragSortEvents() {
+        const rulesList = document.getElementById('rulesList');
+        const ruleItems = rulesList.querySelectorAll('.rule-item');
+
+        let draggedItem = null;
+
+        ruleItems.forEach(item => {
+            // 拖拽开始
+            item.addEventListener('dragstart', (e) => {
+                draggedItem = item;
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/html', item.innerHTML);
+                item.style.opacity = '0.5';
+            });
+
+            // 拖拽结束
+            item.addEventListener('dragend', () => {
+                draggedItem.style.opacity = '1';
+                draggedItem = null;
+            });
+
+            // 拖拽经过
+            item.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+            });
+
+            // 拖拽进入
+            item.addEventListener('dragenter', (e) => {
+                e.preventDefault();
+                if (item !== draggedItem) {
+                    item.style.backgroundColor = '#f0f8ff';
+                }
+            });
+
+            // 拖拽离开
+            item.addEventListener('dragleave', () => {
+                item.style.backgroundColor = '';
+            });
+
+            // 放置
+            item.addEventListener('drop', (e) => {
+                e.preventDefault();
+                if (item !== draggedItem) {
+                    const fromIndex = parseInt(draggedItem.dataset.index);
+                    const toIndex = parseInt(item.dataset.index);
+
+                    // 交换数组中的元素
+                    [this.core.regexRules[fromIndex], this.core.regexRules[toIndex]] =
+                        [this.core.regexRules[toIndex], this.core.regexRules[fromIndex]];
+
+                    // 保存配置
+                    this.core.saveConfig();
+
+                    // 重新渲染列表
+                    this.renderRulesList();
+
+                    // 强制刷新高亮
+                    if (this.core.monacoRenderer && this.core.monacoRenderer.refreshHighlighting) {
+                        this.core.monacoRenderer.refreshHighlighting();
+                    }
+
+                    this.core.setStatus('规则顺序已更新');
+                }
+                item.style.backgroundColor = '';
             });
         });
     }
@@ -198,6 +301,8 @@ class ConfigManager {
             });
 
             this.core.regexRules.splice(index, 1);
+            // 删除后自动排序
+            this.sortRules();
             this.core.saveConfig();
             this.renderRulesList();
             this.renderGroupsList(); // 更新配置组列表显示
@@ -660,6 +765,9 @@ class ConfigManager {
                 this.core.regexRules[existingIndex] = newRule;
             }
         });
+
+        // 合并后自动排序
+        this.sortRules();
 
         // 合并配置组
         configData.configGroups.forEach(newGroup => {

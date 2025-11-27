@@ -278,6 +278,11 @@ class SubscriptionManager {
             }
         });
 
+        // 合并后自动排序规则
+        if (this.core.configManager && this.core.configManager.sortRules) {
+            this.core.configManager.sortRules();
+        }
+
         return { added: addedCount, updated: updatedCount };
     }
 

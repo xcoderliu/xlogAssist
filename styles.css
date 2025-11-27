@@ -561,6 +561,62 @@ footer {
     margin-bottom: 8px;
     background: #f8f9fa;
     gap: 12px;
+    transition: all 0.2s ease;
+    cursor: grab;
+    position: relative;
+}
+
+.rule-item:hover, .group-item:hover {
+    border-color: #1a73e8;
+    box-shadow: 0 2px 8px rgba(26, 115, 232, 0.1);
+}
+
+.rule-item.dragging, .group-item.dragging {
+    opacity: 0.5;
+    background: #e8f0fe;
+    border-color: #1a73e8;
+    box-shadow: 0 4px 12px rgba(26, 115, 232, 0.2);
+    cursor: grabbing;
+}
+
+.rule-item.drag-over, .group-item.drag-over {
+    border-top: 2px solid #1a73e8;
+    background: #f0f7ff;
+}
+
+.rule-item .drag-handle, .group-item .drag-handle {
+    width: 16px;
+    height: 16px;
+    cursor: grab;
+    color: #9aa0a6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 8px;
+    flex-shrink: 0;
+}
+
+.rule-item .drag-handle:hover, .group-item .drag-handle:hover {
+    color: #1a73e8;
+}
+
+.rule-item.dragging .drag-handle, .group-item.dragging .drag-handle {
+    cursor: grabbing;
+}
+
+.rule-item .drag-handle::before {
+    content: '';
+    font-size: 12px;
+    line-height: 1;
+    transform: rotate(90deg);
+    display: block;
+}
+
+.rule-item > div:first-child {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
 }
 
 .rule-item > div:first-child {
