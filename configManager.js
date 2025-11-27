@@ -3,12 +3,43 @@ class ConfigManager {
         this.core = core;
     }
 
+    // 生成随机颜色
+    getRandomColor() {
+        const colors = [
+            '#0066cc', '#cc0000', '#009900', '#990099', '#cc6600',
+            '#006699', '#993300', '#669900', '#990066', '#006633',
+            '#3366cc', '#cc3366', '#33cc66', '#6633cc', '#cc6633',
+            '#3399cc', '#cc3399', '#99cc33', '#9933cc', '#cc9933',
+            '#2288cc', '#cc2288', '#22cc88', '#8822cc', '#cc8822',
+            '#44aadd', '#dd44aa', '#aadd44', '#aa44dd', '#ddaa44',
+            '#55bbee', '#ee55bb', '#bbee55', '#bb55ee', '#eebb55',
+            '#66ccff', '#ff66cc', '#ccff66', '#cc66ff', '#ffcc66',
+            '#1177bb', '#bb1177', '#77bb11', '#7711bb', '#bb7711',
+            '#3388dd', '#dd3388', '#88dd33', '#8833dd', '#dd8833',
+            '#5599ee', '#ee5599', '#99ee55', '#9955ee', '#ee9955',
+            '#77aaff', '#ff77aa', '#aaff77', '#aa77ff', '#ffaa77'
+        ];
+        return colors[Math.floor(Math.random() * colors.length)];
+    }
+
     // 显示配置面板
     showConfigPanel() {
         this.core.configPanel.style.display = 'block';
         this.renderRulesList();
         this.renderChartConfigsList();
         this.renderSubscriptionsList();
+        // 清空表单，生成新的随机颜色
+        this.clearRuleForm();
+    }
+
+    // 清空规则表单并设置随机颜色
+    clearRuleForm() {
+        document.getElementById('regexPattern').value = '';
+        document.getElementById('regexColor').value = this.getRandomColor(); // 随机颜色字体
+        document.getElementById('regexBgColor').value = '#ffffff'; // 默认白色背景
+        document.getElementById('highlightWholeLine').checked = false;
+        document.getElementById('addRegexRule').textContent = '添加规则';
+        delete this.core.editingIndex;
     }
 
     // 隐藏配置面板
@@ -71,11 +102,7 @@ class ConfigManager {
             }
 
             // 清空表单并重置按钮文字
-            document.getElementById('regexPattern').value = '';
-            document.getElementById('regexColor').value = '#ff4444';
-            document.getElementById('regexBgColor').value = '#ffffff';
-            document.getElementById('highlightWholeLine').checked = false;
-            document.getElementById('addRegexRule').textContent = '添加规则';
+            this.clearRuleForm();
 
         } catch (error) {
             alert('正则表达式无效: ' + error.message);

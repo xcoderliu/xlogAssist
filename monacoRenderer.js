@@ -192,7 +192,7 @@ class MonacoRenderer extends RendererInterface {
         }
     }
 
-    // 应用正则高亮
+    // 应用正则高亮 - 可见区域高亮 + 延迟处理
     async applyRegexHighlighting() {
         if (!this.editor) return;
 
@@ -207,89 +207,148 @@ class MonacoRenderer extends RendererInterface {
             // 清除之前的正则装饰器，但保留搜索装饰器
             this.clearCurrentDecorations();
 
-            const decorations = [];
             const model = this.editor.getModel();
+            const maxLines = model.getLineCount();
 
-            // 限制处理的日志行数，避免性能问题
-            const maxLines = Math.min(model.getLineCount(), 10000);
-
-            // 对每个规则应用高亮 - 整行高亮规则放在前面处理
-            const sortedRules = [...activeRules].sort((a, b) => {
-                // 整行高亮规则排在前面
-                if (a.highlightWholeLine && !b.highlightWholeLine) return -1;
-                if (!a.highlightWholeLine && b.highlightWholeLine) return 1;
-                return 0;
-            });
-            
-            for (const [index, rule] of sortedRules.entries()) {
+            // 预编译所有规则的正则表达式
+            const compiledRules = [];
+            for (const [index, rule] of activeRules.entries()) {
                 try {
                     // 为这个规则添加CSS样式
                     this.addHighlightStyle(rule, index);
 
-                    // 对于部分高亮，不应该转义正则表达式特殊字符
-                    // 因为用户可能使用正则表达式语法
-                    const escapedPattern = rule.highlightWholeLine ?
-                        rule.pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') :
-                        rule.pattern;
-
-                    // 检查整行高亮规则
-                    if (rule.highlightWholeLine) {
-                        // 使用更安全的方法处理整行高亮 - 逐行检查
-                        for (let lineNumber = 1; lineNumber <= maxLines; lineNumber++) {
-                            const lineText = model.getLineContent(lineNumber);
-                            const regex = new RegExp(escapedPattern, 'gi');
-                            if (regex.test(lineText)) {
-                                decorations.push({
-                                    range: new monaco.Range(lineNumber, 1, lineNumber, model.getLineMaxColumn(lineNumber)),
-                                    options: {
-                                        inlineClassName: `regex-line-highlight-${index}`,
-                                        stickiness: 1
-                                    }
-                                });
-                            }
-                        }
-                    } else {
-                        // 部分高亮 - 使用更兼容的方法
-                        for (let lineNumber = 1; lineNumber <= maxLines; lineNumber++) {
-                            const lineText = model.getLineContent(lineNumber);
-
-                            try {
-                                const regex = new RegExp(escapedPattern, 'gi');
-                                let match;
-
-                                // 重置正则表达式状态
-                                regex.lastIndex = 0;
-
-                                while ((match = regex.exec(lineText)) !== null) {
-                                    const startColumn = match.index + 1; // Monaco列号从1开始
-                                    const endColumn = startColumn + match[0].length;
-
-                                    decorations.push({
-                                        range: new monaco.Range(lineNumber, startColumn, lineNumber, endColumn),
-                                        options: {
-                                            inlineClassName: `regex-highlight-${index}`,
-                                            stickiness: 2  // 更高的优先级，可以覆盖整行高亮
-                                        }
-                                    });
-                                }
-                            } catch (error) {
-                                console.warn('正则表达式匹配错误:', escapedPattern, error);
-                                // 跳过这一行的匹配，继续下一行
-                            }
-                        }
-                    }
-
-
+                    compiledRules.push({
+                        ...rule,
+                        index,
+                        regex: new RegExp(rule.pattern, 'gi')
+                    });
                 } catch (error) {
-                    console.warn('正则表达式错误:', rule.pattern, error);
+                    console.warn('正则表达式编译错误:', rule.pattern, error);
                 }
             }
 
-            // 应用装饰器
-            this.currentDecorations = this.editor.deltaDecorations([], decorations);
+            // 分离整行高亮规则和部分高亮规则
+            const wholeLineRules = compiledRules.filter(rule => rule.highlightWholeLine);
+            const partialHighlightRules = compiledRules.filter(rule => !rule.highlightWholeLine);
+
+            // 获取可见区域的行范围
+            const visibleRanges = this.editor.getVisibleRanges();
+            if (visibleRanges.length === 0) {
+                // 如果没有可见区域，处理前100行
+                this.highlightLines(1, Math.min(100, maxLines), compiledRules, wholeLineRules, partialHighlightRules, model);
+            } else {
+                // 处理可见区域
+                const startLine = visibleRanges[0].startLineNumber;
+                const endLine = visibleRanges[0].endLineNumber;
+
+                // 扩展可见区域，预加载前后一些行
+                const bufferLines = 50;
+                const extendedStartLine = Math.max(1, startLine - bufferLines);
+                const extendedEndLine = Math.min(maxLines, endLine + bufferLines);
+
+                this.highlightLines(extendedStartLine, extendedEndLine, compiledRules, wholeLineRules, partialHighlightRules, model);
+            }
+
+            // 监听滚动事件，动态更新可见区域的高亮
+            this.setupScrollListener(compiledRules, wholeLineRules, partialHighlightRules, model);
+
         } catch (error) {
             console.error('Monaco高亮失败:', error);
         }
+    }
+
+    // 高亮指定范围内的行
+    highlightLines(startLine, endLine, compiledRules, wholeLineRules, partialHighlightRules, model) {
+        const decorations = [];
+
+        for (let lineNumber = startLine; lineNumber <= endLine; lineNumber++) {
+            const lineText = model.getLineContent(lineNumber);
+            const lineMaxColumn = model.getLineMaxColumn(lineNumber);
+
+            // 先处理整行高亮规则
+            for (const rule of wholeLineRules) {
+                try {
+                    // 重置正则表达式状态
+                    rule.regex.lastIndex = 0;
+                    if (rule.regex.test(lineText)) {
+                        decorations.push({
+                            range: new monaco.Range(lineNumber, 1, lineNumber, lineMaxColumn),
+                            options: {
+                                inlineClassName: `regex-line-highlight-${rule.index}`,
+                                stickiness: 1,
+                                shouldFillLineOnLineBreak: false
+                            }
+                        });
+                        // 整行高亮后，跳过该行的其他整行规则检查
+                        break;
+                    }
+                } catch (error) {
+                    console.warn('整行高亮正则匹配错误:', rule.pattern, error);
+                }
+            }
+
+            // 处理部分高亮规则
+            for (const rule of partialHighlightRules) {
+                try {
+                    // 重置正则表达式状态
+                    rule.regex.lastIndex = 0;
+                    let match;
+
+                    while ((match = rule.regex.exec(lineText)) !== null) {
+                        const startColumn = match.index + 1; // Monaco列号从1开始
+                        const endColumn = startColumn + match[0].length;
+
+                        decorations.push({
+                            range: new monaco.Range(lineNumber, startColumn, lineNumber, endColumn),
+                            options: {
+                                inlineClassName: `regex-highlight-${rule.index}`,
+                                stickiness: 2,
+                                shouldFillLineOnLineBreak: false
+                            }
+                        });
+                    }
+                } catch (error) {
+                    console.warn('部分高亮正则匹配错误:', rule.pattern, error);
+                }
+            }
+        }
+
+        // 应用装饰器
+        if (decorations.length > 0) {
+            const newDecorations = this.editor.deltaDecorations([], decorations);
+            this.currentDecorations = [...this.currentDecorations, ...newDecorations];
+        }
+    }
+
+    // 设置滚动监听器，动态更新可见区域的高亮
+    setupScrollListener(compiledRules, wholeLineRules, partialHighlightRules, model) {
+        // 移除之前的监听器
+        if (this.scrollListener) {
+            this.scrollListener.dispose();
+        }
+
+        // 添加新的滚动监听器
+        this.scrollListener = this.editor.onDidScrollChange(() => {
+            // 使用防抖避免频繁更新
+            if (this.scrollTimeout) {
+                clearTimeout(this.scrollTimeout);
+            }
+
+            this.scrollTimeout = setTimeout(() => {
+                const visibleRanges = this.editor.getVisibleRanges();
+                if (visibleRanges.length > 0) {
+                    const startLine = visibleRanges[0].startLineNumber;
+                    const endLine = visibleRanges[0].endLineNumber;
+
+                    // 扩展可见区域，预加载前后一些行
+                    const bufferLines = 40;
+                    const extendedStartLine = Math.max(1, startLine - bufferLines);
+                    const extendedEndLine = Math.min(model.getLineCount(), endLine + bufferLines);
+
+                    this.highlightLines(extendedStartLine, extendedEndLine, compiledRules, wholeLineRules, partialHighlightRules, model);
+                }
+            }, 500);
+        });
     }
 
     // 添加高亮样式
@@ -332,6 +391,18 @@ class MonacoRenderer extends RendererInterface {
         if (this.editor && this.currentDecorations.length > 0) {
             this.editor.deltaDecorations(this.currentDecorations, []);
             this.currentDecorations = [];
+        }
+
+        // 清除滚动监听器
+        if (this.scrollListener) {
+            this.scrollListener.dispose();
+            this.scrollListener = null;
+        }
+
+        // 清除滚动超时
+        if (this.scrollTimeout) {
+            clearTimeout(this.scrollTimeout);
+            this.scrollTimeout = null;
         }
     }
 
