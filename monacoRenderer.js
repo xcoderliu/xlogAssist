@@ -374,7 +374,7 @@ class MonacoRenderer extends RendererInterface {
                 color: ${rule.color} !important;
                 background-color: ${rule.bgColor} !important;
                 border-radius: 2px;
-                padding: 1px 2px;
+                padding: 0;
             }
             .search-highlight {
                 background-color: #ffff00 !important;
