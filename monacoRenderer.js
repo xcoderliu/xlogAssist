@@ -215,7 +215,7 @@ class MonacoRenderer extends RendererInterface {
             for (const [index, rule] of activeRules.entries()) {
                 try {
                     // 为这个规则添加CSS样式
-                    this.addHighlightStyle(rule, index);
+                    this.addHighlightStyle(rule);
 
                     compiledRules.push({
                         ...rule,
@@ -261,47 +261,62 @@ class MonacoRenderer extends RendererInterface {
     highlightLines(startLine, endLine, compiledRules, wholeLineRules, partialHighlightRules, model) {
         const decorations = [];
 
+        // 辅助函数：合并重叠或相邻的区间
+        const mergeIntervals = (intervals) => {
+            if (intervals.length === 0) return [];
+            intervals.sort((a, b) => a.start - b.start || a.end - b.end);
+            const merged = [];
+            let current = intervals[0];
+            for (let i = 1; i < intervals.length; i++) {
+                const next = intervals[i];
+                if (next.start <= current.end + 1) { // 相邻或重叠
+                    current.end = Math.max(current.end, next.end);
+                } else {
+                    merged.push(current);
+                    current = next;
+                }
+            }
+            merged.push(current);
+            return merged;
+        };
+
+        // 辅助函数：从整行区间中减去部分区间
+        const subtractIntervals = (wholeStart, wholeEnd, partIntervals) => {
+            if (partIntervals.length === 0) return [{ start: wholeStart, end: wholeEnd }];
+            const merged = mergeIntervals(partIntervals);
+            const result = [];
+            let currentStart = wholeStart;
+            for (const interval of merged) {
+                if (interval.start > currentStart) {
+                    result.push({ start: currentStart, end: interval.start - 1 });
+                }
+                currentStart = Math.max(currentStart, interval.end + 1);
+            }
+            if (currentStart <= wholeEnd) {
+                result.push({ start: currentStart, end: wholeEnd });
+            }
+            return result;
+        };
+
         for (let lineNumber = startLine; lineNumber <= endLine; lineNumber++) {
             const lineText = model.getLineContent(lineNumber);
             const lineMaxColumn = model.getLineMaxColumn(lineNumber);
 
-            // 先处理整行高亮规则
-            for (const rule of wholeLineRules) {
-                try {
-                    // 重置正则表达式状态
-                    rule.regex.lastIndex = 0;
-                    if (rule.regex.test(lineText)) {
-                        decorations.push({
-                            range: new monaco.Range(lineNumber, 1, lineNumber, lineMaxColumn),
-                            options: {
-                                inlineClassName: `regex-line-highlight-${rule.index}`,
-                                stickiness: 1,
-                                shouldFillLineOnLineBreak: false
-                            }
-                        });
-                        // 整行高亮后，跳过该行的其他整行规则检查
-                        break;
-                    }
-                } catch (error) {
-                    console.warn('整行高亮正则匹配错误:', rule.pattern, error);
-                }
-            }
-
-            // 处理部分高亮规则
+            // 收集部分高亮区间
+            const partialIntervals = [];
             for (const rule of partialHighlightRules) {
                 try {
-                    // 重置正则表达式状态
                     rule.regex.lastIndex = 0;
                     let match;
-
                     while ((match = rule.regex.exec(lineText)) !== null) {
-                        const startColumn = match.index + 1; // Monaco列号从1开始
+                        const startColumn = match.index + 1;
                         const endColumn = startColumn + match[0].length;
-
+                        partialIntervals.push({ start: startColumn, end: endColumn });
+                        // 同时添加部分高亮装饰器
                         decorations.push({
                             range: new monaco.Range(lineNumber, startColumn, lineNumber, endColumn),
                             options: {
-                                inlineClassName: `regex-highlight-${rule.index}`,
+                                inlineClassName: `regex-highlight-${rule.id}`,
                                 stickiness: 2,
                                 shouldFillLineOnLineBreak: false
                             }
@@ -309,6 +324,31 @@ class MonacoRenderer extends RendererInterface {
                     }
                 } catch (error) {
                     console.warn('部分高亮正则匹配错误:', rule.pattern, error);
+                }
+            }
+
+            // 处理整行高亮规则
+            for (const rule of wholeLineRules) {
+                try {
+                    rule.regex.lastIndex = 0;
+                    if (rule.regex.test(lineText)) {
+                        // 计算排除部分区间后的整行区间
+                        const remainingIntervals = subtractIntervals(1, lineMaxColumn, partialIntervals);
+                        for (const interval of remainingIntervals) {
+                            decorations.push({
+                                range: new monaco.Range(lineNumber, interval.start, lineNumber, interval.end),
+                                options: {
+                                    inlineClassName: `regex-line-highlight-${rule.id}`,
+                                    stickiness: 1,
+                                    shouldFillLineOnLineBreak: false
+                                }
+                            });
+                        }
+                        // 整行高亮后，跳过该行的其他整行规则检查
+                        break;
+                    }
+                } catch (error) {
+                    console.warn('整行高亮正则匹配错误:', rule.pattern, error);
                 }
             }
         }
@@ -352,8 +392,8 @@ class MonacoRenderer extends RendererInterface {
     }
 
     // 添加高亮样式
-    addHighlightStyle(rule, index) {
-        const styleId = `regex-highlight-${index}`;
+    addHighlightStyle(rule) {
+        const styleId = `regex-highlight-styleid-${rule.id}`;
 
         // 如果样式已存在，先移除它，确保使用最新的颜色
         const existingStyle = document.getElementById(styleId);
@@ -364,13 +404,13 @@ class MonacoRenderer extends RendererInterface {
         const style = document.createElement('style');
         style.id = styleId;
         style.textContent = `
-            .regex-highlight-${index} {
+            .regex-highlight-${rule.id} {
                 color: ${rule.color} !important;
                 background-color: ${rule.bgColor} !important;
                 border-radius: 2px;
                 padding: 1px 2px;
             }
-            .regex-line-highlight-${index} {
+            .regex-line-highlight-${rule.id} {
                 color: ${rule.color} !important;
                 background-color: ${rule.bgColor} !important;
                 border-radius: 2px;
