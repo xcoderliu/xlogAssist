@@ -117,6 +117,11 @@ class MonacoRenderer extends RendererInterface {
             // 显示Monaco容器，隐藏传统容器
             this.showMonacoContainer();
 
+            // 确保编辑器正确布局 - 当容器从隐藏变为显示时必须调用
+            if (this.editor) {
+                this.editor.layout();
+            }
+
             // 控制拖拽区域的显示 - 与原有系统保持一致
             this.controlUploadSection();
 
@@ -134,6 +139,11 @@ class MonacoRenderer extends RendererInterface {
 
             // 设置编辑器内容
             this.editor.setValue(logsText);
+
+            // 再次确保布局正确 (设置内容后)
+            if (this.editor) {
+                this.editor.layout();
+            }
 
             // 更新日志计数
             this.updateLogCount();

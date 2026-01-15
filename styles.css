@@ -5,7 +5,8 @@
     box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
     height: 100%;
     overflow: auto;
     font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -84,7 +85,8 @@ header .btn-small:hover {
 
 /* 日志显示区域 */
 .log-display-area {
-    flex: none; /* 改为none，由JavaScript控制宽度 */
+    flex: none;
+    /* 改为none，由JavaScript控制宽度 */
     display: flex;
     flex-direction: column;
     min-width: 0;
@@ -92,7 +94,8 @@ header .btn-small:hover {
     padding: 24px;
     border-right: 1px solid #dadce0;
     position: relative;
-    width: 50%; /* 默认宽度，会被JavaScript覆盖 */
+    width: 50%;
+    /* 默认宽度，会被JavaScript覆盖 */
 }
 
 /* 上传区域 */
@@ -149,18 +152,21 @@ header .btn-small:hover {
     transform: translateY(-2px);
 }
 
-.drop-content, .download-content {
+.drop-content,
+.download-content {
     cursor: pointer;
 }
 
-.drop-icon, .download-icon {
+.drop-icon,
+.download-icon {
     font-size: 48px;
     display: block;
     margin-bottom: 12px;
     color: #5f6368;
 }
 
-.drop-hint, .download-hint {
+.drop-hint,
+.download-hint {
     font-size: 14px;
     color: #5f6368;
     margin-top: 8px;
@@ -174,13 +180,15 @@ header .btn-small:hover {
     margin-bottom: 20px;
 }
 
-.search-box, .filter-box {
+.search-box,
+.filter-box {
     display: flex;
     align-items: center;
     gap: 12px;
 }
 
-.search-input, .filter-input {
+.search-input,
+.filter-input {
     flex: 1;
     min-width: 280px;
     padding: 12px 16px;
@@ -191,7 +199,8 @@ header .btn-small:hover {
     transition: all 0.2s ease;
 }
 
-.search-input:focus, .filter-input:focus {
+.search-input:focus,
+.filter-input:focus {
     outline: none;
     border-color: #1a73e8;
     box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
@@ -258,8 +267,10 @@ header .btn-small:hover {
 /* 传统渲染器样式已移除 - 完全使用 Monaco Editor */
 
 .search-char-highlight {
-    background: #ffff00;  /* 标准的黄色高亮 */
-    color: #000000;       /* 黑色文字确保可读性 */
+    background: #ffff00;
+    /* 标准的黄色高亮 */
+    color: #000000;
+    /* 黑色文字确保可读性 */
     padding: 1px 2px;
     border-radius: 2px;
     font-weight: bold;
@@ -279,7 +290,8 @@ header .btn-small:hover {
 
 /* 排查区域 */
 .investigation-area {
-    flex: 1; /* 保持flex:1，让它填充剩余空间 */
+    flex: 1;
+    /* 保持flex:1，让它填充剩余空间 */
     min-width: 0;
     min-height: 0;
     padding: 24px;
@@ -531,27 +543,31 @@ footer {
     margin: 0;
 }
 
-.rules-list, .groups-list {
+.rules-list,
+.groups-list {
     margin-top: 24px;
     border-top: 1px solid #dadce0;
     padding-top: 16px;
 }
 
-.rules-list h4, .groups-list h4 {
+.rules-list h4,
+.groups-list h4 {
     margin-bottom: 12px;
     font-size: 16px;
     font-weight: 500;
     color: #202124;
 }
 
-.empty-rules, .empty-groups {
+.empty-rules,
+.empty-groups {
     color: #9aa0a6;
     text-align: center;
     padding: 20px;
     font-style: italic;
 }
 
-.rule-item, .group-item {
+.rule-item,
+.group-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -566,12 +582,14 @@ footer {
     position: relative;
 }
 
-.rule-item:hover, .group-item:hover {
+.rule-item:hover,
+.group-item:hover {
     border-color: #1a73e8;
     box-shadow: 0 2px 8px rgba(26, 115, 232, 0.1);
 }
 
-.rule-item.dragging, .group-item.dragging {
+.rule-item.dragging,
+.group-item.dragging {
     opacity: 0.5;
     background: #e8f0fe;
     border-color: #1a73e8;
@@ -579,12 +597,14 @@ footer {
     cursor: grabbing;
 }
 
-.rule-item.drag-over, .group-item.drag-over {
+.rule-item.drag-over,
+.group-item.drag-over {
     border-top: 2px solid #1a73e8;
     background: #f0f7ff;
 }
 
-.rule-item .drag-handle, .group-item .drag-handle {
+.rule-item .drag-handle,
+.group-item .drag-handle {
     width: 16px;
     height: 16px;
     cursor: grab;
@@ -596,11 +616,13 @@ footer {
     flex-shrink: 0;
 }
 
-.rule-item .drag-handle:hover, .group-item .drag-handle:hover {
+.rule-item .drag-handle:hover,
+.group-item .drag-handle:hover {
     color: #1a73e8;
 }
 
-.rule-item.dragging .drag-handle, .group-item.dragging .drag-handle {
+.rule-item.dragging .drag-handle,
+.group-item.dragging .drag-handle {
     cursor: grabbing;
 }
 
@@ -612,14 +634,14 @@ footer {
     display: block;
 }
 
-.rule-item > div:first-child {
+.rule-item>div:first-child {
     flex: 1;
     min-width: 0;
     display: flex;
     align-items: center;
 }
 
-.rule-item > div:first-child {
+.rule-item>div:first-child {
     flex: 1;
     min-width: 0;
     display: flex;
@@ -671,7 +693,8 @@ footer {
     gap: 8px;
 }
 
-.edit-rule, .delete-rule {
+.edit-rule,
+.delete-rule {
     padding: 6px 12px;
     border: none;
     border-radius: 4px;
@@ -786,7 +809,8 @@ footer {
     color: #202124;
 }
 
-.group-rules-list, .available-rules-list {
+.group-rules-list,
+.available-rules-list {
     margin-bottom: 20px;
     max-height: 200px;
     overflow-y: auto;
@@ -810,7 +834,122 @@ footer {
     max-width: none;
 }
 
-.group-rule-item, .available-rule-item {
+/* Custom Download Manager Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 8px;
+    width: 400px;
+    max-width: 90%;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+    padding: 20px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: #333;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #999;
+}
+
+.close-btn:hover {
+    color: #333;
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+.sources-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.source-item {
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.source-item:hover {
+    border-color: #007bff;
+    background: #f8f9fa;
+}
+
+.source-name {
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.source-description {
+    font-size: 12px;
+    color: #666;
+}
+
+.custom-source-modal .modal-overlay {
+    z-index: 2000;
+}
+
+.custom-source-modal .modal-content {
+    width: 800px;
+    height: 600px;
+    max-width: 95vw;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.custom-source-modal .modal-header {
+    padding: 15px 20px;
+    flex-shrink: 0;
+}
+
+.custom-source-modal .modal-header h3 {
+    font-size: 16px;
+}
+
+.custom-source-modal .close-btn {
+    font-size: 20px;
+}
+
+.custom-source-modal .modal-body {
+    flex: 1;
+    min-height: 0;
+    padding: 0;
+}
+
+
+.group-rule-item,
+.available-rule-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -822,8 +961,8 @@ footer {
     gap: 12px;
 }
 
-.group-rule-item > div,
-.available-rule-item > div {
+.group-rule-item>div,
+.available-rule-item>div {
     flex: 1;
     min-width: 0;
 }
@@ -834,7 +973,8 @@ footer {
     white-space: nowrap;
 }
 
-.group-rule-item:last-child, .available-rule-item:last-child {
+.group-rule-item:last-child,
+.available-rule-item:last-child {
     margin-bottom: 0;
 }
 
@@ -857,19 +997,20 @@ footer {
     .main-content {
         flex-direction: column;
     }
-    
+
     .log-display-area,
     .investigation-area {
         border: none;
         border-bottom: 1px solid #dadce0;
     }
-    
+
     .investigation-area {
         flex: none;
         height: 40%;
     }
-    
-    .search-input, .filter-input {
+
+    .search-input,
+    .filter-input {
         min-width: 200px;
     }
 }
@@ -878,37 +1019,39 @@ footer {
     header {
         padding: 12px 16px;
     }
-    
+
     .log-display-area,
     .investigation-area {
         padding: 16px;
     }
-    
-    .search-box, .filter-box {
+
+    .search-box,
+    .filter-box {
         flex-direction: column;
         align-items: stretch;
     }
-    
-    .search-input, .filter-input {
+
+    .search-input,
+    .filter-input {
         min-width: auto;
     }
-    
+
     .config-panel {
         width: 95vw;
         padding: 20px;
         max-width: none;
     }
-    
+
     .group-rules-modal {
         width: 95vw;
         padding: 20px;
         max-width: none;
     }
-    
+
     .config-content {
         max-height: calc(100vh - 100px);
     }
-    
+
     .group-rules-modal .modal-body {
         max-height: calc(100vh - 100px);
     }
@@ -916,9 +1059,11 @@ footer {
 
 @media (min-width: 1025px) {
     .log-display-area {
-        flex: none; /* 保持由JavaScript控制宽度 */
+        flex: none;
+        /* 保持由JavaScript控制宽度 */
         min-width: 0;
     }
+
     .investigation-area {
         flex: 1;
         min-width: 0;
@@ -926,36 +1071,39 @@ footer {
 }
 
 @media (max-width: 768px) {
-    .group-rule-item, .available-rule-item {
+
+    .group-rule-item,
+    .available-rule-item {
         flex-direction: column;
         align-items: stretch;
         gap: 8px;
     }
-    
+
     .group-rule-item .rule-preview,
     .available-rule-item .rule-preview {
         max-width: 100%;
         font-size: 11px;
     }
-    
-    .rule-item, .group-item {
+
+    .rule-item,
+    .group-item {
         flex-direction: column;
         align-items: stretch;
         gap: 8px;
     }
-    
-    .rule-item > div:first-child {
+
+    .rule-item>div:first-child {
         flex-direction: column;
         align-items: stretch;
         gap: 8px;
     }
-    
+
     .rule-preview {
         max-width: 100%;
         margin-right: 0;
         justify-content: flex-start;
     }
-    
+
     .group-rule-item button,
     .available-rule-item button {
         align-self: flex-end;
@@ -1027,7 +1175,8 @@ footer {
     background: #f8f9fa;
 }
 
-.group-item, .rule-item {
+.group-item,
+.rule-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -1047,7 +1196,8 @@ footer {
     color: #5f6368;
 }
 
-.edit-rule, .delete-rule {
+.edit-rule,
+.delete-rule {
     padding: 6px 12px;
     border: none;
     border-radius: 4px;
@@ -1181,17 +1331,20 @@ body.resizing * {
 footer {
     display: flex;
     align-items: center;
-    justify-content: space-between; /* 按钮在左，状态在右 */
+    justify-content: space-between;
+    /* 按钮在左，状态在右 */
 }
 
 footer .button-group {
     display: flex;
     align-items: center;
-    gap: 8px; /* 按钮之间的间距 */
+    gap: 8px;
+    /* 按钮之间的间距 */
 }
 
 footer .btn-small {
-    padding: 10px 16px; /* 调整内边距 */
+    padding: 10px 16px;
+    /* 调整内边距 */
     font-size: 14px;
     background: #f1f3f4;
     color: #5f6368;
@@ -1214,7 +1367,8 @@ footer .btn {
     align-items: center;
     justify-content: center;
     min-width: 60px;
-    padding: 10px 16px; /* 与设置按钮保持一致 */
+    padding: 10px 16px;
+    /* 与设置按钮保持一致 */
 }
 
 /* 诊断区样式 */
@@ -1712,8 +1866,10 @@ footer .btn {
     align-items: center;
     margin-bottom: 16px;
     flex-shrink: 0;
-    padding-bottom: 0; /* 移除底部padding */
-    border-bottom: none; /* 移除底部边框 */
+    padding-bottom: 0;
+    /* 移除底部padding */
+    border-bottom: none;
+    /* 移除底部边框 */
 }
 
 .investigation-content {
@@ -1728,39 +1884,39 @@ footer .btn {
     .stats-grid {
         grid-template-columns: repeat(2, 1fr);
     }
-    
+
     .diagnosis-header {
         flex-direction: column;
         align-items: flex-start;
         gap: 8px;
     }
-    
+
     .diagnosis-details {
         flex-direction: column;
         gap: 4px;
     }
-    
+
     .investigation-tabs {
         flex-direction: column;
     }
-    
+
     .investigation-tabs .tab-btn {
         text-align: left;
         border-bottom: none;
         border-left: 2px solid transparent;
     }
-    
+
     .investigation-tabs .tab-btn.active {
         border-left-color: #1a73e8;
         border-bottom: none;
     }
-    
+
     .diagnosis-rule-item {
         flex-direction: column;
         align-items: stretch;
         gap: 12px;
     }
-    
+
     .diagnosis-rule-actions {
         align-self: flex-end;
     }
@@ -1798,8 +1954,13 @@ footer .btn {
 }
 
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 .loading-text {
@@ -1960,38 +2121,38 @@ footer .btn {
     .diagnosis-group-header {
         padding: 16px;
     }
-    
+
     .group-main-info {
         flex-direction: column;
         align-items: flex-start;
         gap: 12px;
     }
-    
+
     .group-title {
         flex-direction: column;
         align-items: flex-start;
         gap: 8px;
     }
-    
+
     .group-severity-stats {
         align-self: stretch;
         justify-content: flex-start;
     }
-    
+
     .diagnosis-log-preview pre {
         font-size: 12px;
     }
-    
+
     .log-line-number {
         font-size: 16px;
         padding: 6px 12px;
     }
-    
+
     .rule-count {
         font-size: 14px;
         padding: 4px 10px;
     }
-    
+
     .group-severity-stats .severity-badge {
         font-size: 11px;
         padding: 4px 10px;
@@ -2686,11 +2847,11 @@ footer .btn {
         grid-template-columns: 1fr;
         grid-template-rows: repeat(4, 1fr);
     }
-    
+
     .chart-config-details {
         grid-template-columns: 1fr;
     }
-    
+
     .chart-config-form {
         grid-template-columns: 1fr;
     }
@@ -2700,40 +2861,40 @@ footer .btn {
     .charting-area {
         padding: 16px;
     }
-    
+
     .charting-header {
         flex-direction: column;
         align-items: flex-start;
         gap: 12px;
     }
-    
+
     .charting-controls {
         align-self: stretch;
         justify-content: flex-end;
     }
-    
+
     .chart-item-header {
         flex-direction: column;
         align-items: flex-start;
         gap: 8px;
     }
-    
+
     .chart-config-header {
         flex-direction: column;
         align-items: flex-start;
         gap: 8px;
     }
-    
+
     .chart-config-actions {
         align-self: stretch;
         justify-content: space-between;
     }
-    
+
     .chart-modal-content {
         padding: 16px;
         margin: 16px;
     }
-    
+
     .chart-modal-title {
         font-size: 18px;
     }
@@ -3349,30 +3510,51 @@ footer .btn {
         align-items: stretch;
         gap: 12px;
     }
-    
+
     .subscription-actions {
         align-self: flex-end;
     }
-    
+
     .subscription-form-row {
         flex-direction: column;
         align-items: stretch;
     }
-    
+
     .subscription-form-actions {
         justify-content: stretch;
     }
-    
+
     .subscription-form-actions .btn {
         flex: 1;
     }
-    
+
     .subscription-io-actions {
         flex-direction: column;
     }
-    
+
     .subscription-io-actions .btn-small {
         flex: 1;
         text-align: center;
     }
+}
+
+/* Flash Highlight Animation */
+@keyframes border-flash {
+
+    0%,
+    100% {
+        border-color: #ff0000;
+        box-shadow: 0 0 8px rgba(255, 0, 0, 0.5);
+    }
+
+    50% {
+        border-color: transparent;
+        box-shadow: none;
+    }
+}
+
+.flash-highlight {
+    animation: border-flash 0.5s ease-in-out 3;
+    border: 2px solid #ff0000 !important;
+    transition: all 0.3s;
 }

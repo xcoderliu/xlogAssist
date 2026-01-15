@@ -118,82 +118,7 @@ class CustomDownloadManager {
             </div>
         `;
 
-        // 添加样式
-        if (!document.querySelector('#custom-download-styles')) {
-            const style = document.createElement('style');
-            style.id = 'custom-download-styles';
-            style.textContent = `
-                .modal-overlay {
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                    background: rgba(0,0,0,0.5);
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    z-index: 1000;
-                }
-                .modal-content {
-                    background: white;
-                    border-radius: 8px;
-                    width: 400px;
-                    max-width: 90%;
-                    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-                }
-                .modal-header {
-                    padding: 20px;
-                    border-bottom: 1px solid #eee;
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                }
-                .modal-header h3 {
-                    margin: 0;
-                    color: #333;
-                }
-                .close-btn {
-                    background: none;
-                    border: none;
-                    font-size: 24px;
-                    cursor: pointer;
-                    color: #999;
-                }
-                .close-btn:hover {
-                    color: #333;
-                }
-                .modal-body {
-                    padding: 20px;
-                }
-                .sources-list {
-                    display: flex;
-                    flex-direction: column;
-                    gap: 10px;
-                }
-                .source-item {
-                    padding: 15px;
-                    border: 1px solid #ddd;
-                    border-radius: 4px;
-                    cursor: pointer;
-                    transition: all 0.3s;
-                }
-                .source-item:hover {
-                    border-color: #007bff;
-                    background: #f8f9fa;
-                }
-                .source-name {
-                    font-weight: 500;
-                    color: #333;
-                    margin-bottom: 5px;
-                }
-                .source-description {
-                    font-size: 12px;
-                    color: #666;
-                }
-            `;
-            document.head.appendChild(style);
-        }
+
 
         // 绑定事件
         modal.querySelector('.close-btn').addEventListener('click', () => {
@@ -239,65 +164,7 @@ class CustomDownloadManager {
             </div>
         `;
 
-        // 添加样式
-        if (!document.querySelector('#custom-source-modal-styles')) {
-            const style = document.createElement('style');
-            style.id = 'custom-source-modal-styles';
-            style.textContent = `
-                .custom-source-modal .modal-overlay {
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                    background: rgba(0,0,0,0.5);
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    z-index: 2000;
-                }
-                .custom-source-modal .modal-content {
-                    background: white;
-                    border-radius: 8px;
-                    width: 800px;
-                    height: 600px;
-                    max-width: 95vw;
-                    max-height: 90vh;
-                    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-                    display: flex;
-                    flex-direction: column;
-                }
-                .custom-source-modal .modal-header {
-                    padding: 15px 20px;
-                    border-bottom: 1px solid #eee;
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    flex-shrink: 0;
-                }
-                .custom-source-modal .modal-header h3 {
-                    margin: 0;
-                    color: #333;
-                    font-size: 16px;
-                }
-                .custom-source-modal .close-btn {
-                    background: none;
-                    border: none;
-                    font-size: 20px;
-                    cursor: pointer;
-                    color: #999;
-                }
-                .custom-source-modal .close-btn:hover {
-                    color: #333;
-                }
-                .custom-source-modal .modal-body {
-                    flex: 1;
-                    min-height: 0;
-                    padding: 0;
-                }
-            `;
-            document.head.appendChild(style);
-        }
+
 
         // 绑定关闭事件
         modal.querySelector('.close-btn').addEventListener('click', () => {
@@ -398,6 +265,22 @@ class CustomDownloadManager {
         if (this.core.fileHandler && this.core.fileHandler.saveLastLogs) {
             this.core.fileHandler.saveLastLogs(this.core.logs);
         }
+
+        // 清除过滤和搜索状态，确保新添加的日志能被显示
+        this.core.filteredLogs = null;
+        this.core.filterTerm = '';
+        this.core.isRealSearchMode = false;
+        this.core.searchTerm = '';
+        this.core.searchResults = [];
+        this.core.currentSearchIndex = -1;
+
+        // 重置UI状态
+        if (this.core.filterInput) this.core.filterInput.value = '';
+        if (this.core.searchInput) this.core.searchInput.value = '';
+        if (this.core.clearFilter) this.core.clearFilter.style.display = 'none';
+        if (this.core.clearSearch) this.core.clearSearch.style.display = 'none';
+        if (this.core.prevMatch) this.core.prevMatch.style.display = 'none';
+        if (this.core.nextMatch) this.core.nextMatch.style.display = 'none';
 
         // 通知核心模块重新渲染
         if (this.core.renderLogs) {
