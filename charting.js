@@ -105,7 +105,12 @@ class Charting {
         const placeholderMap = {
             'line': '适合展示趋势变化，如网络成功率、响应时间',
             'bar': '适合展示分类对比，如错误类型分布、请求量统计',
-            'pie': '适合展示比例分布，如状态码分布、用户类型占比'
+            'pie': '适合展示比例分布，如状态码分布、用户类型占比',
+            'doughnut': '适合展示比例分布，类似饼图但中心镂空',
+            'radar': '适合展示多维数据对比，如综合能力评估',
+            'polarArea': '适合展示极坐标分类数据',
+            'scatter': '适合展示两个变量之间的关系分布',
+            'bubble': '适合展示三个变量之间的关系（x, y, r）'
         };
         return placeholderMap[chartType] || '点击生成图表查看数据可视化';
     }
@@ -115,7 +120,12 @@ class Charting {
         const typeMap = {
             'line': '折线图',
             'bar': '柱状图',
-            'pie': '饼图'
+            'pie': '饼图',
+            'doughnut': '甜甜圈图',
+            'radar': '雷达图',
+            'polarArea': '极地图',
+            'scatter': '散点图',
+            'bubble': '气泡图'
         };
         return typeMap[type] || type;
     }
@@ -344,15 +354,18 @@ class Charting {
                 // 执行脚本
                 const result = func(...Object.values(context));
 
-                if (result && result.labels && result.datasets) {
+                if (result && result.datasets) {
+                    // data.labels is optional for some chart types (like scatter/bubble usually imply x/y)
+                    // but Chart.js usually expects structure. 
+                    // Let's relax the check slightly or keep it but allow options.
                     resolve({
                         success: true,
-                        data: result
+                        data: result // result includes labels, datasets, and optional 'options'
                     });
                 } else {
                     resolve({
                         success: false,
-                        error: '脚本必须返回包含 labels 和 datasets 字段的对象'
+                        error: '脚本必须返回包含 datasets 字段的对象 (通常也需要 labels)'
                     });
                 }
             } catch (error) {
@@ -371,132 +384,125 @@ class Charting {
             canvas.chart.destroy();
         }
 
-        const chartOptions = {
+        // 基础配置
+        const baseOptions = {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
                 legend: {
-                    display: false, // 隐藏图例（蓝色小方块）
+                    display: true, // 默认显示图例
+                    position: 'top'
                 },
                 tooltip: {
                     enabled: true,
                     mode: 'index',
                     intersect: false,
-                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                    titleColor: '#fff',
-                    bodyColor: '#fff',
-                    borderColor: 'rgba(255, 255, 255, 0.2)',
-                    borderWidth: 1
                 }
-            },
-            interaction: {
-                mode: 'nearest',
-                axis: 'x',
-                intersect: false
             },
             layout: {
-                padding: {
-                    top: 10,
-                    right: 10,
-                    bottom: 10,
-                    left: 10
-                }
-            },
-            scales: {}
+                padding: 10
+            }
         };
 
-        // 根据图表类型配置不同的选项
+        // 根据图表类型设置默认配置
+        let typeSpecificOptions = {};
         switch (config.type) {
             case 'line':
-                chartOptions.scales = {
-                    x: {
-                        display: true,
-                        title: {
-                            display: true,
-                            text: 'X轴'
-                        }
-                    },
-                    y: {
-                        display: true,
-                        title: {
-                            display: true,
-                            text: 'Y轴'
-                        },
-                        beginAtZero: true
-                    }
-                };
-                break;
             case 'bar':
-                chartOptions.scales = {
-                    x: {
-                        display: true,
-                        title: {
-                            display: true,
-                            text: '分类'
-                        }
+                typeSpecificOptions = {
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
                     },
-                    y: {
-                        display: true,
-                        title: {
-                            display: true,
-                            text: '数值'
-                        },
-                        beginAtZero: true
+                    scales: {
+                        x: { display: true },
+                        y: { display: true, beginAtZero: true }
                     }
                 };
                 break;
             case 'pie':
-                chartOptions.plugins.tooltip = {
-                    callbacks: {
-                        label: function (context) {
-                            const label = context.label || '';
-                            const value = context.parsed;
-                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                            const percentage = ((value / total) * 100).toFixed(1);
-                            return `${label}: ${value} (${percentage}%)`;
+            case 'doughnut':
+            case 'polarArea':
+                typeSpecificOptions = {
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                    return `${label}: ${value} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                };
+                break;
+            case 'radar':
+                typeSpecificOptions = {
+                    elements: { line: { tension: 0.1 } }
+                };
+                break;
+            case 'scatter':
+            case 'bubble':
+                typeSpecificOptions = {
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            position: 'bottom'
+                        },
+                        y: {
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            mode: 'point'
                         }
                     }
                 };
                 break;
         }
 
-        // 准备数据集 - 支持多条线/多数据集
+        // 合并配置：基础配置 < 类型默认配置 < 脚本返回的高级配置
+        const chartOptions = this.deepMerge(baseOptions, typeSpecificOptions);
+        if (data.options) {
+            this.deepMerge(chartOptions, data.options);
+        }
+
+        // 准备数据集
         const datasets = data.datasets.map((dataset, index) => {
-            const baseConfig = {
+            // 默认颜色池
+            const colors = [
+                'rgba(54, 162, 235, 1)',
+                'rgba(255, 99, 132, 1)',
+                'rgba(255, 206, 86, 1)',
+                'rgba(75, 192, 192, 1)',
+                'rgba(153, 102, 255, 1)',
+                'rgba(255, 159, 64, 1)'
+            ];
+            const bgColor = colors[index % colors.length].replace('1)', '0.2)');
+            const borderColor = colors[index % colors.length];
+
+            const defaultDatasetConfig = {
                 label: dataset.label || `数据集 ${index + 1}`,
-                data: dataset.data,
-                borderWidth: 2,
-                fill: false
+                borderWidth: 1,
+                backgroundColor: bgColor,
+                borderColor: borderColor,
             };
 
-            // 让Chart.js自动处理颜色，不设置固定颜色
-            // 这样多数据集会自动分配不同的颜色
-
-            // 根据图表类型设置不同的样式
-            switch (config.type) {
-                case 'line':
-                    return {
-                        ...baseConfig,
-                        tension: 0.4,
-                        pointBorderColor: '#fff',
-                        pointBorderWidth: 2,
-                        pointRadius: 4,
-                        pointHoverRadius: 6
-                    };
-                case 'bar':
-                    return {
-                        ...baseConfig,
-                        borderWidth: 1,
-                        borderRadius: 4
-                    };
-                case 'pie':
-                    return {
-                        ...baseConfig,
-                        borderWidth: 2
-                    };
-                default:
-                    return baseConfig;
+            // 根据类型微调默认样式
+            if (config.type === 'line' || config.type === 'radar') {
+                defaultDatasetConfig.borderWidth = 2;
+                defaultDatasetConfig.fill = false; // 默认不填充
             }
+
+            // 合并用户在dataset中定义的特定样式
+            return {
+                ...defaultDatasetConfig,
+                ...dataset
+            };
         });
 
         // 创建图表
@@ -508,6 +514,18 @@ class Charting {
             },
             options: chartOptions
         });
+    }
+
+    // 辅助深度合并函数
+    deepMerge(target, source) {
+        for (const key in source) {
+            if (source[key] instanceof Object && key in target) {
+                Object.assign(source[key], this.deepMerge(target[key], source[key]));
+            } else {
+                target[key] = source[key];
+            }
+        }
+        return target;
     }
 
 
@@ -549,8 +567,8 @@ class Charting {
             container.innerHTML = `
                 <div class="charts-grid">
                     ${enabledConfigs.map(config => {
-                        const hasGeneratedChart = this.generatedChartIds.has(config.id);
-                        return `
+                const hasGeneratedChart = this.generatedChartIds.has(config.id);
+                return `
                         <div class="chart-item" data-config-id="${config.id}">
                             <div class="chart-header">
                                 <div class="chart-title-section">

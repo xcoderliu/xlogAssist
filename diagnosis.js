@@ -283,13 +283,69 @@ class Diagnosis {
                         if (regex.test(log.content)) {
                             let customResult = null;
 
-                            // 如果有自定义脚本，执行脚本处理
-                            if (rule.customScript) {
-                                try {
-                                    customResult = this.executeCustomScript(rule.customScript, log.content, pattern);
-                                } catch (error) {
-                                    console.warn('自定义脚本执行错误:', error);
-                                }
+                            // 如果有高亮提取字段，执行提取
+                            let highlightedValues = [];
+                            if (rule.highlightFields && Array.isArray(rule.highlightFields)) {
+                                rule.highlightFields.forEach(field => {
+                                    try {
+                                        const label = field.label;
+                                        let value = null;
+
+                                        // 优先使用前缀/后缀提取
+                                        if (field.prefix) {
+                                            const prefix = field.prefix;
+                                            const suffix = field.suffix || '';
+
+                                            const prefixIndex = log.content.indexOf(prefix);
+                                            if (prefixIndex !== -1) {
+                                                const startIndex = prefixIndex + prefix.length;
+                                                let endIndex;
+
+                                                if (suffix) {
+                                                    endIndex = log.content.indexOf(suffix, startIndex);
+                                                } else {
+                                                    // 如果没有指定后缀，默认提取到行尾，或者直到遇到常见的结束符(如换行)
+                                                    // 这里简单处理为直到字符串结束
+                                                    endIndex = log.content.length;
+
+                                                    // 优化：如果没有后缀，尝试智能截断 (例如遇到逗号或空格) 
+                                                    // 但为了准确性，最好还是由用户指定后缀。
+                                                    // 作为一个便利功能，我们可以通过检查下一个字符来决定? 不，保持简单。
+                                                }
+
+                                                if (endIndex !== -1) {
+                                                    value = log.content.substring(startIndex, endIndex).trim();
+                                                }
+                                            }
+                                        }
+                                        // 兼容旧的正则方式
+                                        else if (field.regex) {
+                                            try {
+                                                let regexStr = field.regex;
+                                                let regex;
+                                                // 尝试检测是否已经是正则对象字符串
+                                                try {
+                                                    regex = new RegExp(regexStr);
+                                                } catch (e) {
+                                                    regexStr = regexStr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                                                    regex = new RegExp(regexStr);
+                                                }
+                                                const match = log.content.match(regex);
+                                                if (match) {
+                                                    value = match[1] || match[0];
+                                                }
+                                            } catch (e) {
+                                                // ignore
+                                            }
+                                        }
+
+                                        if (value) {
+                                            highlightedValues.push({ label, value });
+                                        }
+                                    } catch (e) {
+                                        console.warn('高亮字段提取失败:', field, e);
+                                    }
+                                });
                             }
 
                             this.diagnosisResults.push({
@@ -303,7 +359,8 @@ class Diagnosis {
                                 logContent: log.content,
                                 matchedPattern: pattern,
                                 timestamp: new Date().toISOString(),
-                                customResult: customResult
+                                customResult: customResult,
+                                highlightedValues: highlightedValues // 添加高亮字段结果
                             });
                         }
                     } catch (error) {
@@ -415,6 +472,15 @@ class Diagnosis {
                                         <span class="diagnosis-category">${result.category}</span>
                                     </div>
                                     <div class="diagnosis-description">${result.description}</div>
+                                    ${result.highlightedValues && result.highlightedValues.length > 0 ? `
+                                    <div class="diagnosis-highlights" style="margin: 10px 0; background: rgba(0,0,0,0.03); padding: 8px; border-radius: 4px;">
+                                        ${result.highlightedValues.map(v => `
+                                            <span class="highlight-tag" style="display: inline-block; margin-right: 10px; padding: 2px 8px; background: #e3f2fd; color: #1976d2; border-radius: 12px; font-size: 0.9em; border: 1px solid #bbdefb;">
+                                                <strong>${v.label}:</strong> ${v.value}
+                                            </span>
+                                        `).join('')}
+                                    </div>
+                                    ` : ''}
                                     ${result.solution ? `
                                     <div class="diagnosis-solution">
                                         <strong>解决方案:</strong> ${result.solution}

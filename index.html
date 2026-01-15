@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,6 +10,7 @@
     <!-- Monaco Editor -->
     <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
 </head>
+
 <body>
     <div class="container">
         <header>
@@ -77,7 +79,7 @@
 
             <!-- 分隔条 -->
             <div class="resizer" id="resizer"></div>
-            
+
             <!-- 右侧排查区域 -->
             <div class="investigation-area" id="investigationArea">
                 <div class="investigation-header">
@@ -128,7 +130,7 @@
                     <button class="tab-btn" data-tab="charting">图表配置</button>
                     <button class="tab-btn" data-tab="subscriptions">订阅源</button>
                 </div>
-                
+
                 <!-- 规则管理标签页 -->
                 <div class="tab-content active" data-tab="rules">
                     <div class="config-item">
@@ -149,13 +151,13 @@
                         </label>
                     </div>
                     <button id="addRegexRule" class="btn">添加规则</button>
-                    
+
                     <div class="rules-list" id="rulesList">
                         <h4>当前规则:</h4>
                         <div class="empty-rules">暂无规则</div>
                     </div>
                 </div>
-                
+
                 <!-- 配置组标签页 -->
                 <div class="tab-content" data-tab="groups">
                     <div class="config-item">
@@ -163,85 +165,274 @@
                         <input type="text" id="groupName" placeholder="例如: 登录问题排查">
                     </div>
                     <button id="createGroup" class="btn">创建配置组</button>
-                    
+
                     <div class="groups-list" id="groupsList">
                         <h4>配置组列表:</h4>
                         <div class="empty-groups">暂无配置组</div>
                     </div>
-                    
+
                     <div class="group-selection" id="groupSelection" style="display: none;">
                         <h4>选择生效的配置组:</h4>
                         <div class="group-checkboxes" id="groupCheckboxes"></div>
                     </div>
-                    
+
+                </div>
+
+                <!-- 诊断规则标签页 -->
+                <div class="tab-content" data-tab="diagnosis">
+                    <div class="config-item">
+                        <label>规则名称:</label>
+                        <input type="text" id="diagnosisRuleName" placeholder="例如: 用户取消充值">
                     </div>
-                    
-                    <!-- 诊断规则标签页 -->
-                    <div class="tab-content" data-tab="diagnosis">
-                        <div class="config-item">
-                            <label>规则名称:</label>
-                            <input type="text" id="diagnosisRuleName" placeholder="例如: 用户取消充值">
+                    <div class="config-item">
+                        <label>规则描述:</label>
+                        <input type="text" id="diagnosisRuleDescription" placeholder="例如: 用户主动取消了充值操作">
+                    </div>
+                    <div class="config-item">
+                        <label>匹配模式 (每行一个):</label>
+                        <textarea id="diagnosisRulePatterns"
+                            placeholder="例如: 用户取消&#10;user cancelled&#10;cancel by user" rows="4"></textarea>
+                    </div>
+                    <div class="config-item">
+                        <label>严重程度:</label>
+                        <select id="diagnosisRuleSeverity">
+                            <option value="error">错误</option>
+                            <option value="warning">警告</option>
+                            <option value="info">信息</option>
+                        </select>
+                    </div>
+                    <div class="config-item">
+                        <label>问题类别:</label>
+                        <input type="text" id="diagnosisRuleCategory" placeholder="例如: recharge">
+                    </div>
+                    <div class="config-item">
+                        <label>解决方案:</label>
+                        <textarea id="diagnosisRuleSolution" placeholder="例如: 这是正常用户行为，无需处理" rows="3"></textarea>
+                    </div>
+                    <div class="config-item">
+                        <label>关键信息提取 (可选):</label>
+                        <div id="highlightFieldsContainer">
+                            <!-- 动态添加的字段输入框将出现在这里 -->
                         </div>
-                        <div class="config-item">
-                            <label>规则描述:</label>
-                            <input type="text" id="diagnosisRuleDescription" placeholder="例如: 用户主动取消了充值操作">
+                        <button id="addHighlightFieldBtn" class="btn btn-small" style="margin-top: 5px;">+
+                            添加提取字段</button>
+                        <div class="script-hint">
+                            <small>添加想要在诊断卡片上直接展示的关键信息，如订单号、错误码等。</small>
                         </div>
-                        <div class="config-item">
-                            <label>匹配模式 (每行一个):</label>
-                            <textarea id="diagnosisRulePatterns" placeholder="例如: 用户取消&#10;user cancelled&#10;cancel by user" rows="4"></textarea>
+                    </div>
+                    <div class="config-item">
+                        <label>自定义脚本 (JavaScript):</label>
+                        <textarea id="diagnosisRuleCustomScript"
+                            placeholder="例如: // 自定义处理逻辑&#10;return { successRate: 0.95 };" rows="6"></textarea>
+                        <div class="script-hint">
+                            <small>脚本可以使用变量: logContent(日志内容), matchedPattern(匹配模式)</small>
                         </div>
-                        <div class="config-item">
-                            <label>严重程度:</label>
-                            <select id="diagnosisRuleSeverity">
-                                <option value="error">错误</option>
-                                <option value="warning">警告</option>
-                                <option value="info">信息</option>
-                            </select>
+                    </div>
+                    <button id="addDiagnosisRule" class="btn">添加诊断规则</button>
+
+                    <div class="diagnosis-rules-list" id="diagnosisRulesList">
+                        <h4>当前诊断规则:</h4>
+                        <div class="empty-diagnosis-rules">暂无诊断规则</div>
+                    </div>
+                </div>
+
+                <!-- 图表配置标签页 -->
+                <div class="tab-content" data-tab="charting">
+                    <div class="config-item">
+                        <label>图表名称:</label>
+                        <input type="text" id="chartName" placeholder="例如: 网络成功率趋势">
+                    </div>
+                    <div class="config-item">
+                        <label>图表类型:</label>
+                        <select id="chartType" onchange="
+                            const chartTypeValue = this.value;
+                            const simpleTypeSelect = document.getElementById('simpleChartType');
+                            const simpleModeRadio = document.querySelector('input[name=\'chartConfigMode\'][value=\'simple\']');
+                            const advancedModeRadio = document.querySelector('input[name=\'chartConfigMode\'][value=\'advanced\']');
+                            const simpleModeLabel = simpleModeRadio.parentElement; 
+                            
+                            // 气泡图不支持简易模式
+                            if (chartTypeValue === 'bubble') {
+                                advancedModeRadio.checked = true;
+                                advancedModeRadio.onchange(); 
+                                simpleModeRadio.disabled = true;
+                                simpleModeLabel.style.opacity = '0.5';
+                                simpleModeLabel.title = '气泡图需要复杂数据结构，仅支持高级模式';
+                                alert('气泡图需要特殊的数据结构 ({x,y,r})，已自动切换至高级模式。');
+                            } else {
+                                simpleModeRadio.disabled = false;
+                                simpleModeLabel.style.opacity = '1';
+                                simpleModeLabel.removeAttribute('title');
+                            }
+
+                            // 动态过滤分析类型选项
+                            const options = simpleTypeSelect.options;
+                            for (let i = 0; i < options.length; i++) {
+                                options[i].style.display = 'block'; // 重置显示
+                                options[i].disabled = false;
+                            }
+
+                            let defaultType = 'count';
+
+                            if (chartTypeValue === 'line' || chartTypeValue === 'scatter') {
+                                // 折线图/散点图: 仅支持数值提取
+                                for (let i = 0; i < options.length; i++) {
+                                    if (options[i].value !== 'extract') {
+                                        options[i].style.display = 'none';
+                                        options[i].disabled = true;
+                                    }
+                                }
+                                defaultType = 'extract';
+                            } else if (chartTypeValue === 'bar') {
+                                // 柱状图: 支持所有统计类 (频次, 字符串分布, 数值分布) + 数值提取(虽然柱状图画趋势怪怪的但也可以)
+                                // 这里我们允许全部，但推荐 count
+                                defaultType = 'count';
+                            } else {
+                                // 饼图/甜甜圈/雷达/极地: 支持频次和字符串分布，不支持数值趋势或直方图(通常不这样用)
+                                for (let i = 0; i < options.length; i++) {
+                                    if (options[i].value === 'extract' || options[i].value === 'value_distribution') {
+                                        options[i].style.display = 'none';
+                                        options[i].disabled = true;
+                                    }
+                                }
+                                defaultType = 'count';
+                            }
+                            
+                            // 如果当前选中的类型被禁用了，切换到默认类型
+                            if (simpleTypeSelect.selectedOptions[0].disabled) {
+                                simpleTypeSelect.value = defaultType;
+                            }
+
+                            // 触发简易模式类型变更事件以更新UI
+                            simpleTypeSelect.onchange();
+                        ">
+                            <option value="line">折线图</option>
+                            <option value="bar">柱状图</option>
+                            <option value="pie">饼图</option>
+                            <option value="doughnut">甜甜圈图</option>
+                            <option value="radar">雷达图</option>
+                            <option value="polarArea">极地图</option>
+                            <option value="scatter">散点图</option>
+                            <option value="bubble">气泡图</option>
+                        </select>
+                    </div>
+                    <div class="config-item">
+                        <label>图表描述:</label>
+                        <textarea id="chartDescription" placeholder="图表用途描述" rows="2"></textarea>
+                    </div>
+                    <div class="config-item">
+                        <label>JavaScript数据提取脚本:</label>
+
+                        <!-- 配置模式切换 -->
+                        <div class="config-mode-toggle" style="margin-bottom: 10px;">
+                            <label style="margin-right: 15px;">
+                                <input type="radio" name="chartConfigMode" value="simple" checked
+                                    onchange="document.getElementById('simpleChartConfig').style.display='block';document.getElementById('advancedChartConfig').style.display='none'">
+                                简易模式
+                            </label>
+                            <label>
+                                <input type="radio" name="chartConfigMode" value="advanced"
+                                    onchange="document.getElementById('simpleChartConfig').style.display='none';document.getElementById('advancedChartConfig').style.display='block'">
+                                高级模式 (JavaScript)
+                            </label>
                         </div>
-                        <div class="config-item">
-                            <label>问题类别:</label>
-                            <input type="text" id="diagnosisRuleCategory" placeholder="例如: recharge">
-                        </div>
-                        <div class="config-item">
-                            <label>解决方案:</label>
-                            <textarea id="diagnosisRuleSolution" placeholder="例如: 这是正常用户行为，无需处理" rows="3"></textarea>
-                        </div>
-                        <div class="config-item">
-                            <label>自定义脚本 (JavaScript):</label>
-                            <textarea id="diagnosisRuleCustomScript" placeholder="例如: // 自定义处理逻辑&#10;return { successRate: 0.95 };" rows="6"></textarea>
-                            <div class="script-hint">
-                                <small>脚本可以使用变量: logContent(日志内容), matchedPattern(匹配模式)</small>
+
+                        <!-- 简易模式配置 -->
+                        <div id="simpleChartConfig"
+                            style="border: 1px solid #ddd; padding: 15px; border-radius: 4px; background: #f9f9f9; margin-bottom: 15px;">
+                            <div class="config-item">
+                                <label>分析类型:</label>
+                                <select id="simpleChartType" onchange="
+                                    const type = this.value;
+                                    document.getElementById('simpleConfig-keyword').style.display = type === 'count' ? 'block' : 'none';
+                                    
+                                    // 提取类配置 (数值趋势, 字符串统计, 数值分布)
+                                    const isExtraction = type === 'extract' || type === 'extract_string' || type === 'value_distribution';
+                                    document.getElementById('simpleConfig-extraction').style.display = isExtraction ? 'block' : 'none';
+                                    
+                                    // X轴配置: 仅数值提取(趋势)需要
+                                    document.getElementById('xAxisConfig').style.display = type === 'extract' ? 'block' : 'none';
+                                    
+                                    // 桶大小配置: 仅数值分布(直方图)需要
+                                    document.getElementById('bucketSizeConfig').style.display = type === 'value_distribution' ? 'block' : 'none';
+                                    
+                                    // 更新提示语
+                                    const hint = document.getElementById('extractionHint');
+                                    if(type === 'extract') hint.innerHTML = '<small>提取数值并绘制趋势图。适合折线图。</small>';
+                                    else if(type === 'extract_string') hint.innerHTML = '<small>提取字符串并统计出现频次。适合柱状图/饼图。</small>';
+                                    else if(type === 'value_distribution') hint.innerHTML = '<small>提取数值并按区间(桶)统计分布情况。仅适合柱状图。</small>';
+                                ">
+                                    <option value="count">关键词统计 (频次)</option>
+                                    <option value="extract">数值提取 (趋势)</option>
+                                    <option value="extract_string">字符串提取 (统计)</option>
+                                    <option value="value_distribution">数值分布 (直方图)</option>
+                                </select>
+                            </div>
+
+                            <!-- 关键词统计配置 -->
+                            <div id="simpleConfig-keyword" style="display: block;">
+                                <div class="config-item">
+                                    <label>统计关键词 (用逗号分隔):</label>
+                                    <input type="text" id="simpleKeywords" placeholder="例如: Error, Warning, Timeout"
+                                        style="width: 100%;">
+                                    <div class="script-hint"><small>将统计每个关键词在日志中出现的次数。适合柱状图或饼图。</small></div>
+                                </div>
+                            </div>
+
+                            <!-- 数值/字符串提取配置 -->
+                            <div id="simpleConfig-extraction" style="display: none;">
+                                <div class="config-item">
+                                    <label>内容过滤 (可选):</label>
+                                    <input type="text" id="simpleContextFilter"
+                                        placeholder="例如: EventTypeA (仅提取包含此关键词的行)" style="width: 100%;">
+                                </div>
+                                <div class="config-item">
+                                    <label>前缀 (标识符):</label>
+                                    <input type="text" id="simpleExtractPrefix" placeholder="例如: time="
+                                        style="width: 100%;">
+                                </div>
+                                <div class="config-item">
+                                    <label>后缀 (可选):</label>
+                                    <input type="text" id="simpleExtractSuffix" placeholder="例如: ms"
+                                        style="width: 100%;">
+                                </div>
+                                <div class="config-item" id="xAxisConfig" style="display: none;">
+                                    <label>X轴数据源:</label>
+                                    <div style="margin-top: 5px;">
+                                        <label style="margin-right: 15px;">
+                                            <input type="radio" name="xAxisMode" value="index" checked
+                                                onclick="document.getElementById('timeExtractConfig').style.display='none'">
+                                            行号 (默认)
+                                        </label>
+                                        <label>
+                                            <input type="radio" name="xAxisMode" value="time"
+                                                onclick="document.getElementById('timeExtractConfig').style.display='block'">
+                                            提取时间 (行首)
+                                        </label>
+                                    </div>
+                                </div>
+                                <div id="timeExtractConfig"
+                                    style="display: none; margin-top: 5px; padding-left: 10px; border-left: 2px solid #ccc;">
+                                    <div class="config-item">
+                                        <label>时间格式正则 (可选):</label>
+                                        <input type="text" id="simpleTimeRegex" placeholder="默认匹配: \d{2}:\d{2}:\d{2}"
+                                            value="\d{2}:\d{2}:\d{2}" style="width: 100%;">
+                                        <div class="script-hint"><small>将尝试匹配行首的时间字符串作为X轴标签。</small></div>
+                                    </div>
+                                </div>
+                                <div class="config-item" id="bucketSizeConfig" style="display: none;">
+                                    <label>区间大小 (Bucket Size):</label>
+                                    <input type="number" id="simpleBucketSize" placeholder="例如: 100 (每100ms一个区间)"
+                                        value="100" style="width: 100%;">
+                                </div>
+                                <div class="script-hint" id="extractionHint"><small>提取数值并绘制趋势图。适合折线图。</small></div>
                             </div>
                         </div>
-                        <button id="addDiagnosisRule" class="btn">添加诊断规则</button>
-                        
-                        <div class="diagnosis-rules-list" id="diagnosisRulesList">
-                            <h4>当前诊断规则:</h4>
-                            <div class="empty-diagnosis-rules">暂无诊断规则</div>
-                        </div>
-                    </div>
-                    
-                    <!-- 图表配置标签页 -->
-                    <div class="tab-content" data-tab="charting">
-                        <div class="config-item">
-                            <label>图表名称:</label>
-                            <input type="text" id="chartName" placeholder="例如: 网络成功率趋势">
-                        </div>
-                        <div class="config-item">
-                            <label>图表类型:</label>
-                            <select id="chartType">
-                                <option value="line">折线图</option>
-                                <option value="bar">柱状图</option>
-                                <option value="pie">饼图</option>
-                            </select>
-                        </div>
-                        <div class="config-item">
-                            <label>图表描述:</label>
-                            <textarea id="chartDescription" placeholder="图表用途描述" rows="2"></textarea>
-                        </div>
-                        <div class="config-item">
-                            <label>JavaScript数据提取脚本:</label>
-                            <textarea id="chartScript" placeholder="输入JavaScript代码，从日志中提取数据" rows="8" style="font-family: monospace;">// 示例：使用假数据生成图表
+
+                        <!-- 高级模式配置 -->
+                        <div id="advancedChartConfig" style="display: none;">
+                            <textarea id="chartScript" placeholder="输入JavaScript代码，从日志中提取数据" rows="8"
+                                style="font-family: monospace;">// 示例：使用假数据生成图表
 // 返回格式：{ labels: ['标签1', '标签2', ...], datasets: [{ data: [数值1, 数值2, ...] }] }
 
 // 生成假数据
@@ -264,128 +455,83 @@ if (logs && logs.length > 0) {
 // 返回数据对象
 return data;</textarea>
                             <div class="script-hint">
-                                <small>脚本必须返回包含 labels 和 datasets 字段的对象</small>
+                                <small>高级模式：编写自定义JavaScript脚本提取数据。脚本必须返回包含 labels 和 datasets 字段的对象。</small>
                             </div>
-                        </div>
-                        
-                        <!-- 折线图配置 -->
-                        <div class="config-section" id="lineChartConfig" style="display: block;">
-                            <h4>折线图配置</h4>
-                            <div class="config-item">
-                                <label>X轴字段:</label>
-                                <input type="text" id="lineXField" placeholder="例如: timestamp (时间戳)">
-                            </div>
-                            <div class="config-item">
-                                <label>Y轴字段:</label>
-                                <input type="text" id="lineYField" placeholder="例如: value (数值)">
-                            </div>
-                            <div class="config-item">
-                                <label>系列名称:</label>
-                                <input type="text" id="lineSeriesName" placeholder="例如: 成功率">
-                            </div>
-                        </div>
-                        
-                        <!-- 柱状图配置 -->
-                        <div class="config-section" id="barChartConfig" style="display: none;">
-                            <h4>柱状图配置</h4>
-                            <div class="config-item">
-                                <label>X轴字段:</label>
-                                <input type="text" id="barXField" placeholder="例如: category (分类)">
-                            </div>
-                            <div class="config-item">
-                                <label>Y轴字段:</label>
-                                <input type="text" id="barYField" placeholder="例如: value (数值)">
-                            </div>
-                            <div class="config-item">
-                                <label>系列名称:</label>
-                                <input type="text" id="barSeriesName" placeholder="例如: 错误数量">
-                            </div>
-                        </div>
-                        
-                        <!-- 饼图配置 -->
-                        <div class="config-section" id="pieChartConfig" style="display: none;">
-                            <h4>饼图配置</h4>
-                            <div class="config-item">
-                                <label>分类字段:</label>
-                                <input type="text" id="pieNameField" placeholder="例如: name (分类名称)">
-                            </div>
-                            <div class="config-item">
-                                <label>数值字段:</label>
-                                <input type="text" id="pieValueField" placeholder="例如: value (占比数值)">
-                            </div>
-                            <div class="config-item">
-                                <label>系列名称:</label>
-                                <input type="text" id="pieSeriesName" placeholder="例如: 分布比例">
-                            </div>
-                        </div>
-                        
-                        <button id="addChartConfig" class="btn">添加图表配置</button>
-                        
-                        <div class="chart-configs-list" id="chartConfigsList">
-                            <h4>当前图表配置:</h4>
-                            <div class="empty-chart-configs">暂无图表配置</div>
                         </div>
                     </div>
-                    
-                    <!-- 订阅源标签页 -->
-                    <div class="tab-content" data-tab="subscriptions">
-                        <div class="config-section">
-                            <h4>订阅源管理</h4>
-                            <p class="subscription-description">
-                                通过订阅源可以自动获取最新的高亮规则配置。支持JSON格式的订阅源URL。
-                            </p>
-                            
-                            <div class="subscription-form">
-                                <div class="subscription-form-row">
-                                    <div class="config-item">
-                                        <label>订阅源URL:</label>
-                                        <input type="text" id="subscriptionUrl" placeholder="https://example.com/rules.json" style="width: 100%;">
-                                    </div>
-                                    <div class="config-item">
-                                        <label>自定义名称 (可选):</label>
-                                        <input type="text" id="subscriptionName" placeholder="例如: 官方规则库">
-                                    </div>
+
+
+
+                    <button id="addChartConfig" class="btn">添加图表配置</button>
+
+                    <div class="chart-configs-list" id="chartConfigsList">
+                        <h4>当前图表配置:</h4>
+                        <div class="empty-chart-configs">暂无图表配置</div>
+                    </div>
+                </div>
+
+                <!-- 订阅源标签页 -->
+                <div class="tab-content" data-tab="subscriptions">
+                    <div class="config-section">
+                        <h4>订阅源管理</h4>
+                        <p class="subscription-description">
+                            通过订阅源可以自动获取最新的高亮规则配置。支持JSON格式的订阅源URL。
+                        </p>
+
+                        <div class="subscription-form">
+                            <div class="subscription-form-row">
+                                <div class="config-item">
+                                    <label>订阅源URL:</label>
+                                    <input type="text" id="subscriptionUrl" placeholder="https://example.com/rules.json"
+                                        style="width: 100%;">
                                 </div>
-                                <div class="subscription-form-actions">
-                                    <button id="addSubscription" class="btn">添加订阅源</button>
+                                <div class="config-item">
+                                    <label>自定义名称 (可选):</label>
+                                    <input type="text" id="subscriptionName" placeholder="例如: 官方规则库">
                                 </div>
                             </div>
-                            
-                            <div class="subscription-config-actions">
-                                <button id="updateAllSubscriptions" class="btn btn-success">更新所有订阅源</button>
-                                <button id="exportSubscriptions" class="btn btn-primary">导出订阅源</button>
-                                <button id="importSubscriptions" class="btn btn-primary">导入订阅源</button>
-                                <input type="file" id="importSubscriptionsFile" accept=".json" style="display: none;">
+                            <div class="subscription-form-actions">
+                                <button id="addSubscription" class="btn">添加订阅源</button>
                             </div>
-                            
-                            <div class="subscription-list">
-                                <h4>订阅源状态</h4>
-                                <div id="subscriptionsList">
-                                    <div class="empty-subscriptions">暂无订阅源</div>
-                                </div>
+                        </div>
+
+                        <div class="subscription-config-actions">
+                            <button id="updateAllSubscriptions" class="btn btn-success">更新所有订阅源</button>
+                            <button id="exportSubscriptions" class="btn btn-primary">导出订阅源</button>
+                            <button id="importSubscriptions" class="btn btn-primary">导入订阅源</button>
+                            <input type="file" id="importSubscriptionsFile" accept=".json" style="display: none;">
+                        </div>
+
+                        <div class="subscription-list">
+                            <h4>订阅源状态</h4>
+                            <div id="subscriptionsList">
+                                <div class="empty-subscriptions">暂无订阅源</div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- 配置组规则管理模态框 -->
-        <div class="group-rules-modal" id="groupRulesModal">
-            <div class="modal-header">
-                <h3 class="modal-title">管理配置组</h3>
-                <button class="close-btn" onclick="document.getElementById('groupRulesModal').style.display='none'">×</button>
-            </div>
-            <div class="modal-body">
-                <!-- 内容由JavaScript动态生成 -->
-            </div>
+    <!-- 配置组规则管理模态框 -->
+    <div class="group-rules-modal" id="groupRulesModal">
+        <div class="modal-header">
+            <h3 class="modal-title">管理配置组</h3>
+            <button class="close-btn"
+                onclick="document.getElementById('groupRulesModal').style.display='none'">×</button>
         </div>
+        <div class="modal-body">
+            <!-- 内容由JavaScript动态生成 -->
+        </div>
+    </div>
 
-        <footer>
-            <!-- 状态信息已移动到header -->
-        </footer>
+    <footer>
+        <!-- 状态信息已移动到header -->
+    </footer>
     </div>
 
     <script type="module" src="main.js"></script>
 </body>
+
 </html>

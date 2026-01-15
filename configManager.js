@@ -132,12 +132,12 @@ class ConfigManager {
             // 如果类型相同，保持原有顺序
             return 0;
         });
-        
+
         // 检查排序是否改变了顺序
         const orderChanged = originalOrder.some((rule, index) =>
             this.core.getRuleId(rule) !== this.core.getRuleId(this.core.regexRules[index])
         );
-        
+
         // 如果顺序改变，保存配置
         if (orderChanged) {
             this.core.saveConfig();
@@ -859,11 +859,44 @@ class ConfigManager {
     // 绑定诊断规则事件
     bindDiagnosisRuleEvents() {
         const addDiagnosisRuleBtn = document.getElementById('addDiagnosisRule');
+        const addHighlightFieldBtn = document.getElementById('addHighlightFieldBtn');
+
         if (addDiagnosisRuleBtn) {
             addDiagnosisRuleBtn.addEventListener('click', () => {
                 this.addDiagnosisRule();
             });
         }
+
+        if (addHighlightFieldBtn) {
+            // 防止重复绑定
+            addHighlightFieldBtn.replaceWith(addHighlightFieldBtn.cloneNode(true));
+            document.getElementById('addHighlightFieldBtn').addEventListener('click', () => {
+                this.addHighlightFieldInput();
+            });
+        }
+    }
+
+    // 添加高亮提取字段输入行
+    addHighlightFieldInput(label = '', prefix = '', suffix = '') {
+        const container = document.getElementById('highlightFieldsContainer');
+        const row = document.createElement('div');
+        row.className = 'highlight-field-row';
+        row.style.display = 'flex';
+        row.style.gap = '10px';
+        row.style.marginBottom = '5px';
+
+        row.innerHTML = `
+            <input type="text" class="highlight-label" placeholder="名称 (如: 订单号)" value="${label || ''}" style="width: 25%;">
+            <input type="text" class="highlight-prefix" placeholder="前缀 (如: orderId=)" value="${prefix || ''}" style="width: 30%;">
+            <input type="text" class="highlight-suffix" placeholder="后缀 (可选)" value="${suffix || ''}" style="width: 25%;">
+            <button class="btn btn-small btn-danger remove-field" style="width: 60px;">删除</button>
+        `;
+
+        row.querySelector('.remove-field').onclick = () => {
+            container.removeChild(row);
+        };
+
+        container.appendChild(row);
     }
 
     // 添加诊断规则
@@ -886,6 +919,18 @@ class ConfigManager {
             return;
         }
 
+        // 收集高亮提取字段
+        const highlightFields = [];
+        document.querySelectorAll('#highlightFieldsContainer .highlight-field-row').forEach(row => {
+            const label = row.querySelector('.highlight-label').value.trim();
+            const prefix = row.querySelector('.highlight-prefix').value.trim();
+            const suffix = row.querySelector('.highlight-suffix').value; // 后缀可以为空
+
+            if (label && prefix) {
+                highlightFields.push({ label, prefix, suffix: suffix || '' });
+            }
+        });
+
         // 检查是否是编辑模式
         if (this.core.editingDiagnosisIndex !== undefined) {
             // 编辑模式：更新现有规则
@@ -896,6 +941,7 @@ class ConfigManager {
             existingRule.severity = severity;
             existingRule.category = category || 'common';
             existingRule.solution = solution;
+            existingRule.highlightFields = highlightFields;
             existingRule.customScript = document.getElementById('diagnosisRuleCustomScript').value.trim();
 
             delete this.core.editingDiagnosisIndex;
@@ -910,6 +956,7 @@ class ConfigManager {
                 severity,
                 category: category || 'common',
                 solution,
+                highlightFields,
                 customScript: document.getElementById('diagnosisRuleCustomScript').value.trim(),
                 enabled: true // 新增：默认启用规则
             };
@@ -1021,6 +1068,19 @@ class ConfigManager {
         document.getElementById('diagnosisRuleSolution').value = rule.solution;
         document.getElementById('diagnosisRuleCustomScript').value = rule.customScript || '';
 
+        // 恢复高亮提取字段
+        const container = document.getElementById('highlightFieldsContainer');
+        container.innerHTML = '';
+        if (rule.highlightFields && Array.isArray(rule.highlightFields)) {
+            rule.highlightFields.forEach(field => {
+                // 兼容旧版本 (如果有 regex 但没有 prefix，则将 regex 当作 prefix 显示，或提示用户)
+                // 这里简单处理：如果有 prefix 则使用，否则尝试使用 regex
+                const prefix = field.prefix || field.regex || '';
+                const suffix = field.suffix || '';
+                this.addHighlightFieldInput(field.label, prefix, suffix);
+            });
+        }
+
         // 保存当前编辑的规则索引
         this.core.editingDiagnosisIndex = index;
 
@@ -1049,6 +1109,8 @@ class ConfigManager {
         document.getElementById('diagnosisRuleCategory').value = '';
         document.getElementById('diagnosisRuleSolution').value = '';
         document.getElementById('diagnosisRuleCustomScript').value = '';
+        document.getElementById('highlightFieldsContainer').innerHTML = ''; // 清空高亮字段
+
         document.getElementById('addDiagnosisRule').textContent = '添加规则';
         delete this.core.editingDiagnosisIndex;
     }
@@ -1151,16 +1213,279 @@ class ConfigManager {
         const chartName = document.getElementById('chartName').value.trim();
         const chartType = document.getElementById('chartType').value;
         const chartDescription = document.getElementById('chartDescription').value.trim();
-        const chartScript = document.getElementById('chartScript').value.trim();
+
+        let finalScript = '';
+
+        // 检查配置模式 (如果没有找到radio，默认为advanced，兼容旧代码)
+        const modeRadio = document.querySelector('input[name="chartConfigMode"]:checked');
+        const configMode = modeRadio ? modeRadio.value : 'advanced';
+
+        if (configMode === 'simple') {
+            const simpleType = document.getElementById('simpleChartType').value;
+
+            if (simpleType === 'count') {
+                // 关键词统计模式
+                const keywordsInput = document.getElementById('simpleKeywords').value;
+                if (!keywordsInput.trim()) {
+                    alert('请输入要统计的关键词');
+                    return;
+                }
+                const keywords = keywordsInput.split(',').map(k => k.trim()).filter(k => k);
+
+                finalScript = `
+// 自动生成的关键词统计脚本
+const keywords = ${JSON.stringify(keywords)};
+const counts = {};
+keywords.forEach(k => counts[k] = 0);
+
+logs.forEach(log => {
+    // 兼容日志对象的content属性或直接字符串
+    const content = (log && log.content) ? log.content : (log || '').toString();
+    keywords.forEach(k => {
+        if (content.includes(k)) {
+            counts[k]++;
+        }
+    });
+});
+
+return {
+    labels: keywords,
+    datasets: [{
+        label: '出现频次',
+        data: keywords.map(k => counts[k])
+    }]
+};`;
+            } else if (simpleType === 'extract') {
+                // 数值提取模式
+                const prefix = document.getElementById('simpleExtractPrefix').value;
+                const suffix = document.getElementById('simpleExtractSuffix').value;
+                const contextFilter = document.getElementById('simpleContextFilter').value.trim();
+
+                if (!prefix) {
+                    alert('请输入数值前缀');
+                    return;
+                }
+
+                // 转义正则特殊字符
+                const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const safePrefix = escapeRegExp(prefix);
+                const safeSuffix = suffix ? escapeRegExp(suffix) : '';
+
+                // 构造正则
+                const regexStr = safeSuffix
+                    ? `${safePrefix}\\s*([-]?\\d+\\.?\\d*)\\s*.*?${safeSuffix}`
+                    : `${safePrefix}\\s*([-]?\\d+\\.?\\d*)`;
+
+                // 获取X轴模式
+                const xAxisMode = document.querySelector('input[name="xAxisMode"]:checked').value;
+                const timeRegexStr = document.getElementById('simpleTimeRegex').value || '\\d{2}:\\d{2}:\\d{2}';
+
+                const xExtractionLogic = xAxisMode === 'time'
+                    ? `
+    // 尝试提取时间作为X轴
+    const timeMatch = content.match(/${timeRegexStr.replace(/\\/g, '\\\\')}/);
+    const label = timeMatch ? timeMatch[0] : (index + 1);
+    labels.push(label);`
+                    : `
+    // 使用行号作为X轴
+    labels.push(index + 1);`;
+
+                // 内容过滤逻辑
+                const filterLogic = contextFilter ? `
+    // 仅处理包含特定关键词的行
+    if (!content.includes('${contextFilter.replace(/'/g, "\\'")}')) return;
+` : '';
+
+                // 数值提取逻辑已自动生成
+                finalScript = `
+// 自动生成的数值提取脚本
+// 匹配模式: ${regexStr}
+${contextFilter ? '// 过滤关键词: ' + contextFilter : ''}
+const dataPoints = [];
+const labels = [];
+const regex = new RegExp('${regexStr.replace(/\\/g, '\\\\')}', 'i');
+
+logs.forEach((log, index) => {
+    // 兼容日志对象的content属性或直接字符串
+    const content = (log && log.content) ? log.content : (log || '').toString();
+    ${filterLogic}
+    const match = content.match(regex);
+    if (match && match[1]) {
+        const val = parseFloat(match[1]);
+        if (!isNaN(val)) {
+            dataPoints.push(val);
+            ${xExtractionLogic}
+        }
+    }
+});
+
+return {
+    labels: labels,
+    datasets: [{
+        label: '${chartName} (趋势)',
+        data: dataPoints
+    }]
+};`;
+            } else if (simpleType === 'extract_string') {
+                // 字符串提取统计模式
+                const prefix = document.getElementById('simpleExtractPrefix').value;
+                const suffix = document.getElementById('simpleExtractSuffix').value;
+                const contextFilter = document.getElementById('simpleContextFilter').value.trim();
+
+                if (!prefix) {
+                    alert('请输入前缀');
+                    return;
+                }
+
+                // 转义正则特殊字符
+                const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const safePrefix = escapeRegExp(prefix);
+                const safeSuffix = suffix ? escapeRegExp(suffix) : '';
+
+                // 构造正则: 提取中间的任意非空字符
+                const regexStr = safeSuffix
+                    ? `${safePrefix}\\s*(.*?)\\s*${safeSuffix}`
+                    : `${safePrefix}\\s*(.*)`;
+
+                // 内容过滤逻辑
+                const filterLogic = contextFilter ? `
+    // 仅处理包含特定关键词的行
+    if (!content.includes('${contextFilter.replace(/'/g, "\\'")}')) return;
+` : '';
+
+                finalScript = `
+// 自动生成的字符串提取统计脚本
+// 匹配模式: ${regexStr}
+${contextFilter ? '// 过滤关键词: ' + contextFilter : ''}
+const counts = {};
+const regex = new RegExp('${regexStr.replace(/\\/g, '\\\\')}', 'i');
+
+logs.forEach(log => {
+    // 兼容日志对象的content属性或直接字符串
+    const content = (log && log.content) ? log.content : (log || '').toString();
+    ${filterLogic}
+    const match = content.match(regex);
+    if (match && match[1]) {
+        const key = match[1].trim();
+        if (key) {
+            counts[key] = (counts[key] || 0) + 1;
+        }
+    }
+});
+
+const labels = Object.keys(counts);
+const data = labels.map(k => counts[k]);
+
+return {
+    labels: labels,
+    datasets: [{
+        label: '${chartName} (分布)',
+        data: data
+    }]
+};`;
+            } else if (simpleType === 'value_distribution') {
+                // 数值分布 (直方图) 模式
+                const prefix = document.getElementById('simpleExtractPrefix').value;
+                const suffix = document.getElementById('simpleExtractSuffix').value;
+                const bucketSize = parseFloat(document.getElementById('simpleBucketSize').value) || 100;
+                const contextFilter = document.getElementById('simpleContextFilter').value.trim();
+
+                if (!prefix) {
+                    alert('请输入前缀');
+                    return;
+                }
+
+                // 转义正则
+                const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const safePrefix = escapeRegExp(prefix);
+                const safeSuffix = suffix ? escapeRegExp(suffix) : '';
+
+                // 构造正则
+                const regexStr = safeSuffix
+                    ? `${safePrefix}\\s*([-]?\\d+\\.?\\d*)\\s*.*?${safeSuffix}`
+                    : `${safePrefix}\\s*([-]?\\d+\\.?\\d*)`;
+
+                // 内容过滤逻辑
+                const filterLogic = contextFilter ? `
+    // 仅处理包含特定关键词的行
+    if (!content.includes('${contextFilter.replace(/'/g, "\\'")}')) return;
+` : '';
+
+                finalScript = `
+// 自动生成的数值分布(直方图)脚本
+// 匹配模式: ${regexStr}
+// 区间大小: ${bucketSize}
+${contextFilter ? '// 过滤关键词: ' + contextFilter : ''}
+const buckets = {};
+const regex = new RegExp('${regexStr.replace(/\\/g, '\\\\')}', 'i');
+const bucketSize = ${bucketSize};
+
+logs.forEach(log => {
+    // 兼容日志对象的content属性或直接字符串
+    const content = (log && log.content) ? log.content : (log || '').toString();
+    ${filterLogic}
+    const match = content.match(regex);
+    if (match && match[1]) {
+        const val = parseFloat(match[1]);
+        if (!isNaN(val)) {
+            // 计算所属区间
+            const bucketIndex = Math.floor(val / bucketSize);
+            const bucketStart = bucketIndex * bucketSize;
+            const bucketLabel = \`\${bucketStart}-\${bucketStart + bucketSize}\`;
+            
+            buckets[bucketStart] = (buckets[bucketStart] || 0) + 1;
+        }
+    }
+});
+
+// 排序区间
+const sortedStarts = Object.keys(buckets).map(Number).sort((a,b) => a - b);
+const labels = sortedStarts.map(start => \`\${start}-\${start + bucketSize}\`);
+const data = sortedStarts.map(start => buckets[start]);
+
+return {
+    labels: labels,
+    datasets: [{
+        label: '${chartName} (分布)',
+        data: data,
+        borderWidth: 1
+    }]
+};`;
+            }
+        } else {
+            // 高级模式
+            finalScript = document.getElementById('chartScript').value.trim();
+            if (!finalScript) {
+                alert('请输入数据提取脚本');
+                return;
+            }
+        }
 
         if (!chartName) {
             alert('请输入图表名称');
             return;
         }
 
-        if (!chartScript) {
-            alert('请输入数据提取脚本');
-            return;
+        // 构造配置对象
+        const dataSourceConfig = {
+            script: finalScript
+        };
+
+        // 如果是简易模式，保存简易配置以便恢复
+        if (configMode === 'simple') {
+            const simpleType = document.getElementById('simpleChartType').value;
+            const xAxisMode = document.querySelector('input[name="xAxisMode"]:checked') ? document.querySelector('input[name="xAxisMode"]:checked').value : 'index';
+
+            dataSourceConfig.simpleConfig = {
+                type: simpleType,
+                keywords: document.getElementById('simpleKeywords').value,
+                prefix: document.getElementById('simpleExtractPrefix').value,
+                suffix: document.getElementById('simpleExtractSuffix').value,
+                contextFilter: document.getElementById('simpleContextFilter').value,
+                xAxisMode: xAxisMode,
+                timeRegex: document.getElementById('simpleTimeRegex').value,
+                bucketSize: document.getElementById('simpleBucketSize').value
+            };
         }
 
         // 检查是否是编辑模式
@@ -1171,9 +1496,7 @@ class ConfigManager {
                 config.name = chartName;
                 config.type = chartType;
                 config.description = chartDescription;
-                config.dataSource = {
-                    script: chartScript
-                };
+                config.dataSource = dataSourceConfig;
                 config.style = {};
 
                 // 移除颜色配置，让Chart.js自动处理颜色
@@ -1189,9 +1512,7 @@ class ConfigManager {
                 type: chartType,
                 description: chartDescription,
                 enabled: true,
-                dataSource: {
-                    script: chartScript
-                },
+                dataSource: dataSourceConfig,
                 style: {}
             };
 
@@ -1233,7 +1554,71 @@ class ConfigManager {
         document.getElementById('chartDescription').value = config.description || '';
         document.getElementById('chartScript').value = config.dataSource?.script || '';
 
-        // 移除颜色配置填充，不再需要处理颜色
+        // 恢复简易配置模式
+        if (config.dataSource?.simpleConfig) {
+            // 切换到简易模式
+            const simpleRadio = document.querySelector('input[name="chartConfigMode"][value="simple"]');
+            if (simpleRadio) {
+                simpleRadio.checked = true;
+                // 触发change事件更新UI显隐
+                document.getElementById('simpleChartConfig').style.display = 'block';
+                document.getElementById('advancedChartConfig').style.display = 'none';
+            }
+
+            const sc = config.dataSource.simpleConfig;
+
+            // 恢复分析类型
+            const simpleTypeSelect = document.getElementById('simpleChartType');
+            // 注意：需要先触发chartType的change事件以确保simpleChartType选项正确过滤
+            document.getElementById('chartType').onchange();
+
+            // 延迟一点设置simpleChartType，因为onchange可能会重置default
+            setTimeout(() => {
+                if (sc.type) {
+                    simpleTypeSelect.value = sc.type;
+                    simpleTypeSelect.onchange(); // 触发UI更新
+                }
+
+                if (sc.type === 'count') {
+                    document.getElementById('simpleKeywords').value = sc.keywords || '';
+                } else if (sc.type === 'extract' || sc.type === 'extract_string' || sc.type === 'value_distribution') {
+                    document.getElementById('simpleExtractPrefix').value = sc.prefix || '';
+                    document.getElementById('simpleExtractSuffix').value = sc.suffix || '';
+                    document.getElementById('simpleContextFilter').value = sc.contextFilter || '';
+
+                    // 仅数值提取模式才恢复X轴模式
+                    if (sc.type === 'extract' && sc.xAxisMode) {
+                        const xRadio = document.querySelector(`input[name="xAxisMode"][value="${sc.xAxisMode}"]`);
+                        if (xRadio) {
+                            xRadio.checked = true;
+                            // 触发点击事件以更新UI可见性
+                            if (sc.xAxisMode === 'time') {
+                                document.getElementById('timeExtractConfig').style.display = 'block';
+                            } else {
+                                document.getElementById('timeExtractConfig').style.display = 'none';
+                            }
+                        }
+                    }
+
+                    if (sc.timeRegex) {
+                        document.getElementById('simpleTimeRegex').value = sc.timeRegex;
+                    }
+
+                    if (sc.bucketSize) {
+                        document.getElementById('simpleBucketSize').value = sc.bucketSize;
+                    }
+                }
+            }, 0);
+
+        } else {
+            // 切换到高级模式UI
+            const advancedRadio = document.querySelector('input[name="chartConfigMode"][value="advanced"]');
+            if (advancedRadio) {
+                advancedRadio.checked = true;
+                document.getElementById('simpleChartConfig').style.display = 'none';
+                document.getElementById('advancedChartConfig').style.display = 'block';
+            }
+        }
 
         // 保存当前编辑的配置ID
         this.core.editingChartConfigId = configId;
@@ -1270,7 +1655,38 @@ class ConfigManager {
         document.getElementById('chartType').value = 'line';
         document.getElementById('chartDescription').value = '';
         document.getElementById('chartScript').value = '';
-        // 移除颜色相关的表单字段
+
+        // 简易模式输入框清空
+        document.getElementById('simpleKeywords').value = '';
+        document.getElementById('simpleExtractPrefix').value = '';
+        document.getElementById('simpleExtractSuffix').value = '';
+        document.getElementById('simpleContextFilter').value = '';
+        document.getElementById('simpleTimeRegex').value = '\\d{2}:\\d{2}:\\d{2}';
+        document.getElementById('simpleBucketSize').value = '100';
+
+        // 重置简易配置显隐
+        document.getElementById('simpleConfig-keyword').style.display = 'block';
+        document.getElementById('simpleConfig-extraction').style.display = 'none';
+
+        // 重置为简易模式
+        const simpleRadio = document.querySelector('input[name="chartConfigMode"][value="simple"]');
+        if (simpleRadio) {
+            simpleRadio.checked = true;
+            document.getElementById('simpleChartConfig').style.display = 'block';
+            document.getElementById('advancedChartConfig').style.display = 'none';
+        }
+
+        // 重置分析类型
+        const simpleTypeSelect = document.getElementById('simpleChartType');
+        simpleTypeSelect.value = 'count'; // 默认
+
+        // 重置X轴模式
+        const xIndexRadio = document.querySelector('input[name="xAxisMode"][value="index"]');
+        if (xIndexRadio) xIndexRadio.checked = true;
+        document.getElementById('timeExtractConfig').style.display = 'none';
+        document.getElementById('xAxisConfig').style.display = 'none'; // 默认是count，不显示X轴配置
+        document.getElementById('bucketSizeConfig').style.display = 'none';
+
         document.getElementById('addChartConfig').textContent = '添加图表配置';
         delete this.core.editingChartConfigId;
     }
@@ -1278,6 +1694,189 @@ class ConfigManager {
     // 绑定图表配置事件
     bindChartConfigEvents() {
         const addChartConfigBtn = document.getElementById('addChartConfig');
+        const chartTypeSelect = document.getElementById('chartType');
+        const chartScriptTextarea = document.getElementById('chartScript');
+
+        // 图表脚本模板
+        const CHART_TEMPLATES = {
+            'line': `// 折线图脚本示例 (必须返回 labels 和 datasets)
+const dataPoints = [];
+const labels = [];
+// 示例: 提取 "value=123"
+const regex = /value=(\\d+)/;
+
+logs.forEach((log, index) => {
+    const content = (log && log.content) ? log.content : (log || '').toString();
+    const match = content.match(regex);
+    if (match) {
+        dataPoints.push(parseFloat(match[1]));
+        labels.push(index + 1); // 使用行号作为X轴
+    }
+});
+
+return {
+    labels: labels,
+    datasets: [{
+        label: '示例数据',
+        data: dataPoints,
+        borderColor: 'rgb(75, 192, 192)',
+        tension: 0.1
+    }]
+};`,
+            'bar': `// 柱状图脚本示例
+const counts = {};
+// 示例: 统计包含 "Error" 或 "Warning" 的行
+const keywords = ['Error', 'Warning'];
+
+logs.forEach(log => {
+    const content = (log && log.content) ? log.content : (log || '').toString();
+    keywords.forEach(k => {
+        if (content.includes(k)) {
+            counts[k] = (counts[k] || 0) + 1;
+        }
+    });
+});
+
+return {
+    labels: Object.keys(counts),
+    datasets: [{
+        label: '关键词统计',
+        data: Object.values(counts),
+        backgroundColor: ['rgba(255, 99, 132, 0.5)', 'rgba(54, 162, 235, 0.5)']
+    }]
+};`,
+            'pie': `// 饼图脚本示例
+const counts = {};
+// 示例: 统计不同级别的日志
+const regex = /\\[(INFO|WARN|ERROR)\\]/;
+
+logs.forEach(log => {
+    const content = (log && log.content) ? log.content : (log || '').toString();
+    const match = content.match(regex);
+    if (match) {
+        const level = match[1];
+        counts[level] = (counts[level] || 0) + 1;
+    }
+});
+
+return {
+    labels: Object.keys(counts),
+    datasets: [{
+        label: '日志级别占比',
+        data: Object.values(counts),
+        backgroundColor: [
+            'rgba(75, 192, 192, 0.5)', // INFO
+            'rgba(255, 205, 86, 0.5)', // WARN
+            'rgba(255, 99, 132, 0.5)'  // ERROR
+        ]
+    }]
+};`,
+            'scatter': `// 散点图脚本示例 (必须返回 x, y 坐标)
+const data = [];
+// 示例: 提取 "x=10, y=20"
+const regex = /x=(\\d+).*?y=(\\d+)/;
+
+logs.forEach(log => {
+    const content = (log && log.content) ? log.content : (log || '').toString();
+    const match = content.match(regex);
+    if (match) {
+        data.push({
+            x: parseFloat(match[1]),
+            y: parseFloat(match[2])
+        });
+    }
+});
+
+return {
+    datasets: [{
+        label: 'XY分布',
+        data: data,
+        backgroundColor: 'rgb(255, 99, 132)'
+    }]
+};`,
+            'bubble': `// 气泡图脚本示例 (必须返回 x, y, r)
+const data = [];
+// 示例: 提取 "u=10, v=20, s=5" (s为大小)
+const regex = /u=(\\d+).*?v=(\\d+).*?s=(\\d+)/;
+
+logs.forEach(log => {
+    const content = (log && log.content) ? log.content : (log || '').toString();
+    const match = content.match(regex);
+    if (match) {
+        data.push({
+            x: parseFloat(match[1]),
+            y: parseFloat(match[2]),
+            r: parseFloat(match[3]) // 气泡半径
+        });
+    }
+});
+
+return {
+    datasets: [{
+        label: '三维分布',
+        data: data,
+        backgroundColor: 'rgba(255, 99, 132, 0.5)'
+    }]
+};`,
+            'radar': `// 雷达图脚本示例
+const counts = { 'MetricA': 0, 'MetricB': 0, 'MetricC': 0, 'MetricD': 0, 'MetricE': 0 };
+
+// 模拟随机数据 (实际使用请替换为真实提取逻辑)
+Object.keys(counts).forEach(k => {
+    counts[k] = Math.floor(Math.random() * 100);
+});
+
+return {
+    labels: Object.keys(counts),
+    datasets: [{
+        label: '各项指标',
+        data: Object.values(counts),
+        fill: true,
+        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+        borderColor: 'rgb(54, 162, 235)',
+        pointBackgroundColor: 'rgb(54, 162, 235)',
+        pointBorderColor: '#fff',
+        pointHoverBackgroundColor: '#fff',
+        pointHoverBorderColor: 'rgb(54, 162, 235)'
+    }]
+};`
+        };
+
+        // 映射别名
+        CHART_TEMPLATES['doughnut'] = CHART_TEMPLATES['pie'];
+        CHART_TEMPLATES['polarArea'] = CHART_TEMPLATES['pie'];
+
+        if (chartTypeSelect && chartScriptTextarea) {
+            // 监听图表类型变化，自动填充模板
+            chartTypeSelect.addEventListener('change', () => {
+                const type = chartTypeSelect.value;
+                const currentScript = chartScriptTextarea.value.trim();
+                const template = CHART_TEMPLATES[type] || CHART_TEMPLATES['line'];
+
+                // 仅当脚本为空，或脚本与某个已知模板完全一致(说明用户未修改)时，才自动覆盖
+                // 为了简化判断，我们只在为空时填充，或者用户明确想要重置时（这里只做为空判断）
+                // 改进：检查当前内容是否是默认模板之一，如果是，则允许替换
+                const isTemplate = Object.values(CHART_TEMPLATES).some(t => t.trim() === currentScript);
+
+                if (!currentScript || isTemplate) {
+                    chartScriptTextarea.value = template;
+                }
+            });
+
+            // 初始化: 如果为空，填充默认
+            if (!chartScriptTextarea.value.trim()) {
+                const type = chartTypeSelect.value;
+                chartScriptTextarea.value = CHART_TEMPLATES[type] || CHART_TEMPLATES['line'];
+            }
+
+            // 重要: 手动触发一次change事件，以确保简易模式下的分析类型根据默认的图表类型(line)正确初始化
+            // 这解决了初始化时虽然是折线图，但分析类型没自动切到'extract'的问题
+            // 使用 setTimeout 确保在DOM完全就绪后执行
+            setTimeout(() => {
+                const event = new Event('change');
+                chartTypeSelect.dispatchEvent(event);
+            }, 0);
+        }
 
         if (addChartConfigBtn) {
             // 使用最简单的方式，每次重新绑定
