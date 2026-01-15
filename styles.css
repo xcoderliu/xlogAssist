@@ -3543,8 +3543,8 @@ footer .btn {
 
     0%,
     100% {
-        border-color: #ff0000;
-        box-shadow: 0 0 8px rgba(255, 0, 0, 0.5);
+        border-color: #28a745;
+        box-shadow: 0 0 8px rgba(40, 167, 69, 0.5);
     }
 
     50% {
@@ -3555,6 +3555,6 @@ footer .btn {
 
 .flash-highlight {
     animation: border-flash 0.5s ease-in-out 3;
-    border: 2px solid #ff0000 !important;
+    border: 2px solid #28a745 !important;
     transition: all 0.3s;
 }

@@ -214,6 +214,11 @@ class MonacoRenderer extends RendererInterface {
                 return;
             }
 
+            // 简单的防抖/节流，避免在日志高频更新时频繁重算
+            if (this._isHighlighting) return;
+            this._isHighlighting = true;
+            setTimeout(() => { this._isHighlighting = false; }, 100);
+
             // 清除之前的正则装饰器，但保留搜索装饰器
             this.clearCurrentDecorations();
 
