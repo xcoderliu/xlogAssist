@@ -28,6 +28,9 @@ class LogAnalyzer {
         // 选中行相关属性
         this.selectedLineIndex = -1;
 
+        // 主题相关属性
+        this.currentTheme = localStorage.getItem('xlogAssist_theme') || 'light';
+
         // 初始化模块
         this.initializeModules();
     }
@@ -36,6 +39,9 @@ class LogAnalyzer {
         // 初始化UI元素
         this.initializeElements();
 
+        // 初始化主题
+        this.initializeTheme();
+
         // 绑定事件
         this.bindEvents();
 
@@ -43,9 +49,40 @@ class LogAnalyzer {
         this.loadConfig();
     }
 
+    initializeTheme() {
+        document.documentElement.setAttribute('data-theme', this.currentTheme);
+        this.updateThemeButton();
+    }
+
+    toggleTheme() {
+        this.currentTheme = this.currentTheme === 'light' ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', this.currentTheme);
+        localStorage.setItem('xlogAssist_theme', this.currentTheme);
+        this.updateThemeButton();
+
+        // 通知Monaco Renderer更新主题
+        if (this.monacoRenderer) {
+            this.monacoRenderer.updateTheme(this.currentTheme);
+        }
+
+        // 通知Chart模块更新主题
+        if (this.charting && this.charting.updateTheme) {
+            this.charting.updateTheme(this.currentTheme);
+        }
+    }
+
+    updateThemeButton() {
+        const btn = document.getElementById('themeToggleBtn');
+        if (btn) {
+            btn.textContent = this.currentTheme === 'light' ? '🌓' : '☀️';
+            btn.title = this.currentTheme === 'light' ? '切换到深色模式' : '切换到浅色模式';
+        }
+    }
+
     initializeElements() {
         this.dropZone = document.getElementById('dropZone');
         this.fileInput = document.getElementById('fileInput');
+        this.themeToggleBtn = document.getElementById('themeToggleBtn');
         this.logCount = document.getElementById('logCount');
         this.investigationContent = document.getElementById('investigationContent');
         this.contextMenu = document.getElementById('contextMenu');
@@ -79,6 +116,11 @@ class LogAnalyzer {
         this.dropZone.addEventListener('dragleave', (e) => this.handleDragLeave(e));
         this.dropZone.addEventListener('drop', (e) => this.handleDrop(e));
         this.fileInput.addEventListener('change', (e) => this.handleFileSelect(e));
+
+        // 主题切换事件
+        if (this.themeToggleBtn) {
+            this.themeToggleBtn.addEventListener('click', () => this.toggleTheme());
+        }
 
         // 控制按钮事件
         document.getElementById('clearLogs').addEventListener('click', () => this.clearLogs());

@@ -169,9 +169,9 @@ class ConfigManager {
                     <span class="rule-text">${rule.pattern}</span>
                     ${rule.highlightWholeLine ? '<span style="font-size: 12px; color: #666; margin-left: 8px;">(整行)</span>' : ''}
                 </div>
-                <div>
-                    <button class="edit-rule" data-index="${index}" style="background: #28a745; margin-right: 5px;">编辑</button>
-                    <button class="delete-rule" data-index="${index}">删除</button>
+                <div class="item-actions">
+                    <button class="edit-rule" data-index="${index}" title="编辑规则">✏️</button>
+                    <button class="delete-rule" data-index="${index}" title="删除规则">🗑️</button>
                 </div>
             `;
             rulesList.appendChild(ruleElement);
@@ -366,9 +366,9 @@ class ConfigManager {
                     <span class="group-name">${group.name}</span>
                     <span class="group-rules-count">(${group.ruleIds.length} 条规则)</span>
                 </div>
-                <div class="group-controls">
-                    <button class="edit-rule" data-group-index="${index}">编辑</button>
-                    <button class="delete-rule" data-group-index="${index}">删除</button>
+                <div class="item-actions">
+                    <button class="edit-rule" data-group-index="${index}" title="编辑配置组">✏️</button>
+                    <button class="delete-rule" data-group-index="${index}" title="删除配置组">🗑️</button>
                 </div>
             `;
             groupsList.appendChild(groupElement);
@@ -989,24 +989,17 @@ class ConfigManager {
             ruleElement.innerHTML = `
                 <div class="diagnosis-rule-content">
                     <div class="diagnosis-rule-header">
-                        <span class="diagnosis-rule-name">${rule.name}</span>
+                        <span class="diagnosis-rule-name" style="font-weight:600; font-size:14px;">${rule.name}</span>
                         <span class="diagnosis-rule-severity severity-${rule.severity}">${rule.severity}</span>
                     </div>
-                    <div class="diagnosis-rule-description">${rule.description}</div>
-                    <div class="diagnosis-rule-patterns">
-                        <strong>匹配模式:</strong> ${rule.patterns.join(', ')}
-                    </div>
-                    <div class="diagnosis-rule-category">
-                        <strong>类别:</strong> ${rule.category}
-                    </div>
+                    <div style="font-size:12px; color:var(--text-secondary); margin-top:4px;">${rule.description}</div>
                 </div>
-                <div class="diagnosis-rule-actions">
-                    <div class="diagnosis-rule-toggle ${rule.enabled ? 'enabled' : 'disabled'}" data-index="${index}">
-                        <div class="toggle-switch"></div>
-                        <span class="toggle-label">${rule.enabled ? '已启用' : '已禁用'}</span>
+                <div class="item-actions">
+                    <div class="diagnosis-rule-toggle ${rule.enabled ? 'enabled' : 'disabled'}" data-index="${index}" style="margin-right:8px; cursor:pointer;" title="${rule.enabled ? '点击禁用' : '点击启用'}">
+                         ${rule.enabled ? '🟢' : '⚪️'}
                     </div>
-                    <button class="edit-diagnosis-rule" data-index="${index}">编辑</button>
-                    <button class="delete-diagnosis-rule" data-index="${index}">删除</button>
+                    <button class="edit-rule" data-index="${index}" title="编辑规则">✏️</button>
+                    <button class="delete-rule" data-index="${index}" title="删除规则">🗑️</button>
                 </div>
             `;
             container.appendChild(ruleElement);
@@ -1030,14 +1023,14 @@ class ConfigManager {
             });
         });
 
-        container.querySelectorAll('.edit-diagnosis-rule').forEach(button => {
+        container.querySelectorAll('.edit-rule').forEach(button => {
             button.addEventListener('click', (e) => {
                 const index = parseInt(e.target.dataset.index);
                 this.editDiagnosisRule(index);
             });
         });
 
-        container.querySelectorAll('.delete-diagnosis-rule').forEach(button => {
+        container.querySelectorAll('.delete-rule').forEach(button => {
             button.addEventListener('click', (e) => {
                 const index = parseInt(e.target.dataset.index);
                 this.deleteDiagnosisRule(index);
@@ -1147,23 +1140,18 @@ class ConfigManager {
                 <div class="chart-config-content">
                     <div class="chart-config-header">
                         <div class="chart-config-info">
-                            <h5 class="chart-config-title">${config.name || '未命名配置'}</h5>
-                            <span class="chart-config-type">${this.getChartTypeName(config.type)}</span>
+                            <span class="chart-config-title" style="font-weight:600; font-size:14px; margin-right:8px;">${config.name || '未命名配置'}</span>
+                            <span class="chart-config-type" style="font-size:12px; background:var(--bg-secondary); padding:2px 6px; border-radius:4px;">${this.getChartTypeName(config.type)}</span>
                         </div>
-                        <div class="chart-config-description">${config.description || '无描述'}</div>
-                        <div class="chart-config-details">
-                            <div class="chart-config-detail">脚本: ${scriptPreview}</div>
-                            <div class="chart-config-detail">类型: ${config.type}</div>
-                        </div>
+                        <div style="font-size:12px; color:var(--text-secondary); margin-top:4px;">${config.description || '无描述'}</div>
                     </div>
-                    <div class="chart-config-actions">
-                        <div class="chart-config-toggle ${config.enabled ? 'enabled' : 'disabled'}" data-config-id="${config.id}">
-                            <div class="toggle-switch"></div>
-                            <span class="toggle-label">${config.enabled ? '已启用' : '已禁用'}</span>
-                        </div>
-                        <button class="btn btn-small btn-primary edit-chart-config" data-config-id="${config.id}">编辑</button>
-                        <button class="btn btn-small btn-danger delete-chart-config" data-config-id="${config.id}">删除</button>
+                </div>
+                <div class="item-actions">
+                    <div class="chart-config-toggle ${config.enabled ? 'enabled' : 'disabled'}" data-config-id="${config.id}" style="margin-right:8px; cursor:pointer;" title="${config.enabled ? '点击禁用' : '点击启用'}">
+                        ${config.enabled ? '🟢' : '⚪️'}
                     </div>
+                    <button class="edit-rule edit-chart-config" data-config-id="${config.id}" title="编辑配置">✏️</button>
+                    <button class="delete-rule delete-chart-config" data-config-id="${config.id}" title="删除配置">🗑️</button>
                 </div>
             `;
             container.appendChild(configElement);
@@ -2165,25 +2153,24 @@ return {
             subscriptionElement.innerHTML = `
                 <div class="subscription-content">
                     <div class="subscription-header">
-                        <span class="subscription-name">${subscription.name}</span>
-                        <span class="subscription-status ${subscription.enabled ? 'enabled' : 'disabled'}">
+                        <span class="subscription-name" style="font-weight:600; font-size:14px; margin-right:8px;">${subscription.name}</span>
+                        <span class="subscription-status" style="font-size:12px; background:var(--bg-secondary); padding:2px 6px; border-radius:4px;">
                             ${subscription.enabled ? '已启用' : '已禁用'}
                         </span>
                     </div>
-                    <div class="subscription-url">${subscription.url}</div>
-                    <div class="subscription-info">
+                    <div class="subscription-url" style="color:var(--text-secondary); font-size:12px; margin-top:4px;">${subscription.url}</div>
+                    <div class="subscription-info" style="color:var(--text-secondary); font-size:12px;">
                         <span>最后更新: ${lastUpdate}</span>
                     </div>
                 </div>
-                <div class="subscription-actions">
-                    <div class="subscription-toggle ${subscription.enabled ? 'enabled' : 'disabled'}" data-id="${subscription.id}">
-                        <div class="toggle-switch"></div>
-                        <span class="toggle-label">${subscription.enabled ? '启用' : '禁用'}</span>
+                <div class="item-actions">
+                    <div class="subscription-toggle ${subscription.enabled ? 'enabled' : 'disabled'}" data-id="${subscription.id}" style="margin-right:8px; cursor:pointer;" title="${subscription.enabled ? '点击禁用' : '点击启用'}">
+                        ${subscription.enabled ? '🟢' : '⚪️'}
                     </div>
-                    <button class="update-subscription" data-id="${subscription.id}" ${subscription.status === 'updating' ? 'disabled' : ''}>
-                        ${subscription.status === 'updating' ? '更新中...' : '更新'}
+                    <button class="update-subscription edit-rule" data-id="${subscription.id}" ${subscription.status === 'updating' ? 'disabled' : ''} title="更新订阅源">
+                        ${subscription.status === 'updating' ? '⏳' : '🔄'}
                     </button>
-                    <button class="remove-subscription" data-id="${subscription.id}">删除</button>
+                    <button class="remove-subscription delete-rule" data-id="${subscription.id}" title="删除订阅源">🗑️</button>
                 </div>
             `;
             container.appendChild(subscriptionElement);

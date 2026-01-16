@@ -385,22 +385,64 @@ class Charting {
         }
 
         // 基础配置
+        // 获取当前主题
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const zoomBgColor = isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)';
+        const zoomBorderColor = isDark ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.4)';
+
         const baseOptions = {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
                 legend: {
-                    display: true, // 默认显示图例
-                    position: 'top'
+                    display: true,
+                    position: 'top',
+                    labels: {
+                        color: isDark ? '#e0e0e0' : '#666'
+                    }
                 },
                 tooltip: {
                     enabled: true,
                     mode: 'index',
                     intersect: false,
+                },
+                zoom: {
+                    zoom: {
+                        drag: {
+                            enabled: true,
+                            backgroundColor: zoomBgColor,
+                            borderColor: zoomBorderColor,
+                            borderWidth: 1
+                        },
+                        mode: 'x',
+                    },
+                    pan: {
+                        enabled: false,
+                        mode: 'x',
+                    }
                 }
             },
             layout: {
                 padding: 10
+            },
+            scales: {
+                x: {
+                    grid: {
+                        color: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+                    },
+                    ticks: {
+                        color: isDark ? '#a0a0a0' : '#666'
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+                    },
+                    ticks: {
+                        color: isDark ? '#a0a0a0' : '#666'
+                    }
+                }
             }
         };
 
@@ -655,6 +697,50 @@ class Charting {
     clearGeneratedCharts() {
         this.generatedChartIds.clear();
         this.renderCharts(); // 重新渲染以更新状态
+    }
+    // 更新图表主题
+    updateTheme(theme) {
+        const isDark = theme === 'dark';
+        const zoomBgColor = isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)';
+        const zoomBorderColor = isDark ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.4)';
+        const textColor = isDark ? '#e0e0e0' : '#666';
+        const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+
+        // 更新所有显示的图表
+        const canvases = document.querySelectorAll('.chart-preview canvas');
+        canvases.forEach(canvas => {
+            if (canvas.chart) {
+                const chart = canvas.chart;
+
+                // 更新Zoom插件颜色
+                if (chart.options.plugins && chart.options.plugins.zoom &&
+                    chart.options.plugins.zoom.zoom && chart.options.plugins.zoom.zoom.drag) {
+                    chart.options.plugins.zoom.zoom.drag.backgroundColor = zoomBgColor;
+                    chart.options.plugins.zoom.zoom.drag.borderColor = zoomBorderColor;
+                }
+
+                // 更新坐标轴颜色
+                if (chart.options.scales) {
+                    ['x', 'y'].forEach(axis => {
+                        if (chart.options.scales[axis]) {
+                            if (chart.options.scales[axis].grid) {
+                                chart.options.scales[axis].grid.color = gridColor;
+                            }
+                            if (chart.options.scales[axis].ticks) {
+                                chart.options.scales[axis].ticks.color = textColor;
+                            }
+                        }
+                    });
+                }
+
+                // 更新图例文字颜色
+                if (chart.options.plugins && chart.options.plugins.legend && chart.options.plugins.legend.labels) {
+                    chart.options.plugins.legend.labels.color = textColor;
+                }
+
+                chart.update('none'); // 无动画更新
+            }
+        });
     }
 }
 

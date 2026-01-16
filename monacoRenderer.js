@@ -6,6 +6,7 @@ class MonacoRenderer extends RendererInterface {
         super(core);
         this.editor = null;
         this.isInitialized = false;
+        this.useMonaco = true; // Initialize to true
         this.logsText = '';
         this.currentDecorations = []; // 当前装饰器
         this.searchDecorations = []; // 搜索装饰器
@@ -24,18 +25,34 @@ class MonacoRenderer extends RendererInterface {
                 require(['vs/editor/editor.main'], resolve, reject);
             });
 
-            // 定义自定义主题 (Darker selection color)
-            monaco.editor.defineTheme('xlog-theme', {
+            // 定义自定义主题 (Light)
+            monaco.editor.defineTheme('xlog-theme-light', {
                 base: 'vs',
                 inherit: true,
                 rules: [],
                 colors: {
-                    'editor.selectionBackground': '#75A7E0', // 更深、更明显的蓝色
+                    'editor.selectionBackground': '#75A7E0',
                     'editor.inactiveSelectionBackground': '#A0C4E8',
-                    'editor.lineHighlightBackground': '#e8f0fe', // 行高亮背景色 (原 .selected-line 颜色)
-                    'editor.lineHighlightBorder': '#00000000' // 隐藏行高亮边框
+                    'editor.lineHighlightBackground': '#e8f0fe',
+                    'editor.lineHighlightBorder': '#00000000'
                 }
             });
+
+            // 定义自定义主题 (Dark)
+            monaco.editor.defineTheme('xlog-theme-dark', {
+                base: 'vs-dark',
+                inherit: true,
+                rules: [],
+                colors: {
+                    'editor.selectionBackground': '#264f78', // VS Code默认深色选中
+                    'editor.inactiveSelectionBackground': '#3a3d41',
+                    'editor.lineHighlightBackground': '#2d2d2d', // 深色模式行高亮
+                    'editor.lineHighlightBorder': '#00000000'
+                }
+            });
+
+            // 获取当前主题
+            const initialTheme = this.core.currentTheme === 'dark' ? 'xlog-theme-dark' : 'xlog-theme-light';
 
             // 创建编辑器实例
             const container = document.getElementById('monacoEditor');
@@ -47,7 +64,7 @@ class MonacoRenderer extends RendererInterface {
             this.editor = monaco.editor.create(container, {
                 value: '',
                 language: 'plaintext',
-                theme: 'xlog-theme', // 使用自定义主题
+                theme: initialTheme,
                 readOnly: true, // 允许选择
                 scrollBeyondLastLine: false,
                 wordWrap: 'on',
@@ -81,6 +98,13 @@ class MonacoRenderer extends RendererInterface {
         } catch (error) {
             this.useMonaco = false;
         }
+    }
+
+    // 更新主题
+    updateTheme(themeName) {
+        if (!this.editor || !this.useMonaco) return;
+        const newTheme = themeName === 'dark' ? 'xlog-theme-dark' : 'xlog-theme-light';
+        monaco.editor.setTheme(newTheme);
     }
 
     // 绑定编辑器事件

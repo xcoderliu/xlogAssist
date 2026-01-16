@@ -29,14 +29,14 @@ class Investigation {
             itemElement.className = 'investigation-item';
             itemElement.dataset.index = log.originalIndex;
             itemElement.innerHTML = `
-                <div style="font-size: 10px; color: #666; margin-bottom: 2px;">
+                <div class="investigation-meta">
                     ${log.file} - 行 ${log.originalIndex + 1}
                 </div>
                 <div class="investigation-content">${this.applySearchHighlighting(log.content)}</div>
-                <div class="investigation-note" style="margin-top: 5px;">
+                <div class="investigation-note">
                     <textarea 
                         placeholder="添加备注..." 
-                        style="width: 100%; height: 30px; resize: vertical; border: 1px solid #ddd; border-radius: 4px; padding: 4px; font-size: 12px; font-family: inherit;"
+                        class="note-textarea"
                     >${log.note || ''}</textarea>
                 </div>
             `;

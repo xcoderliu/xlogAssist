@@ -1,4 +1,78 @@
 /* Material Design 风格重置 */
+:root {
+    /* Light Mode Variables */
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8f9fa;
+    --bg-tertiary: #f1f3f4;
+    --bg-active: #e8f0fe;
+
+    --text-primary: #202124;
+    --text-secondary: #5f6368;
+    --text-muted: #9aa0a6;
+
+    --border-color: #dadce0;
+    --border-light: #e8eaed;
+
+    --accent-color: #1a73e8;
+    --accent-hover: #1967d2;
+    --accent-bg: rgba(26, 115, 232, 0.1);
+
+    --success-color: #34a853;
+    --success-bg: #e6f4ea;
+    --success-hover: #2d8e47;
+
+    --error-color: #ea4335;
+    --error-bg: #fce8e6;
+    --error-hover: #d33426;
+
+    --warning-color: #fbbc04;
+    --warning-bg: #fef7e0;
+    --warning-border: #fbbc04;
+
+    --shadow-sm: 0 1px 2px rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
+
+    /* Code colors */
+    --code-bg: #ffffff;
+    --code-text: #202124;
+}
+
+[data-theme="dark"] {
+    /* Dark Mode Variables */
+    --bg-primary: #1e1e1e;
+    --bg-secondary: #252526;
+    --bg-tertiary: #2d2d2d;
+    --bg-active: #37373d;
+
+    --text-primary: #e0e0e0;
+    --text-secondary: #a0a0a0;
+    --text-muted: #6e7681;
+
+    --border-color: #454545;
+    --border-light: #333333;
+
+    --accent-color: #4da6ff;
+    --accent-hover: #1a73e8;
+    --accent-bg: rgba(77, 166, 255, 0.15);
+
+    --success-color: #4caf50;
+    --success-bg: rgba(76, 175, 80, 0.15);
+    --success-hover: #388e3c;
+
+    --error-color: #f44336;
+    --error-bg: rgba(244, 67, 54, 0.15);
+    --error-hover: #d32f2f;
+
+    --warning-color: #ffc107;
+    --warning-bg: rgba(255, 193, 7, 0.15);
+    --warning-border: #ffb300;
+
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5);
+
+    /* Code colors */
+    --code-bg: #1e1e1e;
+    --code-text: #d4d4d4;
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -10,11 +84,8 @@ body {
     height: 100%;
     overflow: auto;
     font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-}
-
-body {
-    background: #f8f9fa;
-    color: #202124;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
 }
 
 /* 容器布局 */
@@ -23,14 +94,14 @@ body {
     height: 100vh;
     display: flex;
     flex-direction: column;
-    background: #ffffff;
+    background: var(--bg-primary);
 }
 
 /* 顶部导航栏 */
 header {
-    background: #ffffff;
+    background: var(--bg-primary);
     padding: 16px 24px;
-    border-bottom: 1px solid #dadce0;
+    border-bottom: 1px solid var(--border-color);
     box-shadow: 0 1px 2px rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
     display: flex;
     justify-content: space-between;
@@ -41,7 +112,7 @@ header {
 header h1 {
     font-size: 22px;
     font-weight: 500;
-    color: #1a73e8;
+    color: var(--accent-color);
     margin: 0;
 }
 
@@ -61,7 +132,7 @@ header h1 {
 header .btn-small {
     padding: 8px 16px;
     font-size: 14px;
-    background: #1a73e8;
+    background: var(--accent-color);
     color: white;
     border: none;
     border-radius: 6px;
@@ -70,7 +141,7 @@ header .btn-small {
 }
 
 header .btn-small:hover {
-    background: #1967d2;
+    background: var(--accent-hover);
     box-shadow: 0 1px 2px rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
 }
 
@@ -92,7 +163,7 @@ header .btn-small:hover {
     min-width: 0;
     min-height: 0;
     padding: 24px;
-    border-right: 1px solid #dadce0;
+    border-right: 1px solid var(--border-color);
     position: relative;
     width: 50%;
     /* 默认宽度，会被JavaScript覆盖 */
@@ -112,12 +183,12 @@ header .btn-small:hover {
 
 .drop-zone {
     flex: 1;
-    border: 2px dashed #dadce0;
+    border: 2px dashed var(--border-color);
     border-radius: 8px;
     padding: 24px;
     text-align: center;
     transition: all 0.2s ease;
-    background: #f8f9fa;
+    background: var(--bg-secondary);
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -126,19 +197,19 @@ header .btn-small:hover {
 }
 
 .drop-zone.drag-over {
-    border-color: #1a73e8;
-    background: #e8f0fe;
+    border-color: var(--accent-color);
+    background: var(--bg-active);
     transform: translateY(-2px);
 }
 
 .custom-download-zone {
     flex: 1;
-    border: 2px dashed #dadce0;
+    border: 2px dashed var(--border-color);
     border-radius: 8px;
     padding: 24px;
     text-align: center;
     transition: all 0.2s ease;
-    background: #f8f9fa;
+    background: var(--bg-secondary);
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -147,8 +218,8 @@ header .btn-small:hover {
 }
 
 .custom-download-zone:hover {
-    border-color: #1a73e8;
-    background: #e8f0fe;
+    border-color: var(--accent-color);
+    background: var(--bg-active);
     transform: translateY(-2px);
 }
 
@@ -162,13 +233,13 @@ header .btn-small:hover {
     font-size: 48px;
     display: block;
     margin-bottom: 12px;
-    color: #5f6368;
+    color: var(--text-secondary);
 }
 
 .drop-hint,
 .download-hint {
     font-size: 14px;
-    color: #5f6368;
+    color: var(--text-secondary);
     margin-top: 8px;
 }
 
@@ -192,66 +263,179 @@ header .btn-small:hover {
     flex: 1;
     min-width: 280px;
     padding: 12px 16px;
-    border: 1px solid #dadce0;
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     font-size: 14px;
-    background: #ffffff;
+    background: var(--bg-primary);
+    color: var(--text-primary);
     transition: all 0.2s ease;
 }
 
 .search-input:focus,
 .filter-input:focus {
     outline: none;
-    border-color: #1a73e8;
+    border-color: var(--accent-color);
     box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
 }
 
 /* 按钮样式 */
+/* 按钮样式重构 */
 .btn {
-    padding: 10px 20px;
-    border: none;
+    padding: 8px 16px;
+    border: 1px solid var(--border-color);
     border-radius: 6px;
-    background: #1a73e8;
-    color: white;
+    background: var(--bg-primary);
+    color: var(--text-primary);
     cursor: pointer;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 500;
-    transition: all 0.2s ease;
-    text-transform: none;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    user-select: none;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .btn:hover {
-    background: #1967d2;
-    box-shadow: 0 1px 2px rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
+    background: var(--bg-tertiary);
+    border-color: var(--border-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.btn:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+/* 主按钮 (实心) */
+.btn-primary {
+    background: var(--accent-color);
+    color: white;
+    border: 1px solid transparent;
+    box-shadow: 0 2px 4px rgba(26, 115, 232, 0.2);
+}
+
+.btn-primary:hover {
+    background: #1557b0;
+    /* darker shade of blue */
+    color: white;
+    border-color: transparent;
+    box-shadow: 0 4px 8px rgba(26, 115, 232, 0.3);
+    color: white;
+    border-color: transparent;
+    box-shadow: 0 4px 8px rgba(26, 115, 232, 0.3);
+}
+
+/* 描边主按钮 (无填充) */
+.btn-outline-primary {
+    background: transparent;
+    border: 1px solid var(--accent-color);
+    color: var(--accent-color);
+    box-shadow: none;
+}
+
+.btn-outline-primary:hover {
+    background: rgba(26, 115, 232, 0.1);
+}
+
+/* 描边成功按钮 (无填充) */
+.btn-outline-success {
+    background: transparent;
+    border: 1px solid var(--success-color);
+    color: var(--success-color);
+    box-shadow: none;
+}
+
+.btn-outline-success:hover {
+    background: rgba(52, 168, 83, 0.1);
+}
+
+/* 次要按钮 (灰色背景/描边) */
+.btn-secondary {
+    background: transparent;
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.btn-secondary:hover {
+    background: var(--bg-secondary);
+    border-color: var(--border-hover);
+    color: var(--text-primary);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 文本/幽灵按钮 (无边框背景) */
+.btn-ghost {
+    background: transparent;
+    border-color: transparent;
+    color: var(--text-secondary);
+    box-shadow: none;
+}
+
+.btn-ghost:hover {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border-color: transparent;
+    box-shadow: none;
+}
+
+/* 图标按钮 (圆形/方形，无文字) */
+.btn-icon {
+    padding: 8px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    /* 圆形 */
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text-secondary);
+    box-shadow: none;
+    font-size: 16px;
+    /* 图标大小 */
+    line-height: 1;
+}
+
+.btn-icon:hover {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    transform: none;
+    /* 图标按钮一般不需要位移 */
+    box-shadow: none;
 }
 
 .btn-small {
-    padding: 8px 16px;
-    font-size: 13px;
+    padding: 4px 10px;
+    font-size: 12px;
+    border-radius: 4px;
 }
 
 .btn:disabled {
-    background: #f1f3f4;
-    color: #9aa0a6;
+    background: var(--bg-tertiary);
+    color: var(--text-muted);
     cursor: not-allowed;
 }
 
 /* 日志容器 */
 .log-container {
     flex: 1;
-    border: 1px solid #dadce0;
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     overflow: hidden;
     display: flex;
     flex-direction: column;
     min-height: 0;
-    background: #ffffff;
+    background: var(--bg-primary);
 }
 
 .log-header {
-    background: #f8f9fa;
+    background: var(--bg-secondary);
     padding: 16px 20px;
-    border-bottom: 1px solid #dadce0;
+    border-bottom: 1px solid var(--border-color);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -260,27 +444,56 @@ header .btn-small:hover {
 }
 
 .log-count {
-    color: #5f6368;
+    color: var(--text-secondary);
     font-size: 13px;
 }
 
 /* 传统渲染器样式已移除 - 完全使用 Monaco Editor */
 
 .search-char-highlight {
-    background: #ffff00;
-    /* 标准的黄色高亮 */
-    color: #000000;
-    /* 黑色文字确保可读性 */
-    padding: 1px 2px;
-    border-radius: 2px;
-    font-weight: bold;
+    background-color: var(--warning-bg);
+    color: inherit;
+    border-bottom: 2px solid var(--warning-color);
+}
+
+/* 确保深色模式下搜索高亮可见 */
+[data-theme="dark"] .search-char-highlight {
+    background-color: rgba(255, 193, 7, 0.3);
+    color: #fff;
+    border-bottom: 2px solid #ffc107;
+}
+
+.investigation-meta {
+    font-size: 10px;
+    color: var(--text-secondary);
+    margin-bottom: 2px;
+}
+
+.note-textarea {
+    width: 100%;
+    height: 30px;
+    resize: vertical;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 4px;
+    font-size: 12px;
+    font-family: inherit;
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.note-textarea:focus {
+    border-color: var(--accent-color);
+    background: var(--bg-primary);
 }
 
 /* 空状态 */
 .empty-state {
     text-align: center;
     padding: 48px 24px;
-    color: #9aa0a6;
+    color: var(--text-muted);
 }
 
 .empty-state p {
@@ -295,8 +508,8 @@ header .btn-small:hover {
     min-width: 0;
     min-height: 0;
     padding: 24px;
-    background: #f8f9fa;
-    border-left: 1px solid #dadce0;
+    background: var(--bg-secondary);
+    border-left: 1px solid var(--border-color);
     position: relative;
     display: flex;
     flex-direction: column;
@@ -309,7 +522,7 @@ header .btn-small:hover {
     align-items: center;
     margin-bottom: 20px;
     padding-bottom: 12px;
-    border-bottom: 1px solid #dadce0;
+    border-bottom: 1px solid var(--border-color);
     flex-shrink: 0;
 }
 
@@ -317,7 +530,7 @@ header .btn-small:hover {
     margin: 0;
     font-size: 18px;
     font-weight: 500;
-    color: #202124;
+    color: var(--text-primary);
 }
 
 .investigation-controls {
@@ -334,11 +547,11 @@ header .btn-small:hover {
 
 .investigation-item {
     padding: 12px 16px;
-    border-bottom: 1px solid #f1f3f4;
+    border-bottom: 1px solid var(--bg-tertiary);
     font-family: 'Roboto Mono', monospace;
     font-size: 13px;
     line-height: 1.5;
-    background: #ffffff;
+    background: var(--bg-primary);
     border-radius: 6px;
     margin-bottom: 8px;
     box-shadow: 0 1px 2px rgba(60, 64, 67, 0.1);
@@ -346,9 +559,9 @@ header .btn-small:hover {
 
 /* 底部状态栏 */
 footer {
-    background: #ffffff;
+    background: var(--bg-primary);
     padding: 16px 24px;
-    border-top: 1px solid #dadce0;
+    border-top: 1px solid var(--border-color);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -360,8 +573,8 @@ footer {
 /* 右键菜单 */
 .context-menu {
     position: fixed;
-    background: #ffffff;
-    border: 1px solid #dadce0;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     box-shadow: 0 2px 6px 2px rgba(60, 64, 67, 0.15);
     z-index: 1000;
@@ -377,7 +590,7 @@ footer {
 }
 
 .menu-item:hover {
-    background: #f8f9fa;
+    background: var(--bg-secondary);
 }
 
 /* 配置面板 */
@@ -386,8 +599,8 @@ footer {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: #ffffff;
-    border: 1px solid #dadce0;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
     border-radius: 12px;
     padding: 24px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -405,7 +618,7 @@ footer {
     align-items: center;
     margin-bottom: 24px;
     padding-bottom: 16px;
-    border-bottom: 1px solid #dadce0;
+    border-bottom: 1px solid var(--border-color);
     gap: 16px;
 }
 
@@ -413,7 +626,7 @@ footer {
     margin: 0;
     font-size: 18px;
     font-weight: 500;
-    color: #202124;
+    color: var(--text-primary);
     flex: 1;
 }
 
@@ -426,14 +639,14 @@ footer {
 .config-actions .btn-small {
     padding: 6px 12px;
     font-size: 12px;
-    background: #f1f3f4;
-    color: #5f6368;
-    border: 1px solid #dadce0;
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
 }
 
 .config-actions .btn-small:hover {
-    background: #e8eaed;
-    color: #202124;
+    background: var(--border-light);
+    color: var(--text-primary);
 }
 
 .close-btn {
@@ -441,15 +654,15 @@ footer {
     border: none;
     font-size: 20px;
     cursor: pointer;
-    color: #5f6368;
+    color: var(--text-secondary);
     padding: 4px;
     border-radius: 50%;
     transition: background 0.2s ease;
 }
 
 .close-btn:hover {
-    background: #f1f3f4;
-    color: #202124;
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
 }
 
 .config-content {
@@ -460,7 +673,7 @@ footer {
 
 .config-tabs {
     display: flex;
-    border-bottom: 1px solid #dadce0;
+    border-bottom: 1px solid var(--border-color);
     margin-bottom: 20px;
 }
 
@@ -472,16 +685,16 @@ footer {
     border-bottom: 2px solid transparent;
     transition: all 0.2s ease;
     font-weight: 500;
-    color: #5f6368;
+    color: var(--text-secondary);
 }
 
 .tab-btn.active {
-    border-bottom-color: #1a73e8;
-    color: #1a73e8;
+    border-bottom-color: var(--accent-color);
+    color: var(--accent-color);
 }
 
 .tab-btn:hover {
-    background: #f8f9fa;
+    background: var(--bg-secondary);
 }
 
 .tab-content {
@@ -500,30 +713,30 @@ footer {
     display: block;
     margin-bottom: 8px;
     font-weight: 500;
-    color: #202124;
+    color: var(--text-primary);
     font-size: 14px;
 }
 
 .config-item input[type="text"] {
     width: 100%;
     padding: 12px 16px;
-    border: 1px solid #dadce0;
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     font-size: 14px;
-    background: #ffffff;
+    background: var(--bg-primary);
     transition: all 0.2s ease;
 }
 
 .config-item input[type="text"]:focus {
     outline: none;
-    border-color: #1a73e8;
+    border-color: var(--accent-color);
     box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
 }
 
 .config-item input[type="color"] {
     width: 60px;
     height: 40px;
-    border: 1px solid #dadce0;
+    border: 1px solid var(--border-color);
     border-radius: 6px;
     cursor: pointer;
 }
@@ -546,7 +759,7 @@ footer {
 .rules-list,
 .groups-list {
     margin-top: 24px;
-    border-top: 1px solid #dadce0;
+    border-top: 1px solid var(--border-color);
     padding-top: 16px;
 }
 
@@ -555,12 +768,12 @@ footer {
     margin-bottom: 12px;
     font-size: 16px;
     font-weight: 500;
-    color: #202124;
+    color: var(--text-primary);
 }
 
 .empty-rules,
 .empty-groups {
-    color: #9aa0a6;
+    color: var(--text-muted);
     text-align: center;
     padding: 20px;
     font-style: italic;
@@ -572,10 +785,10 @@ footer {
     justify-content: space-between;
     align-items: center;
     padding: 12px 16px;
-    border: 1px solid #dadce0;
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     margin-bottom: 8px;
-    background: #f8f9fa;
+    background: var(--bg-secondary);
     gap: 12px;
     transition: all 0.2s ease;
     cursor: grab;
@@ -584,22 +797,22 @@ footer {
 
 .rule-item:hover,
 .group-item:hover {
-    border-color: #1a73e8;
+    border-color: var(--accent-color);
     box-shadow: 0 2px 8px rgba(26, 115, 232, 0.1);
 }
 
 .rule-item.dragging,
 .group-item.dragging {
     opacity: 0.5;
-    background: #e8f0fe;
-    border-color: #1a73e8;
+    background: var(--bg-active);
+    border-color: var(--accent-color);
     box-shadow: 0 4px 12px rgba(26, 115, 232, 0.2);
     cursor: grabbing;
 }
 
 .rule-item.drag-over,
 .group-item.drag-over {
-    border-top: 2px solid #1a73e8;
+    border-top: 2px solid var(--accent-color);
     background: #f0f7ff;
 }
 
@@ -608,7 +821,7 @@ footer {
     width: 16px;
     height: 16px;
     cursor: grab;
-    color: #9aa0a6;
+    color: var(--text-muted);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -618,7 +831,7 @@ footer {
 
 .rule-item .drag-handle:hover,
 .group-item .drag-handle:hover {
-    color: #1a73e8;
+    color: var(--accent-color);
 }
 
 .rule-item.dragging .drag-handle,
@@ -684,7 +897,7 @@ footer {
 
 .group-rules-count {
     font-size: 12px;
-    color: #5f6368;
+    color: var(--text-secondary);
     margin-left: 8px;
 }
 
@@ -693,37 +906,11 @@ footer {
     gap: 8px;
 }
 
-.edit-rule,
-.delete-rule {
-    padding: 6px 12px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: 500;
-}
 
-.edit-rule {
-    background: #34a853;
-    color: white;
-}
-
-.delete-rule {
-    background: #ea4335;
-    color: white;
-}
-
-.edit-rule:hover {
-    background: #2d8e47;
-}
-
-.delete-rule:hover {
-    background: #d33426;
-}
 
 .group-selection {
     margin-top: 20px;
-    border-top: 1px solid #dadce0;
+    border-top: 1px solid var(--border-color);
     padding-top: 16px;
 }
 
@@ -744,9 +931,9 @@ footer {
     align-items: center;
     gap: 8px;
     padding: 8px 12px;
-    background: #f8f9fa;
+    background: var(--bg-secondary);
     border-radius: 6px;
-    border: 1px solid #dadce0;
+    border: 1px solid var(--border-color);
 }
 
 .group-checkbox-item input[type="checkbox"] {
@@ -767,8 +954,8 @@ footer {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: #ffffff;
-    border: 1px solid #dadce0;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
     border-radius: 12px;
     padding: 24px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -786,14 +973,14 @@ footer {
     align-items: center;
     margin-bottom: 20px;
     padding-bottom: 16px;
-    border-bottom: 1px solid #dadce0;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .group-rules-modal .modal-title {
     margin: 0;
     font-size: 18px;
     font-weight: 500;
-    color: #202124;
+    color: var(--text-primary);
 }
 
 .group-rules-modal .modal-body {
@@ -806,7 +993,7 @@ footer {
     margin: 16px 0 12px 0;
     font-size: 16px;
     font-weight: 500;
-    color: #202124;
+    color: var(--text-primary);
 }
 
 .group-rules-list,
@@ -814,10 +1001,10 @@ footer {
     margin-bottom: 20px;
     max-height: 200px;
     overflow-y: auto;
-    border: 1px solid #dadce0;
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     padding: 12px;
-    background: #f8f9fa;
+    background: var(--bg-secondary);
 }
 
 .group-rule-item .rule-preview,
@@ -901,7 +1088,7 @@ footer {
 
 .source-item:hover {
     border-color: #007bff;
-    background: #f8f9fa;
+    background: var(--bg-secondary);
 }
 
 .source-name {
@@ -955,8 +1142,8 @@ footer {
     align-items: center;
     padding: 10px 12px;
     margin-bottom: 6px;
-    background: #ffffff;
-    border: 1px solid #e8eaed;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-light);
     border-radius: 6px;
     gap: 12px;
 }
@@ -982,11 +1169,11 @@ footer {
     text-align: right;
     margin-top: 24px;
     padding-top: 16px;
-    border-top: 1px solid #dadce0;
+    border-top: 1px solid var(--border-color);
 }
 
 .text-muted {
-    color: #9aa0a6;
+    color: var(--text-muted);
     font-style: italic;
     text-align: center;
     padding: 20px;
@@ -1001,7 +1188,7 @@ footer {
     .log-display-area,
     .investigation-area {
         border: none;
-        border-bottom: 1px solid #dadce0;
+        border-bottom: 1px solid var(--border-color);
     }
 
     .investigation-area {
@@ -1116,12 +1303,12 @@ footer {
 }
 
 ::-webkit-scrollbar-track {
-    background: #f1f3f4;
+    background: var(--bg-tertiary);
     border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #dadce0;
+    background: var(--border-color);
     border-radius: 4px;
 }
 
@@ -1138,96 +1325,292 @@ footer {
     display: block;
     margin-bottom: 6px;
     font-weight: 500;
-    color: #202124;
+    color: var(--text-primary);
 }
 
+/* 统一输入框样式 */
 .config-item input[type="text"],
-.config-item input[type="color"] {
+.config-item input[type="number"],
+.config-item input[type="color"],
+.config-item select,
+.config-item textarea {
     width: 100%;
     padding: 10px 12px;
-    border: 1px solid #dadce0;
-    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    /* 圆角一致 */
+    background: var(--bg-primary);
+    color: var(--text-primary);
     font-size: 14px;
+    transition: all 0.2s;
+}
+
+.config-item input[type="text"]:focus,
+.config-item input[type="number"]:focus,
+.config-item select:focus,
+.config-item textarea:focus {
+    border-color: var(--accent-color);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.1);
+    /* 聚焦光环 */
 }
 
 .config-tabs {
     display: flex;
-    border-bottom: 1px solid #dadce0;
-    margin-bottom: 20px;
+    gap: 8px;
+    /* Tab间距 */
+    margin-bottom: 24px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0;
+    /* 贴合底部 */
 }
 
 .tab-btn {
-    padding: 12px 20px;
+    padding: 10px 20px;
+    background: transparent;
     border: none;
-    background: none;
     cursor: pointer;
-    border-bottom: 2px solid transparent;
-    transition: all 0.2s ease;
+    color: var(--text-secondary);
+    font-size: 14px;
     font-weight: 500;
-}
-
-.tab-btn.active {
-    border-bottom-color: #1a73e8;
-    color: #1a73e8;
+    border-bottom: 2px solid transparent;
+    /* 底部指示条 */
+    margin-bottom: -1px;
+    /* 盖住分割线 */
+    transition: all 0.2s;
 }
 
 .tab-btn:hover {
-    background: #f8f9fa;
+    color: var(--text-primary);
+    background: var(--bg-tertiary);
+    border-radius: 6px 6px 0 0;
 }
 
+.tab-btn.active {
+    color: var(--accent-color);
+    border-bottom-color: var(--accent-color);
+    background: transparent;
+}
+
+/* 简易图表配置 */
+.simple-chart-config {
+    border: 1px solid var(--border-color);
+    padding: 16px;
+    border-radius: 12px;
+    background: var(--bg-tertiary);
+    margin-bottom: 20px;
+}
+
+/* 统一列表容器样式 */
+.rules-list,
+.groups-list,
+.diagnosis-rules-list,
+.chart-configs-list,
+.subscription-list {
+    margin-top: 24px;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 16px;
+    background: var(--bg-tertiary);
+    /* 列表容器使用略深的背景 */
+}
+
+.rules-list h4,
+.groups-list h4,
+.diagnosis-rules-list h4,
+.chart-configs-list h4,
+.subscription-list h4 {
+    margin-top: 0;
+    margin-bottom: 16px;
+    font-size: 14px;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+/* 统一列表项样式 */
+.rule-item,
 .group-item,
-.rule-item {
+.diagnosis-item,
+.chart-config-item,
+.subscription-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px;
-    border: 1px solid #dadce0;
-    border-radius: 6px;
-    margin-bottom: 8px;
-    background: #f8f9fa;
+    padding: 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    margin-bottom: 12px;
+    background: var(--bg-primary);
+    /* 项使用主背景 */
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.rule-item:last-child,
+.group-item:last-child,
+.diagnosis-item:last-child {
+    margin-bottom: 0;
+}
+
+.rule-item:hover,
+.group-item:hover,
+.diagnosis-item:hover,
+.chart-config-item:hover,
+.subscription-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    /* 悬浮时的柔和阴影 */
+    border-color: var(--border-hover);
+}
+
+/* 统一内容区域布局 */
+.chart-config-content,
+.subscription-content,
+.diagnosis-rule-content,
+.group-item>div:first-child,
+/* Groups List Content */
+.rule-item>div:first-child {
+    /* Rules List Content */
+    flex: 1;
+    /* 占据剩余空间 */
+    min-width: 0;
+    /* 防止内容过长撑开 */
+    padding-right: 16px;
+    /* 与按钮组的间距 */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* 操作按钮组布局 */
+.item-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    /* 保持按钮不被压缩 */
+}
+
+/* 特定列表项优化 */
+.subscription-url {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    margin-bottom: 2px;
 }
 
 .group-name {
-    font-weight: 500;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 14px;
+    margin-bottom: 4px;
+    display: block;
 }
 
 .group-rules-count {
     font-size: 12px;
-    color: #5f6368;
+    color: var(--text-secondary);
+    background: var(--bg-secondary);
+    padding: 2px 8px;
+    border-radius: 10px;
+    display: inline-block;
 }
 
+/* 规则列表内容修正 (Row layout for rules) */
+.rule-item>div:first-child {
+    flex-direction: row;
+    /* 规则项保持水平排列 */
+    align-items: center;
+    justify-content: flex-start;
+    /* 左对齐 */
+}
+
+.rule-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 300px;
+    /* 限制规则文本宽度 */
+    margin-left: 8px;
+}
+
+/* 统一后的列表操作按钮样式 (Icon Style) */
 .edit-rule,
-.delete-rule {
-    padding: 6px 12px;
+.delete-rule,
+.edit-group,
+.delete-group,
+.update-subscription {
+    width: 28px;
+    height: 28px;
+    padding: 0;
     border: none;
-    border-radius: 4px;
+    border-radius: 6px;
     cursor: pointer;
-    font-size: 12px;
-    font-weight: 500;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    background: transparent;
+    /* 默认透明，更干净 */
 }
 
-.edit-rule {
-    background: #34a853;
-    color: white;
+/* 编辑按钮 */
+.edit-rule,
+.edit-group {
+    color: #188038;
 }
 
-.delete-rule {
-    background: #ea4335;
-    color: white;
+.edit-rule:hover,
+.edit-group:hover {
+    background: transparent;
+    transform: scale(1.1);
 }
 
-.edit-rule:hover {
-    background: #2d8e47;
+/* 删除按钮 */
+.delete-rule,
+.delete-group {
+    color: #d93025;
 }
 
-.delete-rule:hover {
-    background: #d33426;
+.delete-rule:hover,
+.delete-group:hover {
+    background: transparent;
+    transform: scale(1.1);
+}
+
+/* 更新按钮 (Subscription) */
+.update-subscription {
+    color: var(--accent-color);
+}
+
+.update-subscription:hover {
+    background: transparent;
+    transform: rotate(180deg);
+    /* 旋转动画 */
+}
+
+.update-subscription:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* 分隔条样式 */
 .resizer {
     width: 8px;
-    background: #dadce0;
+    background: var(--border-color);
     cursor: col-resize;
     position: relative;
     z-index: 10;
@@ -1235,11 +1618,11 @@ footer {
 }
 
 .resizer:hover {
-    background: #1a73e8;
+    background: var(--accent-color);
 }
 
 .resizer:active {
-    background: #1967d2;
+    background: var(--accent-hover);
 }
 
 .resizer::before {
@@ -1250,21 +1633,21 @@ footer {
     transform: translate(-50%, -50%);
     width: 2px;
     height: 24px;
-    background: #9aa0a6;
+    background: var(--text-muted);
     border-radius: 1px;
 }
 
 .resizer:hover::before {
-    background: #ffffff;
+    background: var(--bg-primary);
 }
 
 /* 拖动时的样式 */
 .resizer.dragging {
-    background: #1a73e8;
+    background: var(--accent-color);
 }
 
 .resizer.dragging::before {
-    background: #ffffff;
+    background: var(--bg-primary);
 }
 
 /* 拖动时的文档样式 */
@@ -1283,8 +1666,8 @@ body.resizing * {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: #ffffff;
-    border: 1px solid #dadce0;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
     border-radius: 12px;
     padding: 24px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -1300,14 +1683,14 @@ body.resizing * {
     align-items: center;
     margin-bottom: 20px;
     padding-bottom: 16px;
-    border-bottom: 1px solid #dadce0;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .settings-header h3 {
     margin: 0;
     font-size: 18px;
     font-weight: 500;
-    color: #202124;
+    color: var(--text-primary);
 }
 
 .settings-content {
@@ -1324,7 +1707,7 @@ body.resizing * {
     text-align: right;
     margin-top: 24px;
     padding-top: 16px;
-    border-top: 1px solid #dadce0;
+    border-top: 1px solid var(--border-color);
 }
 
 /* 底部按钮样式调整 */
@@ -1346,9 +1729,9 @@ footer .btn-small {
     padding: 10px 16px;
     /* 调整内边距 */
     font-size: 14px;
-    background: #f1f3f4;
-    color: #5f6368;
-    border: 1px solid #dadce0;
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
     height: 40px;
     display: flex;
     align-items: center;
@@ -1357,8 +1740,8 @@ footer .btn-small {
 }
 
 footer .btn-small:hover {
-    background: #e8eaed;
-    color: #202124;
+    background: var(--border-light);
+    color: var(--text-primary);
 }
 
 footer .btn {
@@ -1374,7 +1757,7 @@ footer .btn {
 /* 诊断区样式 */
 .investigation-tabs {
     display: flex;
-    border-bottom: 1px solid #dadce0;
+    border-bottom: 1px solid var(--border-color);
     margin-bottom: 16px;
     flex-shrink: 0;
 }
@@ -1387,17 +1770,17 @@ footer .btn {
     border-bottom: 2px solid transparent;
     transition: all 0.2s ease;
     font-weight: 500;
-    color: #5f6368;
+    color: var(--text-secondary);
     font-size: 14px;
 }
 
 .investigation-tabs .tab-btn.active {
-    border-bottom-color: #1a73e8;
-    color: #1a73e8;
+    border-bottom-color: var(--accent-color);
+    color: var(--accent-color);
 }
 
 .investigation-tabs .tab-btn:hover {
-    background: #f8f9fa;
+    background: var(--bg-secondary);
 }
 
 .investigation-content .tab-content {
@@ -1413,11 +1796,11 @@ footer .btn {
 
 /* 诊断统计样式 */
 .diagnosis-stats {
-    background: #ffffff;
+    background: var(--bg-primary);
     border-radius: 8px;
     padding: 16px;
     margin-bottom: 16px;
-    border: 1px solid #dadce0;
+    border: 1px solid var(--border-color);
 }
 
 .stats-grid {
@@ -1429,16 +1812,16 @@ footer .btn {
 .stat-item {
     text-align: center;
     padding: 12px;
-    background: #f8f9fa;
+    background: var(--bg-secondary);
     border-radius: 6px;
-    border: 1px solid #e8eaed;
+    border: 1px solid var(--border-light);
     cursor: pointer;
     transition: all 0.2s ease;
     position: relative;
 }
 
 .stat-item:hover {
-    background: #e8f0fe;
+    background: var(--bg-active);
 }
 
 .stat-item.active::after {
@@ -1449,7 +1832,7 @@ footer .btn {
     transform: translateX(-50%);
     width: 80%;
     height: 3px;
-    background: #1a73e8;
+    background: var(--accent-color);
     border-radius: 2px;
 }
 
@@ -1457,13 +1840,13 @@ footer .btn {
     display: block;
     font-size: 24px;
     font-weight: 600;
-    color: #1a73e8;
+    color: var(--accent-color);
     margin-bottom: 4px;
 }
 
 .stat-label {
     font-size: 12px;
-    color: #5f6368;
+    color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
@@ -1476,13 +1859,18 @@ footer .btn {
 }
 
 .diagnosis-item {
-    background: #ffffff;
-    border: 1px solid #dadce0;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
     border-radius: 8px;
-    padding: 16px;
+    padding: 12px 16px;
     cursor: pointer;
     transition: all 0.2s ease;
     box-shadow: 0 1px 2px rgba(60, 64, 67, 0.1);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    /* Internal gap between items */
 }
 
 .diagnosis-item:hover {
@@ -1491,23 +1879,25 @@ footer .btn {
 }
 
 .diagnosis-item.severity-error {
-    border-left: 4px solid #ea4335;
+    border-left: 4px solid var(--error-color);
 }
 
 .diagnosis-item.severity-warning {
-    border-left: 4px solid #fbbc04;
+    border-left: 4px solid var(--warning-color);
 }
 
 .diagnosis-item.severity-info {
-    border-left: 4px solid #34a853;
+    border-left: 4px solid var(--success-color);
 }
 
 .diagnosis-header {
     display: flex;
     align-items: center;
     gap: 12px;
-    margin-bottom: 8px;
-    flex-wrap: wrap;
+    margin-bottom: 0;
+    /* Remove bottom margin */
+    flex-wrap: nowrap;
+    /* 防止换行 */
 }
 
 .severity-badge {
@@ -1517,55 +1907,78 @@ footer .btn {
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    flex-shrink: 0;
+    /* 防止压缩 */
 }
 
 .severity-error .severity-badge {
-    background: #fce8e6;
-    color: #c5221f;
+    background: var(--error-bg);
+    color: var(--error-color);
 }
 
 .severity-warning .severity-badge {
-    background: #fef7e0;
-    color: #e37400;
+    background: var(--warning-bg);
+    color: var(--warning-color);
 }
 
 .severity-info .severity-badge {
-    background: #e6f4ea;
-    color: #137333;
+    background: var(--success-bg);
+    color: var(--success-color);
 }
 
 .diagnosis-title {
     font-weight: 600;
     font-size: 16px;
-    color: #202124;
-    flex: 1;
+    color: var(--text-primary);
+    /* flex: 1; Removed */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+    flex-shrink: 1;
+    /* Allow shrinking */
+    margin-right: 4px;
+    /* Reduced gap */
 }
 
 .diagnosis-category {
     font-size: 12px;
-    color: #5f6368;
-    background: #f1f3f4;
+    color: var(--text-secondary);
+    background: var(--bg-tertiary);
     padding: 4px 8px;
     border-radius: 4px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    /* Reduced gap */
+    margin-right: 12px;
+    /* Gap to Match Pattern */
 }
 
 .diagnosis-description {
-    color: #5f6368;
+    color: var(--text-secondary);
     font-size: 14px;
     margin-bottom: 8px;
     line-height: 1.4;
+    display: none;
+    /* Hide description or handle it layout-wise */
 }
 
 .diagnosis-log-preview {
-    background: #f8f9fa;
-    border: 1px solid #e8eaed;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-light);
     border-radius: 6px;
     padding: 4px 12px;
-    margin: 4px 0;
+    margin: 4px 0 0 0;
     font-family: 'Roboto Mono', monospace;
     font-size: 12px;
     line-height: 1.4;
-    color: #5f6368;
+    color: var(--text-secondary);
+    width: 100%;
+    /* Force new line */
+    flex-basis: 100%;
+    order: 10;
+    /* Ensure it's last */
+    box-sizing: border-box;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1577,7 +1990,7 @@ footer .btn {
 }
 
 .diagnosis-solution {
-    background: #f8f9fa;
+    background: var(--bg-secondary);
     padding: 12px;
     border-radius: 6px;
     margin-bottom: 8px;
@@ -1586,21 +1999,21 @@ footer .btn {
 }
 
 .diagnosis-solution strong {
-    color: #202124;
+    color: var(--text-primary);
 }
 
 .diagnosis-details {
     display: flex;
     gap: 16px;
     font-size: 12px;
-    color: #9aa0a6;
+    color: var(--text-muted);
     margin-bottom: 8px;
     flex-wrap: wrap;
 }
 
 .diagnosis-log {
-    background: #f8f9fa;
-    border: 1px solid #e8eaed;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-light);
     border-radius: 4px;
     padding: 8px;
     margin-top: 8px;
@@ -1611,7 +2024,7 @@ footer .btn {
     font-family: 'Roboto Mono', monospace;
     font-size: 12px;
     line-height: 1.4;
-    color: #5f6368;
+    color: var(--text-secondary);
     white-space: pre-wrap;
     word-break: break-all;
 }
@@ -1622,18 +2035,18 @@ footer .btn {
     justify-content: space-between;
     align-items: flex-start;
     padding: 16px;
-    border: 1px solid #dadce0;
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     margin-bottom: 12px;
-    background: #f8f9fa;
+    background: var(--bg-secondary);
     gap: 16px;
     transition: all 0.2s ease;
 }
 
 .diagnosis-rule-item.disabled {
-    background: #f1f3f4;
+    background: var(--bg-tertiary);
     opacity: 0.7;
-    border-color: #e8eaed;
+    border-color: var(--border-light);
 }
 
 .diagnosis-rule-content {
@@ -1652,11 +2065,11 @@ footer .btn {
 .diagnosis-rule-name {
     font-weight: 600;
     font-size: 16px;
-    color: #202124;
+    color: var(--text-primary);
 }
 
 .diagnosis-rule-item.disabled .diagnosis-rule-name {
-    color: #9aa0a6;
+    color: var(--text-muted);
 }
 
 .diagnosis-rule-severity {
@@ -1669,17 +2082,17 @@ footer .btn {
 }
 
 .diagnosis-rule-severity.severity-error {
-    background: #fce8e6;
+    background: var(--error-bg);
     color: #c5221f;
 }
 
 .diagnosis-rule-severity.severity-warning {
-    background: #fef7e0;
+    background: var(--warning-bg);
     color: #e37400;
 }
 
 .diagnosis-rule-severity.severity-info {
-    background: #e6f4ea;
+    background: var(--success-bg);
     color: #137333;
 }
 
@@ -1688,26 +2101,26 @@ footer .btn {
 }
 
 .diagnosis-rule-description {
-    color: #5f6368;
+    color: var(--text-secondary);
     font-size: 14px;
     margin-bottom: 8px;
     line-height: 1.4;
 }
 
 .diagnosis-rule-item.disabled .diagnosis-rule-description {
-    color: #9aa0a6;
+    color: var(--text-muted);
 }
 
 .diagnosis-rule-patterns,
 .diagnosis-rule-category {
     font-size: 13px;
-    color: #5f6368;
+    color: var(--text-secondary);
     margin-bottom: 4px;
 }
 
 .diagnosis-rule-item.disabled .diagnosis-rule-patterns,
 .diagnosis-rule-item.disabled .diagnosis-rule-category {
-    color: #9aa0a6;
+    color: var(--text-muted);
 }
 
 .diagnosis-rule-actions {
@@ -1725,27 +2138,27 @@ footer .btn {
     cursor: pointer;
     padding: 6px 12px;
     border-radius: 20px;
-    background: #f1f3f4;
-    border: 1px solid #dadce0;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
     transition: all 0.2s ease;
     font-size: 12px;
     font-weight: 500;
-    color: #5f6368;
+    color: var(--text-secondary);
 }
 
 .diagnosis-rule-toggle:hover {
-    background: #e8eaed;
+    background: var(--border-light);
 }
 
 .diagnosis-rule-toggle.enabled {
-    background: #e6f4ea;
-    border-color: #34a853;
+    background: var(--success-bg);
+    border-color: var(--success-color);
     color: #137333;
 }
 
 .diagnosis-rule-toggle.disabled {
-    background: #fce8e6;
-    border-color: #ea4335;
+    background: var(--error-bg);
+    border-color: var(--error-color);
     color: #c5221f;
 }
 
@@ -1753,7 +2166,7 @@ footer .btn {
     position: relative;
     width: 36px;
     height: 20px;
-    background: #dadce0;
+    background: var(--border-color);
     border-radius: 10px;
     transition: all 0.2s ease;
 }
@@ -1771,7 +2184,7 @@ footer .btn {
 }
 
 .diagnosis-rule-toggle.enabled .toggle-switch {
-    background: #34a853;
+    background: var(--success-color);
 }
 
 .diagnosis-rule-toggle.enabled .toggle-switch::before {
@@ -1779,7 +2192,7 @@ footer .btn {
 }
 
 .diagnosis-rule-toggle.disabled .toggle-switch {
-    background: #ea4335;
+    background: var(--error-color);
 }
 
 .toggle-label {
@@ -1799,12 +2212,12 @@ footer .btn {
 }
 
 .edit-diagnosis-rule {
-    background: #34a853;
+    background: var(--success-color);
     color: white;
 }
 
 .delete-diagnosis-rule {
-    background: #ea4335;
+    background: var(--error-color);
     color: white;
 }
 
@@ -1817,7 +2230,7 @@ footer .btn {
 }
 
 .empty-diagnosis-rules {
-    color: #9aa0a6;
+    color: var(--text-muted);
     text-align: center;
     padding: 20px;
     font-style: italic;
@@ -1827,10 +2240,10 @@ footer .btn {
 .config-item textarea {
     width: 100%;
     padding: 12px 16px;
-    border: 1px solid #dadce0;
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     font-size: 14px;
-    background: #ffffff;
+    background: var(--bg-primary);
     transition: all 0.2s ease;
     font-family: inherit;
     resize: vertical;
@@ -1839,23 +2252,23 @@ footer .btn {
 
 .config-item textarea:focus {
     outline: none;
-    border-color: #1a73e8;
+    border-color: var(--accent-color);
     box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
 }
 
 .config-item select {
     width: 100%;
     padding: 12px 16px;
-    border: 1px solid #dadce0;
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     font-size: 14px;
-    background: #ffffff;
+    background: var(--bg-primary);
     transition: all 0.2s ease;
 }
 
 .config-item select:focus {
     outline: none;
-    border-color: #1a73e8;
+    border-color: var(--accent-color);
     box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
 }
 
@@ -1907,7 +2320,7 @@ footer .btn {
     }
 
     .investigation-tabs .tab-btn.active {
-        border-left-color: #1a73e8;
+        border-left-color: var(--accent-color);
         border-bottom: none;
     }
 
@@ -1937,7 +2350,7 @@ footer .btn {
     border-radius: 16px;
     padding: 48px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-    border: 2px solid #1a73e8;
+    border: 2px solid var(--accent-color);
     min-width: 400px;
     min-height: 150px;
     text-align: center;
@@ -1947,7 +2360,7 @@ footer .btn {
     width: 60px;
     height: 60px;
     border: 6px solid #f3f3f3;
-    border-top: 6px solid #1a73e8;
+    border-top: 6px solid var(--accent-color);
     border-radius: 50%;
     animation: spin 1s linear infinite;
     margin: 0 auto;
@@ -1965,7 +2378,7 @@ footer .btn {
 
 .loading-text {
     margin-top: 12px;
-    color: #5f6368;
+    color: var(--text-secondary);
     font-size: 14px;
     font-weight: 500;
 }
@@ -1974,7 +2387,7 @@ footer .btn {
 
 /* 自定义结果样式 */
 .diagnosis-custom-result {
-    background: #f8f9fa;
+    background: var(--bg-secondary);
     padding: 12px;
     border-radius: 6px;
     margin-bottom: 8px;
@@ -1983,13 +2396,13 @@ footer .btn {
 }
 
 .diagnosis-custom-result strong {
-    color: #202124;
+    color: var(--text-primary);
 }
 
 /* 脚本提示样式 */
 .script-hint {
     margin-top: 4px;
-    color: #9aa0a6;
+    color: var(--text-muted);
     font-size: 12px;
     line-height: 1.4;
 }
@@ -2000,8 +2413,8 @@ footer .btn {
 
 /* 诊断分组样式 */
 .diagnosis-group {
-    background: #ffffff;
-    border: 1px solid #dadce0;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
     border-radius: 12px;
     margin-bottom: 16px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
@@ -2015,9 +2428,9 @@ footer .btn {
 }
 
 .diagnosis-group-header {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e8f0fe 100%);
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-active) 100%);
     padding: 20px;
-    border-bottom: 1px solid #e8eaed;
+    border-bottom: 1px solid var(--border-light);
 }
 
 .group-main-info {
@@ -2039,7 +2452,7 @@ footer .btn {
 .log-line-number {
     font-size: 18px;
     font-weight: 700;
-    color: #1a73e8;
+    color: var(--accent-color);
     background: rgba(26, 115, 232, 0.1);
     padding: 8px 16px;
     border-radius: 20px;
@@ -2049,12 +2462,12 @@ footer .btn {
 
 .rule-count {
     font-size: 15px;
-    color: #5f6368;
-    background: #ffffff;
+    color: var(--text-secondary);
+    background: var(--bg-primary);
     padding: 6px 12px;
     border-radius: 12px;
     font-weight: 600;
-    border: 1px solid #dadce0;
+    border: 1px solid var(--border-color);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
@@ -2078,21 +2491,21 @@ footer .btn {
 }
 
 .group-severity-stats .severity-error {
-    background: linear-gradient(135deg, #fce8e6 0%, #fad2cf 100%);
-    color: #c5221f;
-    border-color: #ea4335;
+    background: var(--error-bg);
+    color: var(--error-color);
+    border-color: var(--error-color);
 }
 
 .group-severity-stats .severity-warning {
-    background: linear-gradient(135deg, #fef7e0 0%, #fdeab6 100%);
-    color: #e37400;
-    border-color: #fbbc04;
+    background: var(--warning-bg);
+    color: var(--warning-color);
+    border-color: var(--warning-border);
 }
 
 .group-severity-stats .severity-info {
-    background: linear-gradient(135deg, #e6f4ea 0%, #d4eadf 100%);
-    color: #137333;
-    border-color: #34a853;
+    background: var(--success-bg);
+    color: var(--success-color);
+    border-color: var(--success-color);
 }
 
 
@@ -2105,7 +2518,7 @@ footer .btn {
 
 .diagnosis-rules-container .diagnosis-item {
     margin: 0;
-    border: 1px solid #e8eaed;
+    border: 1px solid var(--border-light);
     border-radius: 8px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     transition: all 0.2s ease;
@@ -2113,7 +2526,7 @@ footer .btn {
 
 .diagnosis-rules-container .diagnosis-item:hover {
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-    border-color: #dadce0;
+    border-color: var(--border-color);
 }
 
 /* 响应式调整 */
@@ -2166,8 +2579,8 @@ footer .btn {
     min-width: 0;
     min-height: 0;
     padding: 24px;
-    background: #f8f9fa;
-    border-left: 1px solid #dadce0;
+    background: var(--bg-secondary);
+    border-left: 1px solid var(--border-color);
     position: relative;
     display: flex;
     flex-direction: column;
@@ -2180,7 +2593,7 @@ footer .btn {
     align-items: center;
     margin-bottom: 20px;
     padding-bottom: 12px;
-    border-bottom: 1px solid #dadce0;
+    border-bottom: 1px solid var(--border-color);
     flex-shrink: 0;
 }
 
@@ -2188,7 +2601,7 @@ footer .btn {
     margin: 0;
     font-size: 18px;
     font-weight: 500;
-    color: #202124;
+    color: var(--text-primary);
 }
 
 .charting-controls {
@@ -2213,8 +2626,8 @@ footer .btn {
 }
 
 .chart-item {
-    background: #ffffff;
-    border: 1px solid #dadce0;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
     border-radius: 12px;
     padding: 20px;
     display: flex;
@@ -2227,9 +2640,10 @@ footer .btn {
 }
 
 .chart-item:hover {
+    background: var(--bg-secondary);
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
     transform: translateY(-3px);
-    border-color: #1a73e8;
+    border-color: var(--accent-color);
 }
 
 .chart-header {
@@ -2250,7 +2664,7 @@ footer .btn {
 .chart-name {
     font-weight: 700;
     font-size: 16px;
-    color: #202124;
+    color: var(--text-primary);
     margin: 0;
     line-height: 1.3;
 }
@@ -2258,7 +2672,7 @@ footer .btn {
 .chart-type-badge {
     font-size: 12px;
     font-weight: 600;
-    color: #1a73e8;
+    color: var(--accent-color);
     background: rgba(26, 115, 232, 0.1);
     padding: 4px 10px;
     border-radius: 12px;
@@ -2269,14 +2683,14 @@ footer .btn {
 }
 
 .chart-description {
-    color: #5f6368;
+    color: var(--text-secondary);
     font-size: 14px;
     line-height: 1.5;
     margin: 0;
     padding: 12px 16px;
-    background: #f8f9fa;
+    background: var(--bg-secondary);
     border-radius: 8px;
-    border-left: 3px solid #dadce0;
+    border-left: 3px solid var(--border-color);
 }
 
 .chart-preview {
@@ -2285,17 +2699,17 @@ footer .btn {
     align-items: center;
     justify-content: center;
     min-height: 200px;
-    background: #f8f9fa;
+    background: var(--bg-secondary);
     border-radius: 8px;
-    border: 1px dashed #dadce0;
+    border: 1px dashed var(--border-color);
     position: relative;
     overflow: hidden;
     transition: all 0.3s ease;
 }
 
 .chart-item:hover .chart-preview {
-    border-color: #1a73e8;
-    background: #f0f7ff;
+    border-color: var(--accent-color);
+    background: var(--bg-tertiary);
 }
 
 .chart-image {
@@ -2307,7 +2721,7 @@ footer .btn {
 
 .chart-placeholder {
     text-align: center;
-    color: #9aa0a6;
+    color: var(--text-muted);
     padding: 20px;
 }
 
@@ -2315,7 +2729,7 @@ footer .btn {
     font-size: 48px;
     margin-bottom: 12px;
     display: block;
-    color: #dadce0;
+    color: var(--border-color);
 }
 
 .chart-placeholder-text {
@@ -2343,7 +2757,7 @@ footer .btn {
     border: none;
     border-radius: 4px;
     background: rgba(255, 255, 255, 0.9);
-    color: #5f6368;
+    color: var(--text-secondary);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -2355,7 +2769,7 @@ footer .btn {
 }
 
 .chart-action-btn:hover {
-    background: #1a73e8;
+    background: var(--accent-color);
     color: white;
     transform: scale(1.1);
 }
@@ -2383,7 +2797,7 @@ footer .btn {
 }
 
 .chart-modal-content {
-    background: #ffffff;
+    background: var(--bg-primary);
     border-radius: 12px;
     padding: 24px;
     max-width: 90vw;
@@ -2403,14 +2817,14 @@ footer .btn {
     align-items: center;
     margin-bottom: 20px;
     padding-bottom: 16px;
-    border-bottom: 1px solid #dadce0;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .chart-modal-title {
     margin: 0;
     font-size: 20px;
     font-weight: 600;
-    color: #202124;
+    color: var(--text-primary);
 }
 
 .chart-modal-close {
@@ -2418,15 +2832,15 @@ footer .btn {
     border: none;
     font-size: 24px;
     cursor: pointer;
-    color: #5f6368;
+    color: var(--text-secondary);
     padding: 4px;
     border-radius: 50%;
     transition: background 0.2s ease;
 }
 
 .chart-modal-close:hover {
-    background: #f1f3f4;
-    color: #202124;
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
 }
 
 .chart-modal-body {
@@ -2448,8 +2862,8 @@ footer .btn {
 /* 图表配置样式 - 优化版 */
 .chart-config-item {
     margin-bottom: 20px;
-    background: #ffffff;
-    border: 1px solid #e8eaed;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-light);
     border-radius: 12px;
     padding: 20px;
     transition: all 0.3s ease;
@@ -2465,14 +2879,14 @@ footer .btn {
     left: 0;
     width: 4px;
     height: 100%;
-    background: linear-gradient(135deg, #1a73e8, #4285f4);
+    background: linear-gradient(135deg, var(--accent-color), #4285f4);
     opacity: 0;
     transition: opacity 0.3s ease;
 }
 
 .chart-config-item:hover {
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-    border-color: #dadce0;
+    border-color: var(--border-color);
     transform: translateY(-2px);
 }
 
@@ -2481,9 +2895,9 @@ footer .btn {
 }
 
 .chart-config-item.disabled {
-    background: #f8f9fa;
+    background: var(--bg-secondary);
     opacity: 0.6;
-    border-color: #e8eaed;
+    border-color: var(--border-light);
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
 }
 
@@ -2509,7 +2923,7 @@ footer .btn {
 .chart-config-title {
     font-weight: 700;
     font-size: 18px;
-    color: #202124;
+    color: var(--text-primary);
     margin: 0 0 8px 0;
     line-height: 1.3;
     display: flex;
@@ -2519,13 +2933,13 @@ footer .btn {
 }
 
 .chart-config-item.disabled .chart-config-title {
-    color: #9aa0a6;
+    color: var(--text-muted);
 }
 
 .chart-config-type {
     font-size: 12px;
     font-weight: 600;
-    color: #1a73e8;
+    color: var(--accent-color);
     background: rgba(26, 115, 232, 0.1);
     padding: 4px 10px;
     border-radius: 12px;
@@ -2535,27 +2949,27 @@ footer .btn {
 }
 
 .chart-config-item.disabled .chart-config-type {
-    color: #9aa0a6;
+    color: var(--text-muted);
     background: rgba(154, 160, 166, 0.1);
     border-color: rgba(154, 160, 166, 0.2);
 }
 
 .chart-config-description {
-    color: #5f6368;
+    color: var(--text-secondary);
     font-size: 14px;
     line-height: 1.5;
     margin-bottom: 16px;
     padding: 12px 16px;
-    background: #f8f9fa;
+    background: var(--bg-secondary);
     border-radius: 8px;
-    border-left: 3px solid #dadce0;
+    border-left: 3px solid var(--border-color);
     max-width: 100%;
 }
 
 .chart-config-item.disabled .chart-config-description {
-    color: #9aa0a6;
-    background: #f1f3f4;
-    border-left-color: #e8eaed;
+    color: var(--text-muted);
+    background: var(--bg-tertiary);
+    border-left-color: var(--border-light);
 }
 
 .chart-config-details {
@@ -2564,19 +2978,19 @@ footer .btn {
     gap: 16px;
     margin-bottom: 20px;
     padding: 16px;
-    background: #f8f9fa;
+    background: var(--bg-secondary);
     border-radius: 8px;
-    border: 1px solid #e8eaed;
+    border: 1px solid var(--border-light);
 }
 
 .chart-config-item.disabled .chart-config-details {
-    background: #f1f3f4;
-    border-color: #e8eaed;
+    background: var(--bg-tertiary);
+    border-color: var(--border-light);
 }
 
 .chart-config-detail {
     font-size: 13px;
-    color: #5f6368;
+    color: var(--text-secondary);
     line-height: 1.4;
     display: flex;
     align-items: flex-start;
@@ -2585,17 +2999,17 @@ footer .btn {
 
 .chart-config-detail::before {
     content: '•';
-    color: #1a73e8;
+    color: var(--accent-color);
     font-weight: bold;
     flex-shrink: 0;
 }
 
 .chart-config-item.disabled .chart-config-detail {
-    color: #9aa0a6;
+    color: var(--text-muted);
 }
 
 .chart-config-item.disabled .chart-config-detail::before {
-    color: #9aa0a6;
+    color: var(--text-muted);
 }
 
 .chart-config-actions {
@@ -2605,7 +3019,7 @@ footer .btn {
     align-items: center;
     flex-wrap: wrap;
     padding-top: 16px;
-    border-top: 1px solid #f1f3f4;
+    border-top: 1px solid var(--bg-tertiary);
 }
 
 .chart-config-actions-left {
@@ -2631,27 +3045,27 @@ footer .btn {
     cursor: pointer;
     padding: 6px 12px;
     border-radius: 20px;
-    background: #f1f3f4;
-    border: 1px solid #dadce0;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
     transition: all 0.2s ease;
     font-size: 12px;
     font-weight: 500;
-    color: #5f6368;
+    color: var(--text-secondary);
 }
 
 .chart-config-toggle:hover {
-    background: #e8eaed;
+    background: var(--border-light);
 }
 
 .chart-config-toggle.enabled {
-    background: #e6f4ea;
-    border-color: #34a853;
+    background: var(--success-bg);
+    border-color: var(--success-color);
     color: #137333;
 }
 
 .chart-config-toggle.disabled {
-    background: #fce8e6;
-    border-color: #ea4335;
+    background: var(--error-bg);
+    border-color: var(--error-color);
     color: #c5221f;
 }
 
@@ -2659,7 +3073,7 @@ footer .btn {
     position: relative;
     width: 36px;
     height: 20px;
-    background: #dadce0;
+    background: var(--border-color);
     border-radius: 10px;
     transition: all 0.2s ease;
 }
@@ -2677,7 +3091,7 @@ footer .btn {
 }
 
 .chart-config-toggle.enabled .toggle-switch {
-    background: #34a853;
+    background: var(--success-color);
 }
 
 .chart-config-toggle.enabled .toggle-switch::before {
@@ -2685,7 +3099,7 @@ footer .btn {
 }
 
 .chart-config-toggle.disabled .toggle-switch {
-    background: #ea4335;
+    background: var(--error-color);
 }
 
 .toggle-label {
@@ -2693,83 +3107,18 @@ footer .btn {
     font-weight: 500;
 }
 
-/* 图表配置操作按钮 - 优化版 */
-.edit-chart-config,
-.delete-chart-config {
-    padding: 8px 16px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 600;
-    white-space: nowrap;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    min-width: 80px;
-    justify-content: center;
-    position: relative;
-    overflow: hidden;
-}
 
-.edit-chart-config::before,
-.delete-chart-config::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    transition: left 0.5s ease;
-}
-
-.edit-chart-config:hover::before,
-.delete-chart-config:hover::before {
-    left: 100%;
-}
-
-.edit-chart-config {
-    background: linear-gradient(135deg, #34a853, #2d8e47);
-    color: white;
-    box-shadow: 0 2px 8px rgba(52, 168, 83, 0.3);
-}
-
-.edit-chart-config:hover {
-    background: linear-gradient(135deg, #2d8e47, #1e7e34);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(52, 168, 83, 0.4);
-}
-
-.delete-chart-config {
-    background: linear-gradient(135deg, #ea4335, #d33426);
-    color: white;
-    box-shadow: 0 2px 8px rgba(234, 67, 53, 0.3);
-}
-
-.delete-chart-config:hover {
-    background: linear-gradient(135deg, #d33426, #c5221f);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(234, 67, 53, 0.4);
-}
-
-.edit-chart-config:active,
-.delete-chart-config:active {
-    transform: translateY(0);
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
-}
 
 /* 空状态样式 - 优化版 */
 .empty-chart-configs {
-    color: #9aa0a6;
+    color: var(--text-muted);
     text-align: center;
     padding: 60px 20px;
     font-style: italic;
     font-size: 16px;
-    background: #f8f9fa;
+    background: var(--bg-secondary);
     border-radius: 12px;
-    border: 2px dashed #dadce0;
+    border: 2px dashed var(--border-color);
     margin: 20px 0;
 }
 
@@ -2797,7 +3146,7 @@ footer .btn {
     display: block;
     margin-bottom: 6px;
     font-weight: 500;
-    color: #202124;
+    color: var(--text-primary);
     font-size: 14px;
 }
 
@@ -2807,10 +3156,10 @@ footer .btn {
 .chart-config-form textarea {
     width: 100%;
     padding: 10px 12px;
-    border: 1px solid #dadce0;
+    border: 1px solid var(--border-color);
     border-radius: 6px;
     font-size: 14px;
-    background: #ffffff;
+    background: var(--bg-primary);
     transition: all 0.2s ease;
 }
 
@@ -2819,7 +3168,7 @@ footer .btn {
 .chart-config-form select:focus,
 .chart-config-form textarea:focus {
     outline: none;
-    border-color: #1a73e8;
+    border-color: var(--accent-color);
     box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
 }
 
@@ -2832,7 +3181,7 @@ footer .btn {
 /* 图表脚本提示 */
 .chart-script-hint {
     margin-top: 4px;
-    color: #9aa0a6;
+    color: var(--text-muted);
     font-size: 12px;
     line-height: 1.4;
 }
@@ -2919,14 +3268,14 @@ footer .btn {
     width: 32px;
     height: 32px;
     border: 3px solid #f3f3f3;
-    border-top: 3px solid #1a73e8;
+    border-top: 3px solid var(--accent-color);
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }
 
 .chart-error {
     text-align: center;
-    color: #ea4335;
+    color: var(--error-color);
     padding: 20px;
 }
 
@@ -2972,7 +3321,7 @@ footer .btn {
     border: none;
     border-radius: 6px;
     background: transparent;
-    color: #5f6368;
+    color: var(--text-secondary);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -2982,8 +3331,8 @@ footer .btn {
 }
 
 .btn-icon:hover {
-    background: #f1f3f4;
-    color: #1a73e8;
+    background: var(--bg-tertiary);
+    color: var(--accent-color);
     transform: scale(1.1);
 }
 
@@ -3015,7 +3364,7 @@ footer .btn {
 }
 
 .chart-fullscreen-content {
-    background: #ffffff;
+    background: var(--bg-primary);
     width: 100%;
     height: 100%;
     position: relative;
@@ -3035,8 +3384,8 @@ footer .btn {
     justify-content: space-between;
     align-items: center;
     padding: 16px 24px;
-    border-bottom: 1px solid #dadce0;
-    background: #ffffff;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-primary);
     flex-shrink: 0;
 }
 
@@ -3050,7 +3399,7 @@ footer .btn {
 .chart-fullscreen-header .chart-name {
     font-weight: 700;
     font-size: 16px;
-    color: #202124;
+    color: var(--text-primary);
     margin: 0;
     line-height: 1.3;
 }
@@ -3058,7 +3407,7 @@ footer .btn {
 .chart-fullscreen-header .chart-type-badge {
     font-size: 12px;
     font-weight: 600;
-    color: #1a73e8;
+    color: var(--accent-color);
     background: rgba(26, 115, 232, 0.1);
     padding: 4px 10px;
     border-radius: 12px;
@@ -3075,7 +3424,7 @@ footer .btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #f8f9fa;
+    background: var(--bg-secondary);
 }
 
 .chart-fullscreen-canvas-container {
@@ -3093,7 +3442,7 @@ footer .btn {
     height: 100% !important;
     max-width: 100%;
     max-height: 100%;
-    background: #ffffff;
+    background: var(--bg-primary);
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
@@ -3104,7 +3453,7 @@ footer .btn {
     border: none;
     border-radius: 8px;
     background: transparent;
-    color: #5f6368;
+    color: var(--text-secondary);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -3114,8 +3463,8 @@ footer .btn {
 }
 
 .close-fullscreen-btn:hover {
-    background: #f1f3f4;
-    color: #ea4335;
+    background: var(--bg-tertiary);
+    color: var(--error-color);
     transform: scale(1.1);
 }
 
@@ -3127,7 +3476,7 @@ footer .btn {
     overflow: hidden;
     height: 100%;
     width: 100%;
-    background: #ffffff;
+    background: var(--bg-primary);
 }
 
 /* 确保 Monaco Editor 正确填充容器 */
@@ -3138,15 +3487,17 @@ footer .btn {
 
 /* Monaco Editor 选中行样式 */
 .selected-line {
-    background: #e8f0fe !important;
-    pointer-events: none !important; /* 防止遮挡文字选择 */
+    background: var(--bg-active) !important;
+    pointer-events: none !important;
+    /* 防止遮挡文字选择 */
 }
 
 .selected-line-decoration {
-    background: #1a73e8 !important;
+    background: var(--accent-color) !important;
     width: 3px !important;
     margin-left: 4px !important;
-    pointer-events: none !important; /* 防止遮挡 */
+    pointer-events: none !important;
+    /* 防止遮挡 */
 }
 
 /* Monaco Editor 自定义主题 */
@@ -3178,7 +3529,7 @@ footer .btn {
 /* 订阅源管理样式 */
 .subscription-list {
     margin-top: 24px;
-    border-top: 1px solid #dadce0;
+    border-top: 1px solid var(--border-color);
     padding-top: 16px;
 }
 
@@ -3186,11 +3537,11 @@ footer .btn {
     margin-bottom: 12px;
     font-size: 16px;
     font-weight: 500;
-    color: #202124;
+    color: var(--text-primary);
 }
 
 .empty-subscriptions {
-    color: #9aa0a6;
+    color: var(--text-muted);
     text-align: center;
     padding: 20px;
     font-style: italic;
@@ -3201,16 +3552,16 @@ footer .btn {
     justify-content: space-between;
     align-items: center;
     padding: 16px;
-    border: 1px solid #dadce0;
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     margin-bottom: 12px;
-    background: #f8f9fa;
+    background: var(--bg-secondary);
     gap: 16px;
     transition: all 0.2s ease;
 }
 
 .subscription-item:hover {
-    border-color: #1a73e8;
+    border-color: var(--accent-color);
     box-shadow: 0 2px 8px rgba(26, 115, 232, 0.1);
 }
 
@@ -3222,7 +3573,7 @@ footer .btn {
 .subscription-name {
     font-weight: 600;
     font-size: 16px;
-    color: #202124;
+    color: var(--text-primary);
     margin-bottom: 4px;
     display: flex;
     align-items: center;
@@ -3230,7 +3581,7 @@ footer .btn {
 }
 
 .subscription-url {
-    color: #5f6368;
+    color: var(--text-secondary);
     font-size: 13px;
     font-family: 'Roboto Mono', monospace;
     margin-bottom: 4px;
@@ -3242,27 +3593,27 @@ footer .btn {
     align-items: center;
     gap: 8px;
     font-size: 12px;
-    color: #5f6368;
+    color: var(--text-secondary);
 }
 
 .status-indicator {
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: #34a853;
+    background: var(--success-color);
 }
 
 .status-indicator.error {
-    background: #ea4335;
+    background: var(--error-color);
 }
 
 .status-indicator.pending {
-    background: #fbbc04;
+    background: var(--warning-color);
 }
 
 .last-updated {
     font-size: 11px;
-    color: #9aa0a6;
+    color: var(--text-muted);
 }
 
 .subscription-actions {
@@ -3272,41 +3623,7 @@ footer .btn {
     align-items: center;
 }
 
-.update-subscription,
-.remove-subscription {
-    padding: 6px 12px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: 500;
-    white-space: nowrap;
-    transition: all 0.2s ease;
-}
 
-.update-subscription {
-    background: #1a73e8;
-    color: white;
-}
-
-.remove-subscription {
-    background: #ea4335;
-    color: white;
-}
-
-.update-subscription:hover {
-    background: #1967d2;
-}
-
-.remove-subscription:hover {
-    background: #d33426;
-}
-
-.update-subscription:disabled {
-    background: #f1f3f4;
-    color: #9aa0a6;
-    cursor: not-allowed;
-}
 
 /* 订阅源切换开关样式 */
 .subscription-toggle {
@@ -3316,27 +3633,27 @@ footer .btn {
     cursor: pointer;
     padding: 6px 12px;
     border-radius: 20px;
-    background: #f1f3f4;
-    border: 1px solid #dadce0;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
     transition: all 0.2s ease;
     font-size: 12px;
     font-weight: 500;
-    color: #5f6368;
+    color: var(--text-secondary);
 }
 
 .subscription-toggle:hover {
-    background: #e8eaed;
+    background: var(--border-light);
 }
 
 .subscription-toggle.enabled {
-    background: #e6f4ea;
-    border-color: #34a853;
+    background: var(--success-bg);
+    border-color: var(--success-color);
     color: #137333;
 }
 
 .subscription-toggle.disabled {
-    background: #fce8e6;
-    border-color: #ea4335;
+    background: var(--error-bg);
+    border-color: var(--error-color);
     color: #c5221f;
 }
 
@@ -3344,7 +3661,7 @@ footer .btn {
     position: relative;
     width: 36px;
     height: 20px;
-    background: #dadce0;
+    background: var(--border-color);
     border-radius: 10px;
     transition: all 0.2s ease;
 }
@@ -3362,7 +3679,7 @@ footer .btn {
 }
 
 .subscription-toggle.enabled .toggle-switch {
-    background: #34a853;
+    background: var(--success-color);
 }
 
 .subscription-toggle.enabled .toggle-switch::before {
@@ -3370,13 +3687,13 @@ footer .btn {
 }
 
 .subscription-toggle.disabled .toggle-switch {
-    background: #ea4335;
+    background: var(--error-color);
 }
 
 /* 添加订阅源表单 */
 .add-subscription-form {
     margin-top: 24px;
-    border-top: 1px solid #dadce0;
+    border-top: 1px solid var(--border-color);
     padding-top: 20px;
 }
 
@@ -3384,7 +3701,7 @@ footer .btn {
     margin-bottom: 16px;
     font-size: 16px;
     font-weight: 500;
-    color: #202124;
+    color: var(--text-primary);
 }
 
 .subscription-form-row {
@@ -3418,8 +3735,8 @@ footer .btn {
 
 /* 订阅源错误状态 */
 .subscription-error {
-    border-color: #ea4335;
-    background: #fce8e6;
+    border-color: var(--error-color);
+    background: var(--error-bg);
 }
 
 .subscription-error .subscription-name {
@@ -3432,8 +3749,8 @@ footer .btn {
 
 /* 订阅源成功状态 */
 .subscription-success {
-    border-color: #34a853;
-    background: #e6f4ea;
+    border-color: var(--success-color);
+    background: var(--success-bg);
 }
 
 .subscription-success .subscription-name {
@@ -3446,7 +3763,7 @@ footer .btn {
     gap: 8px;
     margin-top: 16px;
     padding-top: 16px;
-    border-top: 1px solid #dadce0;
+    border-top: 1px solid var(--border-color);
     justify-content: flex-end;
 }
 
@@ -3458,7 +3775,7 @@ footer .btn {
 /* 订阅源导入/导出样式 */
 .subscription-import-export {
     margin-top: 20px;
-    border-top: 1px solid #dadce0;
+    border-top: 1px solid var(--border-color);
     padding-top: 16px;
 }
 
@@ -3466,7 +3783,7 @@ footer .btn {
     margin-bottom: 12px;
     font-size: 16px;
     font-weight: 500;
-    color: #202124;
+    color: var(--text-primary);
 }
 
 .subscription-io-actions {
@@ -3478,20 +3795,20 @@ footer .btn {
 .subscription-io-actions .btn-small {
     padding: 8px 16px;
     font-size: 13px;
-    background: #f1f3f4;
-    color: #5f6368;
-    border: 1px solid #dadce0;
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
 }
 
 .subscription-io-actions .btn-small:hover {
-    background: #e8eaed;
-    color: #202124;
+    background: var(--border-light);
+    color: var(--text-primary);
 }
 
 /* 订阅源更新进度 */
 .subscription-progress {
     margin-top: 8px;
-    background: #f1f3f4;
+    background: var(--bg-tertiary);
     border-radius: 4px;
     height: 4px;
     overflow: hidden;
@@ -3500,7 +3817,7 @@ footer .btn {
 
 .subscription-progress-bar {
     height: 100%;
-    background: #1a73e8;
+    background: var(--accent-color);
     transition: width 0.3s ease;
     border-radius: 4px;
 }
