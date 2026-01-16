@@ -33,7 +33,14 @@
                     <div class="upload-split">
                         <div class="drop-zone" id="dropZone">
                             <div class="drop-content">
-                                <span class="drop-icon">📄</span>
+                                <span class="drop-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                                        stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                        <polyline points="14 2 14 8 20 8"></polyline>
+                                        <path d="M12 18V12m0 0l-3 3m3-3l3 3"></path>
+                                    </svg>
+                                </span>
                                 <p>拖拽日志文件到这里上传</p>
                                 <p class="drop-hint">或者点击选择文件</p>
                             </div>
@@ -41,7 +48,14 @@
                         </div>
                         <div class="custom-download-zone" id="customDownloadZone">
                             <div class="download-content">
-                                <span class="download-icon">🌐</span>
+                                <span class="download-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                                        stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="7 10 12 15 17 10"></polyline>
+                                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                                    </svg>
+                                </span>
                                 <p>自定义下载日志</p>
                                 <p class="download-hint">从自定义源下载</p>
                             </div>
@@ -52,20 +66,27 @@
                 <div class="log-controls">
                     <div class="search-controls">
                         <div class="search-box">
-                            <input type="text" id="searchInput" placeholder="搜索关键词..." class="search-input">
+                            <input type="text" id="searchInput" placeholder="搜索..." class="search-input">
                             <button id="searchBtn" class="btn btn-small btn-secondary">搜索</button>
-                            <button id="prevMatch" class="btn btn-small btn-secondary"
-                                style="display: none;">上一个</button>
-                            <button id="nextMatch" class="btn btn-small btn-secondary"
-                                style="display: none;">下一个</button>
-                            <button id="clearSearch" class="btn btn-small btn-ghost"
-                                style="display: none;">清除搜索</button>
+                            <button id="prevMatch" class="btn btn-small btn-icon" style="display: none;" title="上一个">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;">
+                                    <polyline points="18 15 12 9 6 15"></polyline>
+                                </svg>
+                            </button>
+                            <button id="nextMatch" class="btn btn-small btn-icon" style="display: none;" title="下一个">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;">
+                                    <polyline points="6 9 12 15 18 9"></polyline>
+                                </svg>
+                            </button>
+                            <button id="clearSearch" class="btn btn-small btn-ghost" style="display: none;">清除</button>
                         </div>
+                        <div class="divider-v"></div>
                         <div class="filter-box">
-                            <input type="text" id="filterInput" placeholder="过滤关键词..." class="search-input">
+                            <input type="text" id="filterInput" placeholder="过滤..." class="search-input">
                             <button id="filterBtn" class="btn btn-small btn-secondary">过滤</button>
-                            <button id="clearFilter" class="btn btn-small btn-ghost"
-                                style="display: none;">清除过滤</button>
+                            <button id="clearFilter" class="btn btn-small btn-ghost" style="display: none;">清除</button>
                         </div>
                     </div>
                     <div class="control-buttons">
@@ -361,6 +382,9 @@
                                     const isExtraction = type === 'extract' || type === 'extract_string' || type === 'value_distribution';
                                     document.getElementById('simpleConfig-extraction').style.display = isExtraction ? 'block' : 'none';
                                     
+                                    // 值映射入口: 保持显示，属于可选配置
+                                    document.getElementById('simpleValueMappingArea').style.display = 'block';
+
                                     // X轴配置: 仅数值提取(趋势)需要
                                     document.getElementById('xAxisConfig').style.display = type === 'extract' ? 'block' : 'none';
                                     
@@ -380,6 +404,24 @@
                                 </select>
                             </div>
 
+                            <div class="config-item">
+                                <label>内容过滤 (可选):</label>
+                                <input type="text" id="simpleContextFilter" placeholder="例如: EventTypeA (仅处理包含此关键词的行)"
+                                    style="width: 100%;">
+                            </div>
+
+                            <!-- 值映射配置 ( moved higher for better visibility) -->
+                            <div id="simpleValueMappingArea"
+                                style="margin: 10px 0; padding: 10px; border: 1px dashed var(--border-color); border-radius: 8px; display: block;">
+                                <label
+                                    style="font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">值映射
+                                    (可选):</label>
+                                <div id="chartValueMappingContainer"></div>
+                                <button id="addValueMappingBtn" class="btn btn-small" style="margin-top: 5px;">+
+                                    添加值映射</button>
+                                <div class="script-hint"><small>将提取到的原始值映射为更直观的标签（如 0→成功）。</small></div>
+                            </div>
+
                             <!-- 关键词统计配置 -->
                             <div id="simpleConfig-keyword" style="display: block;">
                                 <div class="config-item">
@@ -392,11 +434,7 @@
 
                             <!-- 数值/字符串提取配置 -->
                             <div id="simpleConfig-extraction" style="display: none;">
-                                <div class="config-item">
-                                    <label>内容过滤 (可选):</label>
-                                    <input type="text" id="simpleContextFilter"
-                                        placeholder="例如: EventTypeA (仅提取包含此关键词的行)" style="width: 100%;">
-                                </div>
+
                                 <div class="config-item">
                                     <label>前缀 (标识符):</label>
                                     <input type="text" id="simpleExtractPrefix" placeholder="例如: time="
@@ -439,11 +477,12 @@
                                 <div class="script-hint" id="extractionHint"><small>提取数值并绘制趋势图。适合折线图。</small></div>
                             </div>
                         </div>
+                    </div>
 
-                        <!-- 高级模式配置 -->
-                        <div id="advancedChartConfig" style="display: none;">
-                            <textarea id="chartScript" placeholder="输入JavaScript代码，从日志中提取数据" rows="8"
-                                style="font-family: monospace;">// 示例：使用假数据生成图表
+                    <!-- 高级模式配置 -->
+                    <div id="advancedChartConfig" style="display: none;">
+                        <textarea id="chartScript" placeholder="输入JavaScript代码，从日志中提取数据" rows="8"
+                            style="font-family: monospace;">// 示例：使用假数据生成图表
 // 返回格式：{ labels: ['标签1', '标签2', ...], datasets: [{ data: [数值1, 数值2, ...] }] }
 
 // 生成假数据
@@ -465,13 +504,10 @@ if (logs && logs.length > 0) {
 
 // 返回数据对象
 return data;</textarea>
-                            <div class="script-hint">
-                                <small>高级模式：编写自定义JavaScript脚本提取数据。脚本必须返回包含 labels 和 datasets 字段的对象。</small>
-                            </div>
+                        <div class="script-hint">
+                            <small>高级模式：编写自定义JavaScript脚本提取数据。脚本必须返回包含 labels 和 datasets 字段的对象。</small>
                         </div>
                     </div>
-
-
 
                     <button id="addChartConfig" class="btn">添加图表配置</button>
 
