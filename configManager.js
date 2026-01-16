@@ -1011,6 +1011,29 @@ class ConfigManager {
         }, 0);
     }
 
+    // 添加图表值映射输入行
+    addValueMappingInput(original = '', display = '') {
+        const container = document.getElementById('chartValueMappingContainer');
+        if (!container) return;
+
+        const row = document.createElement('div');
+        row.className = 'config-item-row';
+        row.style.display = 'flex';
+        row.style.gap = '8px';
+        row.style.marginBottom = '8px';
+        row.style.alignItems = 'center';
+
+        row.innerHTML = `
+            <input type="text" class="mapping-original" placeholder="原始值 (如 0)" value="${original}" style="flex: 1;">
+            <span style="color: var(--text-secondary)">→</span>
+            <input type="text" class="mapping-display" placeholder="显示名 (如 成功)" value="${display}" style="flex: 1;">
+            <button class="btn btn-small btn-icon remove-mapping" title="移除">×</button>
+        `;
+
+        row.querySelector('.remove-mapping').onclick = () => row.remove();
+        container.appendChild(row);
+    }
+
     // 绑定诊断规则操作事件
     bindDiagnosisRuleActionEvents() {
         const container = document.getElementById('diagnosisRulesList');
@@ -1163,6 +1186,17 @@ class ConfigManager {
         // 立即绑定图表配置列表操作事件
         setTimeout(() => {
             this.bindChartConfigListEvents();
+
+            // 绑定值映射添加按钮 (图表配置标签页)
+            const addMappingBtn = document.getElementById('addValueMappingBtn');
+            if (addMappingBtn) {
+                // 移除旧的事件监听器以防止多重绑定
+                const newBtn = addMappingBtn.cloneNode(true);
+                addMappingBtn.parentNode.replaceChild(newBtn, addMappingBtn);
+                newBtn.addEventListener('click', () => {
+                    this.addValueMappingInput();
+                });
+            }
         }, 0);
     }
 
@@ -1220,8 +1254,15 @@ class ConfigManager {
                 }
                 const keywords = keywordsInput.split(',').map(k => k.trim()).filter(k => k);
 
+                const contextFilter = document.getElementById('simpleContextFilter').value.trim();
+                const filterLogic = contextFilter ? `
+    // 仅处理包含特定关键词的行
+    if (!content.includes('${contextFilter.replace(/'/g, "\\'")}')) return;
+` : '';
+
                 finalScript = `
 // 自动生成的关键词统计脚本
+${contextFilter ? '// 过滤关键词: ' + contextFilter : ''}
 const keywords = ${JSON.stringify(keywords)};
 const counts = {};
 keywords.forEach(k => counts[k] = 0);
@@ -1229,6 +1270,7 @@ keywords.forEach(k => counts[k] = 0);
 logs.forEach(log => {
     // 兼容日志对象的content属性或直接字符串
     const content = (log && log.content) ? log.content : (log || '').toString();
+    ${filterLogic}
     keywords.forEach(k => {
         if (content.includes(k)) {
             counts[k]++;
@@ -1341,6 +1383,21 @@ return {
     if (!content.includes('${contextFilter.replace(/'/g, "\\'")}')) return;
 ` : '';
 
+                // 值映射逻辑
+                const mappingContainer = document.getElementById('chartValueMappingContainer');
+                const mappingRows = mappingContainer ? mappingContainer.querySelectorAll('.config-item-row') : [];
+                const valueMappings = {};
+                mappingRows.forEach(row => {
+                    const original = row.querySelector('.mapping-original').value.trim();
+                    const display = row.querySelector('.mapping-display').value.trim();
+                    if (original && display) valueMappings[original] = display;
+                });
+
+                const mappingLogic = Object.keys(valueMappings).length > 0
+                    ? `const valMap = ${JSON.stringify(valueMappings)};
+    const key = valMap[match[1].trim()] || match[1].trim();`
+                    : `const key = match[1].trim();`;
+
                 finalScript = `
 // 自动生成的字符串提取统计脚本
 // 匹配模式: ${regexStr}
@@ -1354,7 +1411,7 @@ logs.forEach(log => {
     ${filterLogic}
     const match = content.match(regex);
     if (match && match[1]) {
-        const key = match[1].trim();
+        ${mappingLogic}
         if (key) {
             counts[key] = (counts[key] || 0) + 1;
         }
@@ -1464,6 +1521,16 @@ return {
             const simpleType = document.getElementById('simpleChartType').value;
             const xAxisMode = document.querySelector('input[name="xAxisMode"]:checked') ? document.querySelector('input[name="xAxisMode"]:checked').value : 'index';
 
+            // 收集当前显示的值映射
+            const mappingContainer = document.getElementById('chartValueMappingContainer');
+            const mappingRows = mappingContainer ? mappingContainer.querySelectorAll('.config-item-row') : [];
+            const valueMappings = [];
+            mappingRows.forEach(row => {
+                const original = row.querySelector('.mapping-original').value.trim();
+                const display = row.querySelector('.mapping-display').value.trim();
+                if (original && display) valueMappings.push({ original, display });
+            });
+
             dataSourceConfig.simpleConfig = {
                 type: simpleType,
                 keywords: document.getElementById('simpleKeywords').value,
@@ -1472,7 +1539,8 @@ return {
                 contextFilter: document.getElementById('simpleContextFilter').value,
                 xAxisMode: xAxisMode,
                 timeRegex: document.getElementById('simpleTimeRegex').value,
-                bucketSize: document.getElementById('simpleBucketSize').value
+                bucketSize: document.getElementById('simpleBucketSize').value,
+                valueMappings: valueMappings
             };
         }
 
@@ -1567,12 +1635,14 @@ return {
                     simpleTypeSelect.onchange(); // 触发UI更新
                 }
 
+                // 恢复通用配置
+                document.getElementById('simpleContextFilter').value = sc.contextFilter || '';
+
                 if (sc.type === 'count') {
                     document.getElementById('simpleKeywords').value = sc.keywords || '';
                 } else if (sc.type === 'extract' || sc.type === 'extract_string' || sc.type === 'value_distribution') {
                     document.getElementById('simpleExtractPrefix').value = sc.prefix || '';
                     document.getElementById('simpleExtractSuffix').value = sc.suffix || '';
-                    document.getElementById('simpleContextFilter').value = sc.contextFilter || '';
 
                     // 仅数值提取模式才恢复X轴模式
                     if (sc.type === 'extract' && sc.xAxisMode) {
@@ -1595,6 +1665,15 @@ return {
                     if (sc.bucketSize) {
                         document.getElementById('simpleBucketSize').value = sc.bucketSize;
                     }
+                }
+
+                // 恢复值映射 (针对 count 和 extract_string 有效)
+                const mappingContainer = document.getElementById('chartValueMappingContainer');
+                if (mappingContainer) mappingContainer.innerHTML = '';
+                if (sc.valueMappings && Array.isArray(sc.valueMappings)) {
+                    sc.valueMappings.forEach(m => {
+                        this.addValueMappingInput(m.original, m.display);
+                    });
                 }
             }, 0);
 
@@ -1674,6 +1753,10 @@ return {
         document.getElementById('timeExtractConfig').style.display = 'none';
         document.getElementById('xAxisConfig').style.display = 'none'; // 默认是count，不显示X轴配置
         document.getElementById('bucketSizeConfig').style.display = 'none';
+
+        // 清空值映射
+        const mappingContainer = document.getElementById('chartValueMappingContainer');
+        if (mappingContainer) mappingContainer.innerHTML = '';
 
         document.getElementById('addChartConfig').textContent = '添加图表配置';
         delete this.core.editingChartConfigId;
