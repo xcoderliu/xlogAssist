@@ -7,6 +7,10 @@
     <title>xlogAssist - 日志分析工具</title>
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- JSONEditor -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/9.10.0/jsoneditor.min.css" rel="stylesheet"
+        type="text/css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/9.10.0/jsoneditor.min.js"></script>
     <!-- Monaco Editor -->
     <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
 </head>
@@ -99,14 +103,17 @@
         </div>
 
         <!-- 日志右键菜单 -->
+        <!-- 日志右键菜单 -->
         <div class="context-menu" id="contextMenu">
             <div class="menu-item" data-action="add-to-investigation">加入排查区</div>
+            <div class="menu-item" data-action="format-json">格式化 JSON</div>
             <div class="menu-item" data-action="copy-line">复制此行</div>
         </div>
 
         <!-- 排查区右键菜单 -->
         <div class="context-menu" id="investigationContextMenu">
             <div class="menu-item" data-action="remove-from-investigation">从排查区移除</div>
+            <div class="menu-item" data-action="format-json">格式化 JSON</div>
             <div class="menu-item" data-action="copy-line">复制此行</div>
         </div>
 
@@ -514,16 +521,25 @@ return data;</textarea>
         </div>
     </div>
 
-    <!-- 配置组规则管理模态框 -->
-    <div class="group-rules-modal" id="groupRulesModal">
-        <div class="modal-header">
-            <h3 class="modal-title">管理配置组</h3>
-            <button class="close-btn"
-                onclick="document.getElementById('groupRulesModal').style.display='none'">×</button>
+    <!-- JSON 查看模态框 -->
+    <div class="json-viewer-modal" id="jsonViewerModal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center;">
+        <div class="modal-content"
+            style="background: white; width: 80%; height: 80%; border-radius: 8px; display: flex; flex-direction: column; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+            <div class="modal-header"
+                style="padding: 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+                <h3 class="modal-title" style="margin: 0;">JSON 格式化查看</h3>
+                <div class="modal-actions">
+                    <button class="btn btn-small" id="copyJsonBtn">复制 JSON</button>
+                    <button class="close-btn" style="background: none; border: none; font-size: 24px; cursor: pointer;"
+                        onclick="document.getElementById('jsonViewerModal').style.display='none'">×</button>
+                </div>
+            </div>
+            <div class="modal-body" id="jsonModalBody"
+                style="flex: 1; padding: 15px; overflow: auto; background: #f8f9fa;">
+            </div>
         </div>
-        <div class="modal-body">
-            <!-- 内容由JavaScript动态生成 -->
-        </div>
+    </div>
     </div>
 
     <footer>

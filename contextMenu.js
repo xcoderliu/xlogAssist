@@ -59,6 +59,8 @@ class ContextMenu {
             this.addToInvestigation(index);
         } else if (action === 'copy-line') {
             this.copyLine(index);
+        } else if (action === 'format-json') {
+            this.formatJSON(index);
         }
 
         this.hideContextMenu();
@@ -73,9 +75,154 @@ class ContextMenu {
             this.removeFromInvestigation(originalIndex);
         } else if (action === 'copy-line') {
             this.copyLineFromInvestigation(originalIndex);
+        } else if (action === 'format-json') {
+            this.formatJSONFromInvestigation(originalIndex);
         }
 
         this.hideContextMenu();
+    }
+
+    // 格式化JSON
+    formatJSON(index) {
+        const log = this.core.logs[index];
+        this.extractAndShowJSON(log.content);
+    }
+
+    // 从排查区格式化JSON
+    formatJSONFromInvestigation(originalIndex) {
+        const log = this.core.investigationLogs.find(item => item.originalIndex === originalIndex);
+        if (log) {
+            this.extractAndShowJSON(log.content);
+        }
+    }
+
+    // 提取并显示JSON
+    extractAndShowJSON(content) {
+        const foundJSONs = [];
+        let i = 0;
+
+        while (i < content.length) {
+            // Find start of JSON candidate
+            if (content[i] === '{' || content[i] === '[') {
+                const result = this._tryExtractJSON(content, i);
+                if (result) {
+                    foundJSONs.push(result.obj);
+                    i = result.endIndex; // Skip past the found object
+                    continue;
+                }
+            }
+            i++;
+        }
+
+        if (foundJSONs.length > 0) {
+            this.showJSONModal(foundJSONs);
+        } else {
+            this.core.setStatus('未在当前行找到有效的 JSON 内容', 'warning');
+        }
+    }
+
+    _tryExtractJSON(str, startIndex) {
+        const startChar = str[startIndex];
+        const endChar = startChar === '{' ? '}' : ']';
+
+        let balance = 0;
+        let inString = false;
+        let escaped = false;
+
+        for (let i = startIndex; i < str.length; i++) {
+            const char = str[i];
+
+            if (escaped) {
+                escaped = false;
+                continue;
+            }
+
+            if (char === '\\') {
+                escaped = true;
+                continue;
+            }
+
+            if (char === '"') {
+                inString = !inString;
+                continue;
+            }
+
+            if (!inString) {
+                if (char === startChar) {
+                    balance++;
+                } else if (char === endChar) {
+                    balance--;
+                    if (balance === 0) {
+                        try {
+                            const candidate = str.substring(startIndex, i + 1);
+                            return { obj: JSON.parse(candidate), endIndex: i };
+                        } catch (e) {
+                            return null;
+                        }
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    // 显示 JSON 模态框
+    showJSONModal(jsonInfos) {
+        const modal = document.getElementById('jsonViewerModal');
+        const modalBody = document.getElementById('jsonModalBody');
+        modalBody.innerHTML = ''; // Clear previous content
+
+        // Container for JSONEditor
+        const container = document.createElement('div');
+        container.style.width = '100%';
+        container.style.height = '100%';
+        container.style.minHeight = '400px';
+        modalBody.appendChild(container);
+
+        // Prepare data: if multiple JSONs, wrap them in an array
+        let dataToView = jsonInfos;
+        if (Array.isArray(jsonInfos) && jsonInfos.length === 1) {
+            dataToView = jsonInfos[0];
+        }
+
+        const options = {
+            mode: 'view',
+            modes: ['view', 'tree', 'code'],
+            search: true,
+            navigationBar: true,
+            statusBar: true
+        };
+
+        try {
+            if (typeof JSONEditor === 'undefined') {
+                throw new Error('JSONEditor library not loaded');
+            }
+            const editor = new JSONEditor(container, options);
+            editor.set(dataToView);
+            editor.expandAll();
+        } catch (e) {
+            console.error('Failed to initialize JSONEditor:', e);
+            container.innerHTML = `<div style="padding: 20px; color: red;">
+                <h3>Error loading JSON Editor</h3>
+                <p>${e.message}</p>
+                <p>Falling back to raw text view:</p>
+                <pre style="background: #f0f0f0; padding: 10px; overflow: auto;">${JSON.stringify(dataToView, null, 2)}</pre>
+            </div>`;
+        }
+
+        modal.style.display = 'flex';
+
+        // 绑定复制按钮 (复制所有JSON的文本)
+        const copyBtn = document.getElementById('copyJsonBtn');
+        const newCopyBtn = copyBtn.cloneNode(true);
+        copyBtn.parentNode.replaceChild(newCopyBtn, copyBtn);
+
+        newCopyBtn.addEventListener('click', () => {
+            const allText = JSON.stringify(dataToView, null, 2);
+            navigator.clipboard.writeText(allText).then(() => {
+                this.core.setStatus('JSON 已复制');
+            });
+        });
     }
 
     // 添加到排查区

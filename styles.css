@@ -3139,12 +3139,14 @@ footer .btn {
 /* Monaco Editor 选中行样式 */
 .selected-line {
     background: #e8f0fe !important;
+    pointer-events: none !important; /* 防止遮挡文字选择 */
 }
 
 .selected-line-decoration {
     background: #1a73e8 !important;
     width: 3px !important;
     margin-left: 4px !important;
+    pointer-events: none !important; /* 防止遮挡 */
 }
 
 /* Monaco Editor 自定义主题 */

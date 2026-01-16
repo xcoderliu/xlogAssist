@@ -24,6 +24,19 @@ class MonacoRenderer extends RendererInterface {
                 require(['vs/editor/editor.main'], resolve, reject);
             });
 
+            // 定义自定义主题 (Darker selection color)
+            monaco.editor.defineTheme('xlog-theme', {
+                base: 'vs',
+                inherit: true,
+                rules: [],
+                colors: {
+                    'editor.selectionBackground': '#75A7E0', // 更深、更明显的蓝色
+                    'editor.inactiveSelectionBackground': '#A0C4E8',
+                    'editor.lineHighlightBackground': '#e8f0fe', // 行高亮背景色 (原 .selected-line 颜色)
+                    'editor.lineHighlightBorder': '#00000000' // 隐藏行高亮边框
+                }
+            });
+
             // 创建编辑器实例
             const container = document.getElementById('monacoEditor');
             if (!container) {
@@ -34,8 +47,8 @@ class MonacoRenderer extends RendererInterface {
             this.editor = monaco.editor.create(container, {
                 value: '',
                 language: 'plaintext',
-                theme: 'vs', // 使用浅色主题
-                readOnly: true,
+                theme: 'xlog-theme', // 使用自定义主题
+                readOnly: true, // 允许选择
                 scrollBeyondLastLine: false,
                 wordWrap: 'on',
                 lineNumbers: 'on',
@@ -45,7 +58,7 @@ class MonacoRenderer extends RendererInterface {
                 fontSize: 13, // 与原有系统保持一致
                 lineHeight: 18,
                 fontFamily: "'Roboto Mono', 'Monaco', 'Menlo', monospace", // 与原有字体一致
-                renderLineHighlight: 'none',
+                renderLineHighlight: 'line', // 使用原生行高亮
                 scrollbar: {
                     vertical: 'visible',
                     horizontal: 'visible',
@@ -57,7 +70,7 @@ class MonacoRenderer extends RendererInterface {
                 suggestOnTriggerCharacters: false,
                 parameterHints: { enabled: false },
                 occurrencesHighlight: false,
-                selectionHighlight: false
+                selectionHighlight: true // 开启选择高亮
             });
 
             this.isInitialized = true;
@@ -74,10 +87,11 @@ class MonacoRenderer extends RendererInterface {
     bindEditorEvents() {
         if (!this.editor) return;
 
-        // 点击行选择事件
-        this.editor.onMouseDown((e) => {
-            if (e.target && e.target.position) {
-                const lineNumber = e.target.position.lineNumber;
+        // 监听光标位置变化来更新选中行 (替代MouseDown，以支持文本选择)
+        this.editor.onDidChangeCursorPosition((e) => {
+            const lineNumber = e.position.lineNumber;
+            // 只有当行号改变时才触发选中逻辑
+            if (this.core.selectedLineIndex !== lineNumber - 1) {
                 this.core.selectLine(lineNumber - 1); // Monaco行号从1开始
             }
         });
@@ -591,20 +605,20 @@ class MonacoRenderer extends RendererInterface {
         // 清除之前的装饰
         const oldDecorations = this.editor.getModel().getAllDecorations();
         const decorationIds = oldDecorations
-            .filter(d => d.options.className === 'selected-line')
+            .filter(d => d.options.linesDecorationsClassName === 'selected-line-decoration')
             .map(d => d.id);
 
         if (decorationIds.length > 0) {
             this.editor.deltaDecorations(decorationIds, []);
         }
 
-        // 添加新的装饰 - selectedLineIndex 已经是基于当前显示日志的索引
+        // 添加新的装饰 - 仅保留 margin 装饰，背景由原生 renderLineHighlight 处理
         const lineNumber = this.core.selectedLineIndex + 1;
         const decorations = [{
             range: new monaco.Range(lineNumber, 1, lineNumber, 1),
             options: {
                 isWholeLine: true,
-                className: 'selected-line',
+                // className: 'selected-line', // 移除自定义背景类，改用原生高亮
                 linesDecorationsClassName: 'selected-line-decoration'
             }
         }];
