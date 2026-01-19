@@ -464,9 +464,11 @@
                                     style="display: none; margin-top: 5px; padding-left: 10px; border-left: 2px solid #ccc;">
                                     <div class="config-item">
                                         <label>时间格式正则 (可选):</label>
-                                        <input type="text" id="simpleTimeRegex" placeholder="默认匹配: \d{2}:\d{2}:\d{2}"
-                                            value="\d{2}:\d{2}:\d{2}" style="width: 100%;">
-                                        <div class="script-hint"><small>将尝试匹配行首的时间字符串作为X轴标签。</small></div>
+                                        <input type="text" id="simpleTimeRegex" placeholder="默认匹配常见时间戳格式"
+                                            value="\d{4}[-/]\d{2}[-/]\d{2}[T ]\d{2}:\d{2}:\d{2}|\d{2}:\d{2}:\d{2}"
+                                            style="width: 100%;">
+                                        <div class="script-hint"><small>默认支持: 2026-01-14 08:45:02 或 08:45:02
+                                                等格式。可自定义正则。</small></div>
                                     </div>
                                 </div>
                                 <div class="config-item" id="bucketSizeConfig" style="display: none;">

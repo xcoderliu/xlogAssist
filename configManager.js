@@ -1307,13 +1307,14 @@ return {
                     : `${safePrefix}\\s*([-]?\\d+\\.?\\d*)`;
 
                 // 获取X轴模式
-                const xAxisMode = document.querySelector('input[name="xAxisMode"]:checked').value;
+                const xAxisModeRadio = document.querySelector('input[name="xAxisMode"]:checked');
+                const xAxisMode = xAxisModeRadio ? xAxisModeRadio.value : 'index';
                 const timeRegexStr = document.getElementById('simpleTimeRegex').value || '\\d{2}:\\d{2}:\\d{2}';
 
                 const xExtractionLogic = xAxisMode === 'time'
                     ? `
     // 尝试提取时间作为X轴
-    const timeMatch = content.match(/${timeRegexStr.replace(/\\/g, '\\\\')}/);
+    const timeMatch = content.match(/${timeRegexStr}/);
     const label = timeMatch ? timeMatch[0] : (index + 1);
     labels.push(label);`
                     : `
