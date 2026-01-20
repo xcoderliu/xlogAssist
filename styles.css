@@ -3909,3 +3909,29 @@ footer .btn {
     border: 2px solid #28a745 !important;
     transition: all 0.3s;
 }
+
+/* 拖拽排序样式 */
+.chart-config-item,
+.chart-item {
+    cursor: grab;
+    transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+}
+
+.chart-config-item:active,
+.chart-item:active {
+    cursor: grabbing;
+}
+
+.chart-config-item.dragging,
+.chart-item.dragging {
+    opacity: 0.5;
+    transform: scale(0.98);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    background: var(--bg-secondary);
+    border: 2px dashed var(--accent-color);
+}
+
+.chart-config-item.drag-over,
+.chart-item.drag-over {
+    border-top: 2px solid var(--accent-color);
+}

@@ -98,6 +98,9 @@ class Charting {
 
         // 自动重新生成已生成的图表
         this.regenerateGeneratedCharts();
+
+        // 绑定拖拽事件
+        this.bindDragEvents();
     }
 
     // 获取图表占位符文本
@@ -646,6 +649,111 @@ class Charting {
         }
 
         this.core.setStatus('所有图表生成完成');
+
+        // 绑定拖拽事件
+        this.bindDragEvents();
+    }
+
+    // 绑定图表拖拽排序事件
+    bindDragEvents() {
+        const container = document.getElementById('chartsContainer');
+        if (!container) return;
+
+        let dragSrcEl = null;
+        const items = container.querySelectorAll('.chart-item');
+
+        const handleDragStart = (e) => {
+            dragSrcEl = e.currentTarget;
+            e.dataTransfer.effectAllowed = 'move';
+            // 延迟添加样式
+            setTimeout(() => e.target.classList.add('dragging'), 0);
+        };
+
+        const handleDragOver = (e) => {
+            if (e.preventDefault) e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            return false;
+        };
+
+        const handleDragEnter = (e) => {
+            const target = e.currentTarget;
+            if (target !== dragSrcEl) {
+                target.classList.add('drag-over');
+            }
+        };
+
+        const handleDragLeave = (e) => {
+            e.currentTarget.classList.remove('drag-over');
+        };
+
+        const handleDrop = (e) => {
+            if (e.stopPropagation) e.stopPropagation();
+
+            const target = e.currentTarget;
+            if (dragSrcEl !== target) {
+                const srcId = dragSrcEl.dataset.configId;
+                const targetId = target.dataset.configId;
+
+                // 在主配置数组中找到对应的索引
+                const oldIndex = this.chartConfigs.findIndex(c => c.id == srcId);
+                const newIndex = this.chartConfigs.findIndex(c => c.id == targetId);
+
+                if (oldIndex !== -1 && newIndex !== -1) {
+                    // 重新排序
+                    const [movedItem] = this.chartConfigs.splice(oldIndex, 1);
+                    this.chartConfigs.splice(newIndex, 0, movedItem);
+
+                    // 保存配置
+                    this.saveChartConfigs();
+
+                    // 仅调整DOM顺序，不重新生成图表
+                    this.reorderChartsDOM();
+                }
+            }
+            return false;
+        };
+
+        const handleDragEnd = (e) => {
+            e.target.classList.remove('dragging');
+            items.forEach(item => item.classList.remove('drag-over'));
+        };
+
+        items.forEach(item => {
+            // 确保是该元素本身开启拖拽
+            item.setAttribute('draggable', 'true');
+            item.addEventListener('dragstart', handleDragStart, false);
+            item.addEventListener('dragenter', handleDragEnter, false);
+            item.addEventListener('dragover', handleDragOver, false);
+            item.addEventListener('dragleave', handleDragLeave, false);
+            item.addEventListener('drop', handleDrop, false);
+            item.addEventListener('dragend', handleDragEnd, false);
+        });
+    }
+
+    // 根据配置顺序重新排列图表DOM元素 (保持Canvas状态)
+    reorderChartsDOM() {
+        const container = document.getElementById('chartsContainer');
+        if (!container) return;
+
+        const grid = container.querySelector('.charts-grid');
+        if (!grid) return;
+
+        const items = Array.from(grid.querySelectorAll('.chart-item'));
+        const itemMap = new Map();
+        items.forEach(item => {
+            if (item.dataset.configId) {
+                itemMap.set(item.dataset.configId, item);
+            }
+        });
+
+        // 按照当前的chartConfigs顺序重新追加元素
+        this.chartConfigs.forEach(config => {
+            if (!config.enabled) return;
+            const item = itemMap.get(config.id.toString());
+            if (item) {
+                grid.appendChild(item); // appendChild会将元素移动到最后，实现排序
+            }
+        });
     }
 
     // 自动重新生成已生成的图表

@@ -1153,6 +1153,8 @@ class ConfigManager {
         this.core.charting.chartConfigs.forEach((config, index) => {
             const configElement = document.createElement('div');
             configElement.className = `chart-config-item ${config.enabled ? '' : 'disabled'}`;
+            configElement.setAttribute('draggable', 'true');
+            configElement.dataset.index = index;
 
             // 获取脚本内容预览（截取前50个字符）
             const scriptPreview = config.dataSource?.script ?
@@ -1983,6 +1985,75 @@ return {
                 const configId = e.currentTarget.dataset.configId;
                 this.deleteChartConfig(configId);
             };
+        });
+
+        // 拖拽排序逻辑
+        let dragSrcEl = null;
+        const items = container.querySelectorAll('.chart-config-item');
+
+        const handleDragStart = (e) => {
+            dragSrcEl = e.currentTarget;
+            e.dataTransfer.effectAllowed = 'move';
+            // 延迟添加样式以避免拖拽图像也被应用该样式
+            setTimeout(() => e.target.classList.add('dragging'), 0);
+        };
+
+        const handleDragOver = (e) => {
+            if (e.preventDefault) e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            return false;
+        };
+
+        const handleDragEnter = (e) => {
+            const target = e.currentTarget;
+            if (target !== dragSrcEl) {
+                target.classList.add('drag-over');
+            }
+        };
+
+        const handleDragLeave = (e) => {
+            e.currentTarget.classList.remove('drag-over');
+        };
+
+        const handleDrop = (e) => {
+            if (e.stopPropagation) e.stopPropagation();
+
+            const target = e.currentTarget;
+            if (dragSrcEl !== target) {
+                const oldIndex = parseInt(dragSrcEl.dataset.index);
+                const newIndex = parseInt(target.dataset.index);
+
+                // 重新排序配置数组
+                const configs = this.core.charting.chartConfigs;
+                if (configs && configs.length > 0) {
+                    const [movedItem] = configs.splice(oldIndex, 1);
+                    configs.splice(newIndex, 0, movedItem);
+
+                    // 保存并重新渲染
+                    this.core.charting.saveChartConfigs();
+                    this.renderChartConfigsList();
+
+                    // 更新主界面图表顺序
+                    if (this.core.charting && this.core.charting.reorderChartsDOM) {
+                        this.core.charting.reorderChartsDOM();
+                    }
+                }
+            }
+            return false;
+        };
+
+        const handleDragEnd = (e) => {
+            e.target.classList.remove('dragging');
+            items.forEach(item => item.classList.remove('drag-over'));
+        };
+
+        items.forEach(item => {
+            item.addEventListener('dragstart', handleDragStart, false);
+            item.addEventListener('dragenter', handleDragEnter, false);
+            item.addEventListener('dragover', handleDragOver, false);
+            item.addEventListener('dragleave', handleDragLeave, false);
+            item.addEventListener('drop', handleDrop, false);
+            item.addEventListener('dragend', handleDragEnd, false);
         });
     }
 
