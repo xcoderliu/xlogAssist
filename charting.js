@@ -1,5 +1,35 @@
 
 // 绘图区模块 - 负责图表显示和管理（纯JavaScript实现）
+// 垂直高亮线插件
+const crosshairPlugin = {
+    id: 'crosshair',
+    afterDraw: (chart) => {
+        if (!chart.options.plugins.crosshair?.enabled) return;
+
+        const tooltip = chart.tooltip;
+        if (!tooltip || !tooltip._active || tooltip._active.length === 0) return;
+
+        const ctx = chart.ctx;
+        const activePoint = tooltip._active[0];
+        const x = activePoint.element.x;
+        const topY = chart.scales.y.top;
+        const bottomY = chart.scales.y.bottom;
+
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const lineColor = isDark ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.3)';
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(x, topY);
+        ctx.lineTo(x, bottomY);
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = lineColor;
+        ctx.setLineDash([5, 3]);
+        ctx.stroke();
+        ctx.restore();
+    }
+};
+
 class Charting {
     constructor(core) {
         this.core = core;
@@ -7,6 +37,7 @@ class Charting {
         this.activeChartId = null;
         this.chartConfigs = []; // 图表配置
         this.generatedChartIds = new Set(); // 存储已生成的图表ID
+        this.crosshairEnabled = true; // 高亮竖线开关状态
 
         // 自动初始化，与其他模块保持一致
         this.loadChartConfigs();
@@ -175,12 +206,14 @@ class Charting {
         // 创建全屏模态框
         const modal = document.createElement('div');
         modal.className = 'chart-fullscreen-modal active';
+
         modal.innerHTML = `
             <div class="chart-fullscreen-content">
                 <div class="chart-fullscreen-header">
                     <div class="chart-title-left">
                         <h3 class="chart-name">${config.name}</h3>
                         <span class="chart-type-badge">${this.getChartTypeName(config.type)}</span>
+                        ${config.description ? `<span class="chart-fullscreen-description">${config.description}</span>` : ''}
                     </div>
                     <button class="btn-icon close-fullscreen-btn" title="关闭全屏">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -226,11 +259,12 @@ class Charting {
                 }
             };
 
-            // 创建全屏图表
+            // 创建全屏图表(带 crosshair 插件)
             fullscreenCanvas.chart = new Chart(fullscreenCanvas, {
                 type: originalChart.config.type,
                 data: chartData,
-                options: fullscreenOptions
+                options: fullscreenOptions,
+                plugins: [crosshairPlugin]
             });
         }
 
@@ -408,6 +442,26 @@ class Charting {
                     enabled: true,
                     mode: 'index',
                     intersect: false,
+                    callbacks: {
+                        // 支持显示额外元数据
+                        afterLabel: function (context) {
+                            const dataIndex = context.dataIndex;
+                            const dataset = context.dataset;
+                            // 检查是否有 meta 数据
+                            if (dataset.meta && dataset.meta[dataIndex]) {
+                                const meta = dataset.meta[dataIndex];
+                                if (typeof meta === 'string') {
+                                    return meta;
+                                } else if (typeof meta === 'object') {
+                                    // 对象格式的 meta，逐行显示
+                                    return Object.entries(meta)
+                                        .map(([key, value]) => `${key}: ${value}`)
+                                        .join('\n');
+                                }
+                            }
+                            return '';
+                        }
+                    }
                 },
                 zoom: {
                     zoom: {
@@ -423,6 +477,9 @@ class Charting {
                         enabled: false,
                         mode: 'x',
                     }
+                },
+                crosshair: {
+                    enabled: true
                 }
             },
             layout: {
@@ -550,14 +607,15 @@ class Charting {
             };
         });
 
-        // 创建图表
+        // 创建图表(带 crosshair 插件)
         canvas.chart = new Chart(canvas, {
             type: config.type,
             data: {
                 labels: data.labels || [],
                 datasets: datasets
             },
-            options: chartOptions
+            options: chartOptions,
+            plugins: [crosshairPlugin]
         });
     }
 

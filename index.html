@@ -445,6 +445,18 @@
                                     <input type="text" id="simpleExtractSuffix" placeholder="例如: ms"
                                         style="width: 100%;">
                                 </div>
+                                <div class="config-item"
+                                    style="margin-top: 10px; padding: 10px; border: 1px dashed var(--border-color); border-radius: 8px;">
+                                    <div
+                                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                        <label style="font-size: 13px; font-weight: 600;">额外信息提取 (可选):</label>
+                                        <button id="addExtraInfoBtn" class="btn btn-small" type="button">+ 添加项</button>
+                                    </div>
+                                    <div id="extraInfoList">
+                                        <!-- 动态添加的额外信息项 -->
+                                    </div>
+                                    <div class="script-hint"><small>提取额外信息，支持多组配置。鼠标悬停时显示在tooltip中。</small></div>
+                                </div>
                                 <div class="config-item" id="xAxisConfig" style="display: none;">
                                     <label>X轴数据源:</label>
                                     <div style="margin-top: 5px;">

@@ -1011,28 +1011,7 @@ class ConfigManager {
         }, 0);
     }
 
-    // 添加图表值映射输入行
-    addValueMappingInput(original = '', display = '') {
-        const container = document.getElementById('chartValueMappingContainer');
-        if (!container) return;
 
-        const row = document.createElement('div');
-        row.className = 'config-item-row';
-        row.style.display = 'flex';
-        row.style.gap = '8px';
-        row.style.marginBottom = '8px';
-        row.style.alignItems = 'center';
-
-        row.innerHTML = `
-            <input type="text" class="mapping-original" placeholder="原始值 (如 0)" value="${original}" style="flex: 1;">
-            <span style="color: var(--text-secondary)">→</span>
-            <input type="text" class="mapping-display" placeholder="显示名 (如 成功)" value="${display}" style="flex: 1;">
-            <button class="btn btn-small btn-icon remove-mapping" title="移除">×</button>
-        `;
-
-        row.querySelector('.remove-mapping').onclick = () => row.remove();
-        container.appendChild(row);
-    }
 
     // 绑定诊断规则操作事件
     bindDiagnosisRuleActionEvents() {
@@ -1293,6 +1272,25 @@ return {
                 const suffix = document.getElementById('simpleExtractSuffix').value;
                 const contextFilter = document.getElementById('simpleContextFilter').value.trim();
 
+                // 收集额外信息配置
+                const extraInfos = [];
+                document.querySelectorAll('#extraInfoList .extra-info-item').forEach(item => {
+                    const label = item.querySelector('.extra-label').value.trim();
+                    const prefix = item.querySelector('.extra-prefix').value;
+                    const suffix = item.querySelector('.extra-suffix').value;
+
+                    const mappings = {};
+                    item.querySelectorAll('.mapping-row').forEach(row => {
+                        const k = row.querySelector('.mapping-key').value.trim();
+                        const v = row.querySelector('.mapping-value').value.trim();
+                        if (k && v) mappings[k] = v;
+                    });
+
+                    if (prefix) {
+                        extraInfos.push({ label, prefix, suffix, mappings });
+                    }
+                });
+
                 if (!prefix) {
                     alert('请输入数值前缀');
                     return;
@@ -1303,19 +1301,18 @@ return {
                 const safePrefix = escapeRegExp(prefix);
                 const safeSuffix = suffix ? escapeRegExp(suffix) : '';
 
-                // 获取值映射配置
+                // 获取主值映射配置
                 const mappingContainer = document.getElementById('chartValueMappingContainer');
-                const mappingRows = mappingContainer ? mappingContainer.querySelectorAll('.config-item-row') : [];
+                const mappingRows = mappingContainer ? mappingContainer.querySelectorAll('.mapping-row') : [];
                 const valueMappings = {};
                 mappingRows.forEach(row => {
-                    const original = row.querySelector('.mapping-original').value.trim();
-                    const display = row.querySelector('.mapping-display').value.trim();
+                    const original = row.querySelector('.mapping-key').value.trim();
+                    const display = row.querySelector('.mapping-value').value.trim();
                     if (original && display) valueMappings[original] = display;
                 });
                 const hasMapping = Object.keys(valueMappings).length > 0;
 
-                // 构造正则：如果有值映射则提取字符串，否则提取数字
-                // 有后缀时使用 (.*?) 非贪婪匹配，无后缀时使用 (\S+)
+                // 构造主数值正则
                 const regexStr = hasMapping
                     ? (safeSuffix
                         ? `${safePrefix}\\s*(.*?)\\s*${safeSuffix}`
@@ -1323,6 +1320,36 @@ return {
                     : (safeSuffix
                         ? `${safePrefix}\\s*([-]?\\d+\\.?\\d*)\\s*.*?${safeSuffix}`
                         : `${safePrefix}\\s*([-]?\\d+\\.?\\d*)`);
+
+                // 构造额外信息提取逻辑代码
+                let extraInfoLogic = 'const metaObj = {};\n';
+                if (extraInfos.length > 0) {
+                    extraInfos.forEach((info, idx) => {
+                        const safeP = escapeRegExp(info.prefix);
+                        const safeS = info.suffix ? escapeRegExp(info.suffix) : '';
+                        // 额外信息通常提取任意字符，非贪婪
+                        const regStr = safeS
+                            ? `${safeP}\\s*(.*?)\\s*${safeS}`
+                            : `${safeP}\\s*(\\S+)`;
+
+                        const mappingJSON = JSON.stringify(info.mappings);
+
+                        extraInfoLogic += `
+            {
+                const reg = new RegExp('${regStr.replace(/\\/g, '\\\\')}', 'i');
+                const m = content.match(reg);
+                if (m && m[1]) {
+                    let val = m[1].trim();
+                    const mappings = ${mappingJSON};
+                    if (mappings[val] !== undefined) val = mappings[val];
+                    metaObj['${info.label || `Info${idx + 1}`}'] = val;
+                }
+            }`;
+                    });
+                    extraInfoLogic += '\n            metaInfo.push(Object.keys(metaObj).length > 0 ? metaObj : null);';
+                } else {
+                    extraInfoLogic += 'metaInfo.push(null);';
+                }
 
                 // 获取X轴模式
                 const xAxisModeRadio = document.querySelector('input[name="xAxisMode"]:checked');
@@ -1355,22 +1382,26 @@ return {
             if (!isNaN(val)) {
                 dataPoints.push(val);
                 ${xExtractionLogic}
+                ${extraInfoLogic}
             }
         }`
                     : `const val = parseFloat(match[1]);
         if (!isNaN(val)) {
             dataPoints.push(val);
             ${xExtractionLogic}
+            ${extraInfoLogic}
         }`;
 
-                // 数值提取逻辑已自动生成
+                // 生成最终脚本
                 finalScript = `
 // 自动生成的数值提取脚本
 // 匹配模式: ${regexStr}
 ${contextFilter ? '// 过滤关键词: ' + contextFilter : ''}
 ${hasMapping ? '// 值映射: ' + JSON.stringify(valueMappings) : ''}
+// 额外信息配置数: ${extraInfos.length}
 const dataPoints = [];
 const labels = [];
+const metaInfo = [];
 const regex = new RegExp('${regexStr.replace(/\\/g, '\\\\')}', 'i');
 
 logs.forEach((log, index) => {
@@ -1387,7 +1418,8 @@ return {
     labels: labels,
     datasets: [{
         label: '${chartName} (趋势)',
-        data: dataPoints
+        data: dataPoints,
+        meta: metaInfo.length > 0 ? metaInfo : undefined
     }]
 };`;
             } else if (simpleType === 'extract_string') {
@@ -1557,12 +1589,29 @@ return {
 
             // 收集当前显示的值映射
             const mappingContainer = document.getElementById('chartValueMappingContainer');
-            const mappingRows = mappingContainer ? mappingContainer.querySelectorAll('.config-item-row') : [];
+            const mappingRows = mappingContainer ? mappingContainer.querySelectorAll('.mapping-row') : [];
             const valueMappings = [];
             mappingRows.forEach(row => {
-                const original = row.querySelector('.mapping-original').value.trim();
-                const display = row.querySelector('.mapping-display').value.trim();
+                const original = row.querySelector('.mapping-key').value.trim();
+                const display = row.querySelector('.mapping-value').value.trim();
                 if (original && display) valueMappings.push({ original, display });
+            });
+
+            // 收集额外信息配置
+            const extraInfos = [];
+            document.querySelectorAll('#extraInfoList .extra-info-item').forEach(item => {
+                const label = item.querySelector('.extra-label').value.trim();
+                const prefix = item.querySelector('.extra-prefix').value;
+                const suffix = item.querySelector('.extra-suffix').value;
+
+                const mappings = {};
+                item.querySelectorAll('.mapping-row').forEach(row => {
+                    const k = row.querySelector('.mapping-key').value.trim();
+                    const v = row.querySelector('.mapping-value').value.trim();
+                    if (k && v) mappings[k] = v;
+                });
+
+                extraInfos.push({ label, prefix, suffix, mappings });
             });
 
             dataSourceConfig.simpleConfig = {
@@ -1570,6 +1619,7 @@ return {
                 keywords: document.getElementById('simpleKeywords').value,
                 prefix: document.getElementById('simpleExtractPrefix').value,
                 suffix: document.getElementById('simpleExtractSuffix').value,
+                extraInfos: extraInfos,
                 contextFilter: document.getElementById('simpleContextFilter').value,
                 xAxisMode: xAxisMode,
                 timeRegex: document.getElementById('simpleTimeRegex').value,
@@ -1658,59 +1708,101 @@ return {
             const sc = config.dataSource.simpleConfig;
 
             // 恢复分析类型
+            // 恢复分析类型
             const simpleTypeSelect = document.getElementById('simpleChartType');
             // 注意：需要先触发chartType的change事件以确保simpleChartType选项正确过滤
-            document.getElementById('chartType').onchange();
+            document.getElementById('chartType').dispatchEvent(new Event('change'));
 
             // 延迟一点设置simpleChartType，因为onchange可能会重置default
             setTimeout(() => {
-                if (sc.type) {
-                    simpleTypeSelect.value = sc.type;
-                    simpleTypeSelect.onchange(); // 触发UI更新
-                }
+                try {
+                    if (sc.type) {
+                        simpleTypeSelect.value = sc.type;
+                        simpleTypeSelect.dispatchEvent(new Event('change')); // 触发UI更新
+                    }
 
-                // 先统一重置X轴相关配置（确保非extract类型不显示时间格式正则）
-                document.getElementById('timeExtractConfig').style.display = 'none';
-                const xIndexRadio = document.querySelector('input[name="xAxisMode"][value="index"]');
-                if (xIndexRadio) xIndexRadio.checked = true;
+                    // 先统一重置X轴相关配置（确保非extract类型不显示时间格式正则）
+                    const timeExtractConfig = document.getElementById('timeExtractConfig');
+                    if (timeExtractConfig) timeExtractConfig.style.display = 'none';
 
-                // 恢复通用配置
-                document.getElementById('simpleContextFilter').value = sc.contextFilter || '';
+                    const xIndexRadio = document.querySelector('input[name="xAxisMode"][value="index"]');
+                    if (xIndexRadio) xIndexRadio.checked = true;
 
-                if (sc.type === 'count') {
-                    document.getElementById('simpleKeywords').value = sc.keywords || '';
-                } else if (sc.type === 'extract' || sc.type === 'extract_string' || sc.type === 'value_distribution') {
-                    document.getElementById('simpleExtractPrefix').value = sc.prefix || '';
-                    document.getElementById('simpleExtractSuffix').value = sc.suffix || '';
+                    // 恢复通用配置
+                    const contextFilterInput = document.getElementById('simpleContextFilter');
+                    if (contextFilterInput) contextFilterInput.value = sc.contextFilter || '';
 
-                    // 仅数值提取模式才恢复X轴模式
-                    if (sc.type === 'extract' && sc.xAxisMode) {
-                        const xRadio = document.querySelector(`input[name="xAxisMode"][value="${sc.xAxisMode}"]`);
-                        if (xRadio) {
-                            xRadio.checked = true;
-                            // 触发点击事件以更新UI可见性
-                            if (sc.xAxisMode === 'time') {
-                                document.getElementById('timeExtractConfig').style.display = 'block';
+                    if (sc.type === 'count') {
+                        const keywordsInput = document.getElementById('simpleKeywords');
+                        if (keywordsInput) keywordsInput.value = sc.keywords || '';
+                    } else if (sc.type === 'extract' || sc.type === 'extract_string' || sc.type === 'value_distribution') {
+                        const prefixInput = document.getElementById('simpleExtractPrefix');
+                        if (prefixInput) prefixInput.value = sc.prefix || '';
+
+                        const suffixInput = document.getElementById('simpleExtractSuffix');
+                        if (suffixInput) suffixInput.value = sc.suffix || '';
+
+                        // 恢复额外信息提取配置
+                        const extraInfoList = document.getElementById('extraInfoList');
+                        if (extraInfoList) extraInfoList.innerHTML = '';
+
+                        if (sc.extraInfos && Array.isArray(sc.extraInfos)) {
+                            sc.extraInfos.forEach(info => {
+                                try {
+                                    this.addExtraInfoItem(info);
+                                } catch (e) {
+                                    console.error('Error recovering extra info item:', e);
+                                }
+                            });
+                        } else {
+                            // 兼容旧配置
+                            const oldPrefix = sc.extraPrefix;
+                            if (oldPrefix) {
+                                this.addExtraInfoItem({
+                                    prefix: oldPrefix,
+                                    suffix: sc.extraSuffix || '',
+                                    label: sc.extraLabel || ''
+                                });
+                            }
+                        }
+
+                        // 仅数值提取模式才恢复X轴模式
+                        if (sc.type === 'extract' && sc.xAxisMode) {
+                            const xRadio = document.querySelector(`input[name="xAxisMode"][value="${sc.xAxisMode}"]`);
+                            if (xRadio) {
+                                xRadio.checked = true;
+                                // 触发点击事件以更新UI可见性
+                                if (sc.xAxisMode === 'time') {
+                                    if (timeExtractConfig) timeExtractConfig.style.display = 'block';
+                                }
                             }
                         }
                     }
-                }
 
-                if (sc.timeRegex) {
-                    document.getElementById('simpleTimeRegex').value = sc.timeRegex;
-                }
+                    if (sc.timeRegex) {
+                        const timeRegexInput = document.getElementById('simpleTimeRegex');
+                        if (timeRegexInput) timeRegexInput.value = sc.timeRegex;
+                    }
 
-                if (sc.bucketSize) {
-                    document.getElementById('simpleBucketSize').value = sc.bucketSize;
-                }
+                    if (sc.bucketSize) {
+                        const bucketSizeInput = document.getElementById('simpleBucketSize');
+                        if (bucketSizeInput) bucketSizeInput.value = sc.bucketSize;
+                    }
 
-                // 恢复值映射 (针对 count 和 extract_string 有效)
-                const mappingContainer = document.getElementById('chartValueMappingContainer');
-                if (mappingContainer) mappingContainer.innerHTML = '';
-                if (sc.valueMappings && Array.isArray(sc.valueMappings)) {
-                    sc.valueMappings.forEach(m => {
-                        this.addValueMappingInput(m.original, m.display);
-                    });
+                    // 恢复值映射 (针对 count 和 extract_string 有效)
+                    const mappingContainer = document.getElementById('chartValueMappingContainer');
+                    if (mappingContainer) mappingContainer.innerHTML = '';
+                    if (sc.valueMappings && Array.isArray(sc.valueMappings)) {
+                        sc.valueMappings.forEach(m => {
+                            try {
+                                this.addValueMappingInput(m.original, m.display);
+                            } catch (e) {
+                                console.error('Error recovering value mapping:', e);
+                            }
+                        });
+                    }
+                } catch (err) {
+                    console.error('Error recovering simple chart config:', err);
                 }
             }, 0);
 
@@ -1765,8 +1857,11 @@ return {
         document.getElementById('simpleExtractPrefix').value = '';
         document.getElementById('simpleExtractSuffix').value = '';
         document.getElementById('simpleContextFilter').value = '';
-        document.getElementById('simpleTimeRegex').value = '\\d{2}:\\d{2}:\\d{2}';
+        document.getElementById('simpleTimeRegex').value = '\d{4}[-/]\d{2}[-/]\d{2}[T ]\d{2}:\d{2}:\d{2}|\d{2}:\d{2}:\d{2}';
         document.getElementById('simpleBucketSize').value = '100';
+        // 清空额外信息列表
+        const extraInfoList = document.getElementById('extraInfoList');
+        if (extraInfoList) extraInfoList.innerHTML = '';
 
         // 重置简易配置显隐
         document.getElementById('simpleConfig-keyword').style.display = 'block';
@@ -1799,9 +1894,115 @@ return {
         delete this.core.editingChartConfigId;
     }
 
+    // 通用：添加映射行到指定容器
+    addMappingRowToContainer(container, original = '', display = '') {
+        if (!container) return;
+
+        const row = document.createElement('div');
+        row.className = 'mapping-row'; // 统一类名
+        row.style.display = 'flex';
+        row.style.gap = '8px';
+        row.style.marginBottom = '5px';
+        row.style.alignItems = 'center';
+
+        row.innerHTML = `
+            <input type="text" class="mapping-key" placeholder="原始值" style="flex: 1; font-size: 12px; padding: 4px;">
+            <span style="color: var(--text-secondary); font-size: 12px;">→</span>
+            <input type="text" class="mapping-value" placeholder="显示名" style="flex: 1; font-size: 12px; padding: 4px;">
+            <button type="button" class="btn-icon remove-mapping-row" style="color: var(--text-tertiary); cursor: pointer;" title="移除">×</button>
+        `;
+
+        // 使用属性赋值，避免 HTML 插值导致的特殊字符问题
+        row.querySelector('.mapping-key').value = original;
+        row.querySelector('.mapping-value').value = display;
+
+        row.querySelector('.remove-mapping-row').onclick = () => row.remove();
+        container.appendChild(row);
+    }
+
+    // 添加图表值映射输入行 (兼容旧调用，但使用新通用方法)
+    addValueMappingInput(original = '', display = '') {
+        const container = document.getElementById('chartValueMappingContainer');
+        this.addMappingRowToContainer(container, original, display);
+    }
+
+    // 添加额外信息配置项
+    addExtraInfoItem(data = null) {
+        const list = document.getElementById('extraInfoList');
+        if (!list) return;
+
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'extra-info-item';
+        itemDiv.style.cssText = 'background: var(--bg-secondary); padding: 10px; border-radius: 6px; margin-bottom: 10px; border: 1px solid var(--border-color); position: relative;';
+
+        const labelVal = data ? data.label || '' : '';
+        const prefixVal = data ? data.prefix || '' : '';
+        const suffixVal = data ? data.suffix || '' : '';
+        const mappings = data ? data.mappings || {} : {};
+
+        itemDiv.innerHTML = `
+            <button type="button" class="btn-icon remove-item" style="position: absolute; right: 5px; top: 5px; color: var(--text-tertiary); cursor: pointer;" title="移除">×</button>
+            <div class="config-item" style="margin-bottom: 8px;">
+                <label style="font-size: 12px;">显示标签:</label>
+                <input type="text" class="extra-label" placeholder="例如: Error Code" value="${labelVal}" style="width: 100%;">
+            </div>
+            <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                <input type="text" class="extra-prefix" placeholder="前缀，如: code=" value="${prefixVal}" style="flex: 1;">
+                <input type="text" class="extra-suffix" placeholder="后缀 (可选)" value="${suffixVal}" style="flex: 1;">
+            </div>
+            <div class="config-item" style="margin-bottom: 0;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                    <label style="font-size: 12px;">值映射:</label>
+                    <button type="button" class="btn btn-small add-mapping-btn" style="font-size: 11px; padding: 2px 6px;">+ 映射</button>
+                </div>
+                <div class="extra-mappings-container"></div>
+            </div>
+        `;
+
+        // 绑定删除事件
+        itemDiv.querySelector('.remove-item').onclick = () => {
+            itemDiv.remove();
+        };
+
+        const mappingContainer = itemDiv.querySelector('.extra-mappings-container');
+
+        // 绑定添加映射事件
+        itemDiv.querySelector('.add-mapping-btn').onclick = () => {
+            this.addMappingRowToContainer(mappingContainer);
+        };
+
+        // 恢复已有映射
+        if (typeof mappings === 'object') {
+            Object.entries(mappings).forEach(([k, v]) => {
+                this.addMappingRowToContainer(mappingContainer, k, v);
+            });
+        }
+        // 兼容旧的字符串格式 (虽然不太可能用到，但为了健壮性)
+        else if (typeof mappings === 'string') {
+            mappings.split('\n').forEach(line => {
+                const [k, v] = line.split('=');
+                if (k && v) this.addMappingRowToContainer(mappingContainer, k.trim(), v.trim());
+            });
+        }
+
+        list.appendChild(itemDiv);
+    }
+
     // 绑定图表配置事件
     bindChartConfigEvents() {
         const addChartConfigBtn = document.getElementById('addChartConfig');
+
+        // 绑定添加额外信息按钮
+        const addExtraInfoBtn = document.getElementById('addExtraInfoBtn');
+        if (addExtraInfoBtn) {
+            // 使用 cloneNode 移除旧的事件监听器
+            const newBtn = addExtraInfoBtn.cloneNode(true);
+            addExtraInfoBtn.parentNode.replaceChild(newBtn, addExtraInfoBtn);
+            newBtn.onclick = () => {
+                this.addExtraInfoItem();
+            };
+        }
+
         const chartTypeSelect = document.getElementById('chartType');
         const chartScriptTextarea = document.getElementById('chartScript');
 

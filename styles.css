@@ -3449,6 +3449,18 @@ footer .btn {
     white-space: nowrap;
 }
 
+.chart-fullscreen-description {
+    color: var(--text-secondary);
+    font-size: 13px;
+    margin-left: 16px;
+    padding-left: 16px;
+    border-left: 1px solid var(--border-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 50%;
+}
+
 .chart-fullscreen-body {
     flex: 1;
     padding: 0;
