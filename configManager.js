@@ -1303,10 +1303,26 @@ return {
                 const safePrefix = escapeRegExp(prefix);
                 const safeSuffix = suffix ? escapeRegExp(suffix) : '';
 
-                // 构造正则
-                const regexStr = safeSuffix
-                    ? `${safePrefix}\\s*([-]?\\d+\\.?\\d*)\\s*.*?${safeSuffix}`
-                    : `${safePrefix}\\s*([-]?\\d+\\.?\\d*)`;
+                // 获取值映射配置
+                const mappingContainer = document.getElementById('chartValueMappingContainer');
+                const mappingRows = mappingContainer ? mappingContainer.querySelectorAll('.config-item-row') : [];
+                const valueMappings = {};
+                mappingRows.forEach(row => {
+                    const original = row.querySelector('.mapping-original').value.trim();
+                    const display = row.querySelector('.mapping-display').value.trim();
+                    if (original && display) valueMappings[original] = display;
+                });
+                const hasMapping = Object.keys(valueMappings).length > 0;
+
+                // 构造正则：如果有值映射则提取字符串，否则提取数字
+                // 有后缀时使用 (.*?) 非贪婪匹配，无后缀时使用 (\S+)
+                const regexStr = hasMapping
+                    ? (safeSuffix
+                        ? `${safePrefix}\\s*(.*?)\\s*${safeSuffix}`
+                        : `${safePrefix}\\s*(\\S+)`)
+                    : (safeSuffix
+                        ? `${safePrefix}\\s*([-]?\\d+\\.?\\d*)\\s*.*?${safeSuffix}`
+                        : `${safePrefix}\\s*([-]?\\d+\\.?\\d*)`);
 
                 // 获取X轴模式
                 const xAxisModeRadio = document.querySelector('input[name="xAxisMode"]:checked');
@@ -1329,11 +1345,30 @@ return {
     if (!content.includes('${contextFilter.replace(/'/g, "\\'")}')) return;
 ` : '';
 
+                // 值映射转换逻辑
+                const mappingLogic = hasMapping
+                    ? `const valMap = ${JSON.stringify(valueMappings)};
+        const rawVal = match[1].trim();
+        const mappedVal = valMap[rawVal];
+        if (mappedVal !== undefined) {
+            const val = parseFloat(mappedVal);
+            if (!isNaN(val)) {
+                dataPoints.push(val);
+                ${xExtractionLogic}
+            }
+        }`
+                    : `const val = parseFloat(match[1]);
+        if (!isNaN(val)) {
+            dataPoints.push(val);
+            ${xExtractionLogic}
+        }`;
+
                 // 数值提取逻辑已自动生成
                 finalScript = `
 // 自动生成的数值提取脚本
 // 匹配模式: ${regexStr}
 ${contextFilter ? '// 过滤关键词: ' + contextFilter : ''}
+${hasMapping ? '// 值映射: ' + JSON.stringify(valueMappings) : ''}
 const dataPoints = [];
 const labels = [];
 const regex = new RegExp('${regexStr.replace(/\\/g, '\\\\')}', 'i');
@@ -1344,11 +1379,7 @@ logs.forEach((log, index) => {
     ${filterLogic}
     const match = content.match(regex);
     if (match && match[1]) {
-        const val = parseFloat(match[1]);
-        if (!isNaN(val)) {
-            dataPoints.push(val);
-            ${xExtractionLogic}
-        }
+        ${mappingLogic}
     }
 });
 
@@ -1638,6 +1669,11 @@ return {
                     simpleTypeSelect.onchange(); // 触发UI更新
                 }
 
+                // 先统一重置X轴相关配置（确保非extract类型不显示时间格式正则）
+                document.getElementById('timeExtractConfig').style.display = 'none';
+                const xIndexRadio = document.querySelector('input[name="xAxisMode"][value="index"]');
+                if (xIndexRadio) xIndexRadio.checked = true;
+
                 // 恢复通用配置
                 document.getElementById('simpleContextFilter').value = sc.contextFilter || '';
 
@@ -1655,19 +1691,17 @@ return {
                             // 触发点击事件以更新UI可见性
                             if (sc.xAxisMode === 'time') {
                                 document.getElementById('timeExtractConfig').style.display = 'block';
-                            } else {
-                                document.getElementById('timeExtractConfig').style.display = 'none';
                             }
                         }
                     }
+                }
 
-                    if (sc.timeRegex) {
-                        document.getElementById('simpleTimeRegex').value = sc.timeRegex;
-                    }
+                if (sc.timeRegex) {
+                    document.getElementById('simpleTimeRegex').value = sc.timeRegex;
+                }
 
-                    if (sc.bucketSize) {
-                        document.getElementById('simpleBucketSize').value = sc.bucketSize;
-                    }
+                if (sc.bucketSize) {
+                    document.getElementById('simpleBucketSize').value = sc.bucketSize;
                 }
 
                 // 恢复值映射 (针对 count 和 extract_string 有效)
